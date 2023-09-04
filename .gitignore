@@ -1,0 +1,4 @@
+*.pyc
+*.vsidx
+.suo
+\venv
