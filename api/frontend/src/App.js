@@ -4,6 +4,7 @@ import './App.css';
 //import { GoogleLogin } from '@react-oauth/google';
 import { googleLogout, useGoogleLogin } from '@react-oauth/google';
 import axios from 'axios';
+import AuthContext from './Login/AuthContext';
 
 function App() {
 /*  const responseMessage = (response) => {
@@ -15,8 +16,8 @@ function App() {
     console.log(error);
   } */
 
-  const [user, setUser] = useState([]);
-  const [profile, setProfile] = useState([]);
+  const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
   const login = useGoogleLogin({onSuccess: (codeResponse) => setUser(codeResponse), 
     onError: (error) => console.log('Login failed', error)});
   const logOut = () => {
@@ -32,12 +33,13 @@ function App() {
         }
       }).then((res) => {
         setProfile(res.data)
-      //  console.log(res.data)
+        console.log(res.data)
       }).catch((err) => console.log(err))
     }}, [user])
 
 
   return (
+    <AuthContext>
     <div className="App">
      <h2>Welcome to TempWise Assistant</h2>
      {profile ? (
@@ -54,6 +56,7 @@ function App() {
           <button onClick={() => login()}>Sign in with Google 🚀 </button>
         )}
     </div>
+    </AuthContext>
   );
 }
 
