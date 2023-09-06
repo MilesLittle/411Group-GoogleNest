@@ -1,16 +1,4 @@
-import React, { createContext, useState, useEffect } from "react";
-import axios from "axios";
+import React, { createContext } from "react";
 
-const AuthContext = createContext({})
-//export default ({ children }) => {
-//   const [currentUser, setCurrentUser] = useState(null)
-//    const [profile, setProfile] = useState(null)
-//    const [authenticated, setAuthenticated] = useState(false)
-
-/*    return (
-        <AuthContext.Provider value={{currentUser, setCurrentUser, authenticated, setAuthenticated, profile, setProfile}}>
-            { children }
-        </AuthContext.Provider>
-    );*/
-//}
+const AuthContext = createContext()
 export default AuthContext;
