@@ -68,14 +68,17 @@ function App() {
       'Authorization': `Bearer ${user.access_token}`
     }
   }).then(function (response) {
-    console.log(response);
+    setCurrentTemp(response.data.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius)
+    console.log(response.data.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius);
+    //setCurrentTemp(response.data.traits.{"sdm.devices.traits"}.Temperature.ambientTemperatureCelsius);
   });
-  }
+}
 
   const [user, setUser] = useState([]);
   const [profile, setProfile] = useState([]);
   const [access_token, setAccess_token] = useState([]);
   const [device_info, setDevice_info] = useState([]);
+  const [currentTemp, setCurrentTemp] = useState([]);
 
 
   const login = useGoogleLogin({onSuccess: (codeResponse) => setUser(codeResponse), 
@@ -85,7 +88,17 @@ function App() {
       setProfile(null);
   };
 
-  
+  useEffect(() =>
+   {if (currentTemp) {
+    axios.get('https://smartdevicemanagement.googleapis.com/v1/' + device_info.name, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${user.access_token}`
+    }
+   }).then(function (response) {
+    //setCurrentTemp(response.data.traits.sdm.devices.traits.Temperature.ambientTemperatureCelsius);
+   }).catch((e) => console.log(e))
+  }}, [currentTemp])
 
   useEffect(() => 
     {if (user) {
@@ -110,8 +123,11 @@ function App() {
           <h3>User Logged in</h3>
           <p>Name: {profile.name}</p>
           <p>Email Address: {profile.email}</p>
+          <p>Current Temp of House: {currentTemp}</p>
+          
           <button onClick={() => getNestDevices()}>Get Nest Devices</button>
           <button onClick={() => getNestTemp()}>Get House Temp</button>
+          
           <br />
           
           <br />
@@ -119,9 +135,8 @@ function App() {
         </div>
         ) : (
           <div>
+          
           <button onClick={() => login()}>Sign in with Google 🚀 </button>
-          <button onClick={() => redirect()}>Sign into Google Nest</button>
-          <button onClick={() => getNestTokens()}>Get Nest Token</button>
           
 
           
