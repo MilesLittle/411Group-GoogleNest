@@ -7,7 +7,7 @@ const Home = () => {
     return (
         <div className="App">
             <h1>Home</h1>
-            <h2>Welcome to TempWise Assistant</h2>
+            <div style={{fontSize: 50, margin: '50px' }}>Welcome to TempWise Assistant</div>
             {authenticated && profile ? (
                <div>
                 <img src={profile.picture} alt="user image" />

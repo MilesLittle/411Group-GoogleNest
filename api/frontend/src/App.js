@@ -15,7 +15,10 @@ const router = createBrowserRouter(
 )
 function App() {
   return (
-    <RouterProvider router={router} />
+    <>
+      {/*<h1>From App.js</h1>  Stuff we want on all pages can go here in App.js*/}
+      <RouterProvider router={router} />
+    </>
   );
 }
 
