@@ -68,7 +68,7 @@ function App() {
       'Authorization': `Bearer ${user.access_token}`
     }
   }).then(function (response) {
-    setCurrentTemp(response.data.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius)
+    setCurrentTemp(response.data.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius * (9 / 5) + 32)
     console.log(response.data.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius);
     //setCurrentTemp(response.data.traits.{"sdm.devices.traits"}.Temperature.ambientTemperatureCelsius);
   });
@@ -96,7 +96,7 @@ function App() {
       'Authorization': `Bearer ${user.access_token}`
     }
    }).then(function (response) {
-    //setCurrentTemp(response.data.traits.sdm.devices.traits.Temperature.ambientTemperatureCelsius);
+    setCurrentTemp(response.data.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius * (9 / 5) + 32);
    }).catch((e) => console.log(e))
   }}, [currentTemp])
 
@@ -123,7 +123,7 @@ function App() {
           <h3>User Logged in</h3>
           <p>Name: {profile.name}</p>
           <p>Email Address: {profile.email}</p>
-          <p>Current Temp of House: {currentTemp}</p>
+          <p>Current Temp of House: {(currentTemp)}</p>
           
           <button onClick={() => getNestDevices()}>Get Nest Devices</button>
           <button onClick={() => getNestTemp()}>Get House Temp</button>
