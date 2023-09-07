@@ -9,7 +9,7 @@ const Login = () => {
     const { currentUser, setCurrentUser, profile, setProfile, authenticated, setAuthenticated } = useContext(AuthContext)
     
     const login = useGoogleLogin({
-        onSuccess: (codeResponse) => { console.log(codeResponse); setCurrentUser(codeResponse); setAuthenticated(true);}, //token stuff
+        onSuccess: (codeResponse) => { console.log(codeResponse); setCurrentUser(codeResponse); setAuthenticated(true); navigate("/")}, //token stuff
         onError: (error) => console.log('Login Failed:', error)
     });
     const logOut = () => {
