@@ -4,7 +4,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import './index.css';
 //import App from './components/App
 import App from './App'
-import './css/index.css'
+//import './css/index.css'
 import AuthProvider from './Login/AuthProvider';
 import CustomTheme from './Theming/CustomTheme';
 

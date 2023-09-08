@@ -12,7 +12,7 @@ const AuthProvider = ({ children }) => {
         headers: {
           Authorization: `Bearer ${currentUser.access_token}`,
           Accept: 'application/json'
-        }
+        } //set access token in state from here later
       }).then((res) => {
         setProfile(res.data) //account stuff
         console.log(res.data)

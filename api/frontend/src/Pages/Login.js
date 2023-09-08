@@ -1,8 +1,16 @@
 import React, { useContext } from 'react';
-import '../App.css';
 import { googleLogout, useGoogleLogin } from "@react-oauth/google";
 import AuthContext from '../Login/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import Button from '@mui/material/Button';
+import GoogleIcon from '@mui/icons-material/Google';
+import Typography from '@mui/material/Typography';
+import Stack from '@mui/material/Stack';
+import Avatar from '@mui/material/Avatar';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Grow from "@mui/material/Grow";
+import '../css/Login.css'
 
 const Login = () => {
     const navigate = useNavigate()
@@ -10,6 +18,7 @@ const Login = () => {
     
     const login = useGoogleLogin({
         onSuccess: (codeResponse) => { console.log(codeResponse); setCurrentUser(codeResponse); setAuthenticated(true); navigate("/")}, //token stuff
+        //or set access token in state from here later
         onError: (error) => console.log('Login Failed:', error)
     });
     const logOut = () => {
@@ -22,22 +31,19 @@ const Login = () => {
         }
     } 
     return (
-        <div className="App">
-        <div style={{fontSize: 50, margin: '50px' }}>Welcome to TempWise Assistant</div>
-            {authenticated && profile ? (
-               <div>
-                <img src={profile.picture} alt="user image" />
-                <h3>User Logged in</h3>
-                <p>Name: {profile.name}</p>
-                <p>Email Address: {profile.email}</p>
-                <br />
-                <br />
-                <button onClick={logOut}>Log out</button>
-              </div>
-          ) : (
-            <button onClick={() => login() }>Sign in with Google 🚀 </button>
-          )}
-      </div>
+      <Stack direction="column" textAlign={'center'} spacing={4} m={8}>
+        <Grow in={true}><Typography fontSize={'3rem'}>Welcome to TempWise Assistant</Typography></Grow>
+         {authenticated && profile ? (
+            <Card sx={{ bgcolor: 'secondary.light', width: '200'}}>
+                <CardContent>
+                 <center><Avatar src={profile.picture} alt="User Image" sx={{ width: 60, height: 60, margin: '10px' }}/></center>
+                    <Typography fontSize={'1.5rem'}> {profile.name} </Typography>
+                    <Typography mb={2}> {profile.email} </Typography>
+                    <Button size="large" color="secondary" variant="contained" onClick={logOut}>Log out</Button>
+                </CardContent>
+            </Card>
+          ) : (<div><Grow in={true}><Button size="large" startIcon={<GoogleIcon />} color="secondary" variant="contained" onClick={() => login()}>Sign in to Google</Button></Grow></div>)}
+      </Stack>
     )
 }
 
