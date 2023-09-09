@@ -1,14 +1,10 @@
-/* Page where you display current Your Google Nests */
 
 function NestThermostat() 
 {
     return(
-
-        <div>
-
-        </div>
+        <div></div>
 
     ); 
 }
 
-export default NestThermostat(); 
+export default NestThermostat; 

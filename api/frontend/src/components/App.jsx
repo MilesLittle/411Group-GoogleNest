@@ -1,10 +1,13 @@
-import TempInfo from "./Tempinfo"
+//import TempInfo from "./Tempinfo"; 
+import ChangeThermostatLog from "../pages/ChangeThermostatLog"; 
+
 
 function App() {
 
   return (
     <div className='App'>
-      <TempInfo />
+
+      <ChangeThermostatLog />
 
     </div>
   );
