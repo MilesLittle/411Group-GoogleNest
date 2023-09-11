@@ -1,0 +1,4 @@
+body {
+    background: -webkit-gradient(linear, left top, left bottom, from(#7BF1A8), to(#D1FAE1)) fixed;
+    /*Somehow this gradient is being set on other pages besides Login.js despite not being imported there?*/
+}
