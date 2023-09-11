@@ -1,1 +1,15 @@
-﻿*.pyc
+
+*.pyc
+*.vsidx
+.suo
+.env
+.venv
+env/
+venv/
+\venv
+venv\
+ENV/
+env.bak/
+venv.bak/
+venv
+

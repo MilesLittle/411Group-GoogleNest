@@ -1,24 +1,26 @@
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import { Route, RouterProvider, createBrowserRouter, createRoutesFromElements } from "react-router-dom";
+import Home from "./Pages/Home";
+import Login from "./Pages/Login";
+import NotFound from "./Pages/NotFound";
+import NavBar from "./components/NavBar/NavBar";
 
+const router = createBrowserRouter(
+  createRoutesFromElements (
+    <>
+      <Route path="/login" element={<Login/>}/>
+      <Route path="/" element={<Home />}/>
+      <Route path="*" element={<NotFound />}/>
+    </>
+  )
+)
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+      {/*<h1>From App.js</h1>  Stuff we want on all pages can go here in App.js*/}
+      <NavBar/>
+      <RouterProvider router={router} />
+    </>
   );
 }
 
