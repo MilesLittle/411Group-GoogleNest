@@ -31,11 +31,9 @@ const Login = () => {
         }
     } 
 
-    var test = 'Text to test navbar is stickyText to test navbar is stickyText to test navbar is stickyText to test navbar is stickyText to test navbar is stickyText to test navbar is stickyText to test navbar is stickyText to test navbar is stickyText to test navbar is stickyText to test navbar is stickyText to test navbar is stickyText to test navbar is stickyText to test navbar is stickyText to test navbar is stickyText to test navbar is stickyText to test navbar is stickyText to test navbar is stickyText to test navbar is stickyText to test navbar is stickyText to test navbar is stickyText to test navbar is stickyText to test navbar is stickyText to test navbar is stickyText to test navbar is stickyText to test navbar is stickyText to test navbar is sticky'
     return (
       <Stack direction="column" textAlign={'center'} spacing={4} m={8}>
         <Grow in={true}><Typography fontSize={'3rem'}>Welcome to TempWise Assistant</Typography></Grow>
-        <Typography fontSize={'2rem'}>{test}</Typography>
          {authenticated && profile ? (
             <Card sx={{ bgcolor: 'secondary.light', width: '200'}}>
                 <CardContent>
