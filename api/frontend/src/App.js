@@ -4,11 +4,13 @@ import Home from "./Pages/Home";
 import Login from "./Pages/Login";
 import NotFound from "./Pages/NotFound";
 import NavBar from "./components/NavBar/NavBar";
+import Profile from "./Pages/Profile";
 
 const router = createBrowserRouter(
   createRoutesFromElements (
     <>
       <Route path="/login" element={<Login/>}/>
+      <Route path="/profile" element={<Profile />}/>
       <Route path="/" element={<Home />}/>
       <Route path="*" element={<NotFound />}/>
     </>
@@ -18,7 +20,7 @@ function App() {
   return (
     <>
       {/*<h1>From App.js</h1>  Stuff we want on all pages can go here in App.js*/}
-      <NavBar/>
+      <NavBar /> {/*Need to make Navbar aware of routes */}
       <RouterProvider router={router} />
     </>
   );

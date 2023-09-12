@@ -5,10 +5,13 @@ import Stack from '@mui/material/Stack';
 import Avatar from '@mui/material/Avatar';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
+import Button from "@mui/material/Button";
+import { Link } from 'react-router-dom';
 
 const Home = () => {
     const { currentUser, setCurrentUser, profile, setProfile, authenticated, setAuthenticated } = useContext(AuthContext)
     return (
+        <>
         <Stack direction="column" textAlign={'center'} spacing={4} m={5}>
         <Typography fontSize={'3rem'}>Home</Typography>
          {authenticated && profile ? (
@@ -21,7 +24,9 @@ const Home = () => {
                 </CardContent>
             </Card>
           ) : (<div>You're not logged in.</div>)}
+          <Link to="/profile"><Button color="secondary" variant="contained">Link test</Button></Link>
       </Stack>
+      </>
     )
 }
 
