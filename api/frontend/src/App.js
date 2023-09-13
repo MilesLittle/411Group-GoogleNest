@@ -1,27 +1,19 @@
 import React from "react";
-import { Route, RouterProvider, createBrowserRouter, createRoutesFromElements } from "react-router-dom";
 import Home from "./Pages/Home";
-import Login from "./Pages/Login";
 import NotFound from "./Pages/NotFound";
 import NavBar from "./components/NavBar/NavBar";
 import Profile from "./Pages/Profile";
-
-const router = createBrowserRouter(
-  createRoutesFromElements (
-    <>
-      <Route path="/login" element={<Login/>}/>
-      <Route path="/profile" element={<Profile />}/>
-      <Route path="/" element={<Home />}/>
-      <Route path="*" element={<NotFound />}/>
-    </>
-  )
-)
+import { Routes, Route } from "react-router-dom";
 function App() {
   return (
     <>
-      {/*<h1>From App.js</h1>  Stuff we want on all pages can go here in App.js*/}
-      <NavBar /> {/*Need to make Navbar aware of routes */}
-      <RouterProvider router={router} />
+      {/* Stuff we want on all pages can go here in App.js*/}
+      <NavBar />
+      <Routes>
+        <Route path="/profile" element={<Profile />}/>
+        <Route path="/" element={<Home />}/>
+        <Route path="*" element={<NotFound />}/>
+      </Routes>
     </>
   );
 }
