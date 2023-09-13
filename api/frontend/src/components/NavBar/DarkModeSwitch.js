@@ -1,7 +1,7 @@
 import React from "react";
 import Switch from '@mui/material/Switch';
 import { styled } from '@mui/material/styles';
-import Brightness5Icon from '@mui/icons-material/Brightness5';
+
 const DarkModeSwitch = styled(Switch)(({ theme }) => ({
     width: 62,
     height: 34,
