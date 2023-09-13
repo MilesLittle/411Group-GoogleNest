@@ -13,7 +13,7 @@ const Home = () => {
     const { profile, setProfile, authenticated, setAuthenticated, setCurrentUser } = useContext(AuthContext)
     const navigate = useNavigate()
     const login = useGoogleLogin({
-        onSuccess: (codeResponse) => { console.log(codeResponse); setCurrentUser(codeResponse); setAuthenticated(true); navigate("/profile");}, //token stuff
+        onSuccess: (codeResponse) => { console.log(codeResponse); setCurrentUser(codeResponse); setAuthenticated(true);}, //token stuff
         //or set access token in state from here later
         onError: (error) => console.log('Login Failed:', error)
     });

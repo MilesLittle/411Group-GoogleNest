@@ -17,7 +17,7 @@ const NavBar = () => {
   const { setCurrentUser, profile, authenticated, setAuthenticated } = useContext(AuthContext)
     const navigate = useNavigate()
     const login = useGoogleLogin({
-        onSuccess: (codeResponse) => { console.log(codeResponse); setCurrentUser(codeResponse); setAuthenticated(true); navigate("/profile");}, //token stuff
+        onSuccess: (codeResponse) => { console.log(codeResponse); setCurrentUser(codeResponse); setAuthenticated(true);}, //token stuff
         //or set access token in state from here later
         onError: (error) => console.log('Login Failed:', error)
     });
@@ -26,14 +26,19 @@ const NavBar = () => {
       <AppBar position="sticky" sx={{ borderRadius: '30px' }} elevation={10}> 
         <Toolbar>
         <Grid container direction="row" justifyContent="space-between" alignItems="center">
-          <Grid item>
-            <DarkModeSwitch />
+          <Grid item width="214px"> 
+          {/*Dark mode switch item is matching width of profile card item so the 2nd item is centered using 
+           justifyContent='space-between'. Could also do marginRight: 'auto' on the 1st flex item and marginLeft: 'auto'
+           on the 3rd flex item.*/}
+            <DarkModeSwitch /> 
           </Grid>
+           <Card sx={{ padding: '8px', backgroundColor: 'secondary.main'}}>
             <Grid item>
-              <Typography variant="h6" style={{ textDecoration: 'none' }}>
-                No logo yet, and yes, I know this isn't centered
+              <Typography fontSize={'1.3rem'} sx={{ textDecoration: 'none', color: 'secondary.light' }}>
+                No logo yet
               </Typography>
             </Grid>
+           </Card>
           <Grid item>
             { authenticated && profile ? 
               (<Link to="/profile" style={{ textDecoration: 'none' }}>
@@ -43,7 +48,7 @@ const NavBar = () => {
                       <Avatar alt="profile pic" src={profile.picture} /> 
                     </Grid>
                     <Grid item>
-                      <Typography sx={{ color: 'secondary.light' }}>{ profile.name }</Typography> 
+                      <Typography sx={{ color: 'secondary.light', marginLeft: '25px' }}>{ profile.name }</Typography> 
                     </Grid> 
                   </Grid>
                 </Card>
@@ -55,7 +60,7 @@ const NavBar = () => {
                     <Avatar alt="google" sx={{ bgcolor: 'secondary.main' }}><GoogleIcon /></Avatar>
                   </Grid>
                   <Grid item>
-                    <Typography sx={{ color: 'secondary.light' }}>Sign in to Google</Typography> 
+                    <Typography sx={{ color: 'secondary.light', marginLeft: '15px' }}>Sign in to Google</Typography> 
                   </Grid> 
                 </Grid>
               </Card>
