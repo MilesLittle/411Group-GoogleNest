@@ -7,15 +7,19 @@ import App from './App'
 //import './css/index.css'
 import AuthProvider from './Login/AuthProvider';
 import CustomTheme from './Theming/CustomTheme';
+import { BrowserRouter } from 'react-router-dom';
 
 // @ts-ignore
 const root = ReactDOM.createRoot(document.getElementById('root'));
+
 root.render(
 <GoogleOAuthProvider clientId='589825515650-ej6sq8icgc3itevo7b731oes8q1tqk4u.apps.googleusercontent.com'>
   <React.StrictMode>
     <AuthProvider>
       <CustomTheme>
-        <App />
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
       </CustomTheme>
     </AuthProvider>
   </React.StrictMode>
