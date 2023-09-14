@@ -35,7 +35,7 @@ const NavBar = () => {
            <Card sx={{ padding: '8px', backgroundColor: 'secondary.main'}}>
             <Grid item>
               <Typography fontSize={'1.3rem'} sx={{ textDecoration: 'none', color: 'secondary.light' }}>
-                No logo yet
+                No logo (yet)
               </Typography>
             </Grid>
            </Card>
