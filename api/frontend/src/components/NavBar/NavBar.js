@@ -47,7 +47,7 @@ const NavBar = () => {
                     <Grid item>
                       <Avatar alt="profile pic" src={profile.picture} /> 
                     </Grid>
-                    <Grid item>
+                    <Grid item> {/*How will this look with longer names? Truncate (...) longer ones? */}
                       <Typography sx={{ color: 'secondary.light', marginLeft: '25px' }}>{ profile.name }</Typography> 
                     </Grid> 
                   </Grid>

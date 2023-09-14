@@ -6,11 +6,30 @@ import Button from '@mui/material/Button';
 import { googleLogout, useGoogleLogin } from "@react-oauth/google";
 import GoogleIcon from '@mui/icons-material/Google'
 import Grow from "@mui/material/Grow";
+import Grid from '@mui/material/Grid';
+import Container from '@mui/material/Container';
 import '../css/Login.css'
 import { useNavigate } from "react-router-dom";
+import ThermoCard from "../components/ThermoCard/ThermoCard";
 
 const Home = () => {
     const { profile, setProfile, authenticated, setAuthenticated, setCurrentUser } = useContext(AuthContext)
+
+    const nests = [  //mock data
+      {
+        id: 1,
+        deviceName: "DeviceName1",
+        type: "Nest Thermostat",
+        location: "Home1 - Hallway"
+      }, 
+      {
+        id: 2,
+        deviceName: "DeviceName2",
+        type: "Nest Learning Thermostat",
+        location: "Home2 - LivingRoom"
+      }
+    ];
+
     const navigate = useNavigate()
     const login = useGoogleLogin({
         onSuccess: (codeResponse) => { console.log(codeResponse); setCurrentUser(codeResponse); setAuthenticated(true);}, //token stuff
@@ -30,22 +49,33 @@ const Home = () => {
 
     return (
       <>
-      <Stack direction="column" textAlign={'center'} spacing={4} m={8}>
          {authenticated && profile ? (
             <>
-            <Grow in={true}><Typography fontSize={'3rem'}>Your Nest Thermostats</Typography></Grow>
+              <Stack direction="column" textAlign={'center'} spacing={4} m={8}>
+                <Grow in={true}><Typography fontSize={'3rem'}>Your Nest Thermostats</Typography></Grow>
+              </Stack>
+              <Container sx={{ marginBottom: '2rem' }}> {/*Map thermostats in this container/grid later */}
+                <Grid container direction="row" justifyContent="space-around">
+                  { nests ? (nests.map((nest) => {
+                    return (
+                      <Grid item>
+                        <ThermoCard id={nest.id} deviceName={nest.deviceName} type={nest.type} location={nest.location} />
+                      </Grid>
+                    )
+                  })) : (<>You have no Nest thermostats associated with your account.</>) }
+                </Grid>
+              </Container>
             </>
           ) : (
-            <>
+            <Stack direction="column" textAlign={'center'} spacing={4} m={8}>
               <Grow in={true}><Typography fontSize={'3rem'}>Welcome to TempWise Assistant</Typography></Grow>
               <div>
                 <Grow in={true}>
                     <Button size="large" startIcon={<GoogleIcon />} color="secondary" variant="contained" onClick={() => login()}>Sign in to Google</Button>
                 </Grow>
               </div>
-            </>
+            </Stack> 
           )} 
-        </Stack> 
       </>
     )
 }
