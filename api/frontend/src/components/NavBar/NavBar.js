@@ -34,9 +34,11 @@ const NavBar = () => {
           </Grid>
            <Card sx={{ padding: '8px', backgroundColor: 'secondary.main'}}>
             <Grid item>
+              <div onClick={() => navigate("/")} style={{ cursor: 'pointer'}}>
               <Typography fontSize={'1.3rem'} sx={{ textDecoration: 'none', color: 'secondary.light' }}>
                 No logo (yet)
               </Typography>
+              </div>
             </Grid>
            </Card>
           <Grid item>
