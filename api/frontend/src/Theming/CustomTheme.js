@@ -1,8 +1,11 @@
-import React from "react";
+import React, { useContext } from "react";
 import { createTheme, ThemeProvider } from '@mui/material/styles'
+import DarkModeSwitchContext from "../components/NavBar/Dark Mode/DarkModeSwitchContext";
 
 const CustomTheme = ({children}) => {
-    const lighttheme = createTheme({ //take text color into account with themes?
+    const { switched, setSwitched } = useContext(DarkModeSwitchContext) 
+
+    const lighttheme = createTheme({
         palette: {
            primary: { //primary components (some shade of green w black text)
                 main: '#7BF1A8',
@@ -20,12 +23,28 @@ const CustomTheme = ({children}) => {
             fontFamily: 'Google Sans' //want Product Sans
         }
     })
-    //make a dark theme and pass that (const darktheme = createTheme({})). Switch between theme and darktheme with a context
-    //state above this controlled by a switch in the navbar, like how login state is set with context api hooks
-    //const [darkMode, setDarkMode] = useState(false)
-    // <ThemeProvider theme={{darkmode ? (darktheme) : (theme)}}
+
+    const darktheme = createTheme({ //test
+        palette: {
+           primary: { 
+                main: '#66e0ff',
+                light: '#ccf5ff',
+                dark: '#007a99',
+                contrastText: '#000000'
+           },
+           secondary: {
+                main: '#000000',
+                light: '#66e0ff',
+                contrastText: '#FFFFFF'
+           }
+        },
+        typography: {
+            fontFamily: 'Google Sans'
+        }
+    })
+
     return (
-        <ThemeProvider theme={lighttheme}>
+        <ThemeProvider theme={ switched ? darktheme : lighttheme }>
             { children }
         </ThemeProvider>
     )
