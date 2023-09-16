@@ -8,7 +8,6 @@ import GoogleIcon from '@mui/icons-material/Google'
 import Grow from "@mui/material/Grow";
 import Grid from '@mui/material/Grid';
 import Container from '@mui/material/Container';
-import '../css/Login.css'
 import { useNavigate } from "react-router-dom";
 import ThermoCard from "../components/ThermoCard/ThermoCard";
 

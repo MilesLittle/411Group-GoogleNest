@@ -32,10 +32,10 @@ const NavBar = () => {
            on the 3rd flex item.*/}
             <DarkModeSwitch /> 
           </Grid>
-           <Card sx={{ padding: '8px', backgroundColor: 'secondary.main'}}>
+           <Card sx={{ padding: '8px', backgroundColor: '#000000'}}>
             <Grid item>
               <div onClick={() => navigate("/")} style={{ cursor: 'pointer'}}>
-              <Typography fontSize={'1.3rem'} sx={{ textDecoration: 'none', color: 'secondary.light' }}>
+              <Typography fontSize={'1.3rem'} sx={{ textDecoration: 'none', color: '#FFFFFF' }}>
                 No logo (yet)
               </Typography>
               </div>
@@ -44,25 +44,25 @@ const NavBar = () => {
           <Grid item>
             { authenticated && profile ? 
               (<Link to="/profile" style={{ textDecoration: 'none' }}>
-                <Card sx={{ padding: '3px', borderRadius: '30px', backgroundColor: 'secondary.main', width: '13rem'}}>
+                <Card sx={{ padding: '3px', borderRadius: '30px', backgroundColor: '#000000', width: '13rem'}}>
                   <Grid container direction="row" alignItems="center">
                     <Grid item>
                       <Avatar alt="profile pic" src={profile.picture} /> 
                     </Grid>
                     <Grid item> {/*How will this look with longer names? Truncate (...) longer ones? */}
-                      <Typography sx={{ color: 'secondary.light', marginLeft: '25px' }}>{ profile.name }</Typography> 
+                      <Typography sx={{ color: '#FFFFFF', marginLeft: '25px' }}>{ profile.name }</Typography> 
                     </Grid> 
                   </Grid>
                 </Card>
               </Link>) : 
             (<div onClick={() => login()} style={{ cursor: 'pointer'}}>
-              <Card sx={{ padding: '3px', borderRadius: '30px', backgroundColor: 'secondary.main', width: '13rem'}}>
+              <Card sx={{ padding: '3px', borderRadius: '30px', backgroundColor: '#000000', width: '13rem'}}>
                 <Grid container direction="row" alignItems="center">
                   <Grid item>
-                    <Avatar alt="google" sx={{ bgcolor: 'secondary.main' }}><GoogleIcon /></Avatar>
+                    <Avatar alt="google" sx={{ bgcolor: '#000000' }}><GoogleIcon /></Avatar>
                   </Grid>
                   <Grid item>
-                    <Typography sx={{ color: 'secondary.light', marginLeft: '15px' }}>Sign in to Google</Typography> 
+                    <Typography sx={{ color: '#FFFFFF', marginLeft: '15px' }}>Sign in to Google</Typography> 
                   </Grid> 
                 </Grid>
               </Card>

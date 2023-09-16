@@ -2,15 +2,18 @@ import React from "react";
 import { createTheme, ThemeProvider } from '@mui/material/styles'
 
 const CustomTheme = ({children}) => {
-    const theme = createTheme({ //take text color into account with themes?
+    const lighttheme = createTheme({ //take text color into account with themes?
         palette: {
-           primary: {
+           primary: { //primary components (some shade of green w black text)
                 main: '#7BF1A8',
-                light: '#D1FAE1'
+                light: '#D1FAE1',
+                dark: '#5DEE95',
+                contrastText: '#000000'
            },
-           secondary: {
+           secondary: { //secondary components (black w white or green text)
                 main: '#000000',
-                light: '#FFFFFF'
+                light: '#7BF1A8',
+                contrastText: '#FFFFFF'
            }
         },
         typography: {
@@ -22,7 +25,7 @@ const CustomTheme = ({children}) => {
     //const [darkMode, setDarkMode] = useState(false)
     // <ThemeProvider theme={{darkmode ? (darktheme) : (theme)}}
     return (
-        <ThemeProvider theme={theme}>
+        <ThemeProvider theme={lighttheme}>
             { children }
         </ThemeProvider>
     )
