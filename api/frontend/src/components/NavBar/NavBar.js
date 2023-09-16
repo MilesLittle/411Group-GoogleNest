@@ -4,17 +4,19 @@ import Toolbar from '@mui/material/Toolbar';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
-import DarkModeSwitch from './DarkModeSwitch';
+import DarkModeSwitch from './Dark Mode/DarkModeSwitch';
 import Card from '@mui/material/Card';
 import Avatar from '@mui/material/Avatar';
 import GoogleIcon from '@mui/icons-material/Google';
 import AuthContext from '../../Login/AuthContext';
+import DarkModeSwitchContext from './Dark Mode/DarkModeSwitchContext';
 import { Link } from 'react-router-dom';
 import { useGoogleLogin } from "@react-oauth/google";
 import { useNavigate } from 'react-router-dom';
 
 const NavBar = () => {
   const { setCurrentUser, profile, authenticated, setAuthenticated } = useContext(AuthContext)
+  const { switched, setSwitched } = useContext(DarkModeSwitchContext)
     const navigate = useNavigate()
     const login = useGoogleLogin({
         onSuccess: (codeResponse) => { console.log(codeResponse); setCurrentUser(codeResponse); setAuthenticated(true);}, //token stuff
@@ -30,7 +32,7 @@ const NavBar = () => {
           {/*Dark mode switch item is matching width of profile card item so the 2nd item is centered using 
            justifyContent='space-between'. Could also do marginRight: 'auto' on the 1st flex item and marginLeft: 'auto'
            on the 3rd flex item.*/}
-            <DarkModeSwitch /> 
+            <DarkModeSwitch checked={switched} onChange={(e) => setSwitched(e.target.checked)} /> 
           </Grid>
            <Card sx={{ padding: '8px', backgroundColor: '#000000'}}>
             <Grid item>
