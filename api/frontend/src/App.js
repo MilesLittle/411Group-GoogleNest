@@ -5,6 +5,7 @@ import NavBar from "./components/NavBar/NavBar";
 import Profile from "./Pages/Profile";
 import ThermoDashboard from "./Pages/ThermoDashboard";
 import { Routes, Route } from "react-router-dom";
+
 function App() {
   return (
     <>
