@@ -10,9 +10,11 @@ import Grid from '@mui/material/Grid';
 import Container from '@mui/material/Container';
 import { useNavigate } from "react-router-dom";
 import ThermoCard from "../components/ThermoCard/ThermoCard";
+import DarkModeSwitchContext from "../components/NavBar/Dark Mode/DarkModeSwitchContext";
 
 const Home = () => {
     const { profile, setProfile, authenticated, setAuthenticated, setCurrentUser } = useContext(AuthContext)
+    const { switched, setSwitched } = useContext(DarkModeSwitchContext)
 
     const nests = [  //mock data
       {
@@ -51,9 +53,9 @@ const Home = () => {
          {authenticated && profile ? (
             <>
               <Stack direction="column" textAlign={'center'} spacing={4} m={8}>
-                <Grow in={true}><Typography fontSize={'3rem'}>Your Nest Thermostats</Typography></Grow>
+                <Grow in={true}><Typography variant="h3">Your Nest Thermostats</Typography></Grow>
               </Stack>
-              <Container sx={{ marginBottom: '2rem' }}> {/*Map thermostats in this container/grid later */}
+              <Container sx={{ marginBottom: '2rem' }}>
                 <Grid container direction="row" justifyContent="space-around">
                   { nests ? (nests.map((nest) => {
                     return (
@@ -67,7 +69,7 @@ const Home = () => {
             </>
           ) : (
             <Stack direction="column" textAlign={'center'} spacing={4} m={8}>
-              <Grow in={true}><Typography fontSize={'3rem'}>Welcome to TempWise Assistant</Typography></Grow>
+              <Grow in={true}><Typography variant="h3">Welcome to TempWise Assistant</Typography></Grow>
               <div>
                 <Grow in={true}>
                     <Button size="large" startIcon={<GoogleIcon />} color="secondary" variant="contained" onClick={() => login()}>Sign in to Google</Button>

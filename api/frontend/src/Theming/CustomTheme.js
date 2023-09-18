@@ -24,22 +24,25 @@ const CustomTheme = ({children}) => {
         }
     })
 
-    const darktheme = createTheme({ //test
+    const darktheme = createTheme({ 
         palette: {
            primary: { 
-                main: '#66e0ff',
-                light: '#ccf5ff',
-                dark: '#007a99',
-                contrastText: '#000000'
+                main: '#7BF1A8',
+                light: '#D1FAE1',
+                dark: '#5DEE95',
+                contrastText: '#7BF1A8'
            },
            secondary: {
                 main: '#000000',
-                light: '#66e0ff',
+                light: '#7BF1A8',
                 contrastText: '#FFFFFF'
            }
         },
         typography: {
-            fontFamily: 'Google Sans'
+            h3: {
+                color: '#7BF1A8'
+            }, 
+            fontFamily: 'Google Sans',
         }
     })
 
