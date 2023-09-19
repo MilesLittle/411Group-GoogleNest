@@ -6,10 +6,12 @@ import Avatar from '@mui/material/Avatar';
 import Button from "@mui/material/Button";
 import { useNavigate } from 'react-router-dom';
 import Grid from "@mui/material/Grid";
+import DarkModeSwitchContext from "../components/NavBar/Dark Mode/DarkModeSwitchContext";
 
 const Profile = () => {
     const navigate = useNavigate()
     const { profile, setProfile, authenticated, setAuthenticated } = useContext(AuthContext)
+    const { switched, setSwitched } = useContext(DarkModeSwitchContext)
 
     const logOut = () => {
         try {
@@ -30,10 +32,10 @@ const Profile = () => {
                         <Avatar src={profile.picture} alt="User Image" sx={{ width: 150, height: 150 }}/>
                     </Grid>
                     <Grid item>
-                        <Typography fontSize={'3rem'}>Hi, {profile.name} </Typography>
+                        <Typography fontSize={'3rem'} color={ switched && '#7BF1A8' }>Hi, {profile.name} </Typography>
                     </Grid>
                     <Grid item>
-                        <Typography fontSize={'1.2rem'}> {profile.email} </Typography>
+                        <Typography fontSize={'1.2rem'} color={ switched && '#7BF1A8' }> {profile.email} </Typography>
                     </Grid>
                     <Grid item>
                         <Grid container direction="row" justifyContent="space-around" alignItems="center" spacing={3} mt={1}>
