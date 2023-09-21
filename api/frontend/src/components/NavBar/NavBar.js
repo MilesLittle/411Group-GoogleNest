@@ -15,12 +15,11 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { useNavigate } from 'react-router-dom';
 
 const NavBar = () => {
-  const { setCurrentUser, profile, authenticated, setAuthenticated } = useContext(AuthContext)
+  const { setAuthTokenDetails, googleAccountInfo } = useContext(AuthContext)
   const { switched, setSwitched } = useContext(DarkModeSwitchContext)
     const navigate = useNavigate()
     const login = useGoogleLogin({
-        onSuccess: (codeResponse) => { console.log(codeResponse); setCurrentUser(codeResponse); setAuthenticated(true);}, //token stuff
-        //or set access token in state from here later
+        onSuccess: (codeResponse) => { console.log(codeResponse); setAuthTokenDetails(codeResponse);},
         onError: (error) => console.log('Login Failed:', error)
     });
   return (
@@ -44,15 +43,15 @@ const NavBar = () => {
             </Grid>
            </Card>
           <Grid item>
-            { authenticated && profile ? 
+            { googleAccountInfo ? 
               (<Link to="/profile" style={{ textDecoration: 'none' }}>
                 <Card sx={{ padding: '3px', borderRadius: '30px', backgroundColor: '#000000', width: '13rem'}}>
                   <Grid container direction="row" alignItems="center">
                     <Grid item>
-                      <Avatar alt="profile pic" src={profile.picture} /> 
+                      <Avatar alt="profile pic" src={googleAccountInfo.picture} /> 
                     </Grid>
                     <Grid item> {/*How will this look with longer names? Truncate (...) longer ones? */}
-                      <Typography sx={{ color: '#FFFFFF', marginLeft: '25px' }}>{ profile.name }</Typography> 
+                      <Typography sx={{ color: '#FFFFFF', marginLeft: '25px' }}>{ googleAccountInfo.name }</Typography> 
                     </Grid> 
                   </Grid>
                 </Card>

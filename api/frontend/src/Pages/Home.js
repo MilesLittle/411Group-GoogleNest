@@ -3,18 +3,15 @@ import AuthContext from '../Login/AuthContext';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
-import { googleLogout, useGoogleLogin } from "@react-oauth/google";
+import { useGoogleLogin } from "@react-oauth/google";
 import GoogleIcon from '@mui/icons-material/Google'
 import Grow from "@mui/material/Grow";
 import Grid from '@mui/material/Grid';
 import Container from '@mui/material/Container';
-import { useNavigate } from "react-router-dom";
 import ThermoCard from "../components/ThermoCard/ThermoCard";
-import DarkModeSwitchContext from "../components/NavBar/Dark Mode/DarkModeSwitchContext";
 
 const Home = () => {
-    const { profile, setProfile, authenticated, setAuthenticated, setCurrentUser } = useContext(AuthContext)
-    const { switched, setSwitched } = useContext(DarkModeSwitchContext)
+    const { setAuthTokenDetails, googleAccountInfo } = useContext(AuthContext)
 
     const nests = [  //mock data
       {
@@ -31,26 +28,14 @@ const Home = () => {
       }
     ];
 
-    const navigate = useNavigate()
     const login = useGoogleLogin({
-        onSuccess: (codeResponse) => { console.log(codeResponse); setCurrentUser(codeResponse); setAuthenticated(true);}, //token stuff
-        //or set access token in state from here later
+        onSuccess: (codeResponse) => { console.log(codeResponse); setAuthTokenDetails(codeResponse);}, 
         onError: (error) => console.log('Login Failed:', error)
     });
-    const logOut = () => {
-        try {
-            googleLogout()
-            setProfile(null)
-            setAuthenticated(false)
-
-        } catch(err) {
-            console.log(err)
-        }
-    } 
 
     return (
       <>
-         {authenticated && profile ? (
+         {googleAccountInfo ? (
             <>
               <Stack direction="column" textAlign={'center'} spacing={4} m={8}>
                 <Grow in={true}><Typography variant="h3">Your Nest Thermostats</Typography></Grow>

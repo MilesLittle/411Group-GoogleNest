@@ -3,7 +3,7 @@ import { createTheme, ThemeProvider } from '@mui/material/styles'
 import DarkModeSwitchContext from "../components/NavBar/Dark Mode/DarkModeSwitchContext";
 
 const CustomTheme = ({children}) => {
-    const { switched, setSwitched } = useContext(DarkModeSwitchContext) 
+    const { switched } = useContext(DarkModeSwitchContext) 
 
     const lighttheme = createTheme({
         palette: {

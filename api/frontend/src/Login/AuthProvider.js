@@ -3,24 +3,24 @@ import AuthContext from "./AuthContext";
 import axios from 'axios';
 
 const AuthProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(null)
-  const [profile, setProfile] = useState(null)
-  const [authenticated, setAuthenticated] = useState(false)
+  const [authTokenDetails, setAuthTokenDetails] = useState(null)
+  const [googleAccountInfo, setGoogleAccountInfo] = useState(null)
   useEffect(() => 
-    {if (currentUser) {
-      axios.get(`https://www.googleapis.com/oauth2/v1/userinfo?access_token=${currentUser.access_token}`, {
+    {if (authTokenDetails) {
+      axios.get(`https://www.googleapis.com/oauth2/v1/userinfo?access_token=${authTokenDetails.access_token}`, {
         headers: {
-          Authorization: `Bearer ${currentUser.access_token}`,
+          Authorization: `Bearer ${authTokenDetails.access_token}`,
           Accept: 'application/json'
-        } //set access token in state from here later
+        }
       }).then((res) => {
-        setProfile(res.data) //account stuff
+        setGoogleAccountInfo(res.data)
         console.log(res.data)
+        console.log(res.status)
       }).catch((err) => console.log(err))
-    }}, [currentUser])
+    }}, [authTokenDetails])
 
   return (
-    <AuthContext.Provider value={{currentUser, setCurrentUser, profile, setProfile, authenticated, setAuthenticated}}>
+    <AuthContext.Provider value={{authTokenDetails, setAuthTokenDetails, googleAccountInfo, setGoogleAccountInfo }}>
         {children}
     </AuthContext.Provider>
   )
