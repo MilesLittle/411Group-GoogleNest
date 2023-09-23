@@ -25,8 +25,6 @@ const AuthProvider = ({ children }) => {
         localStorage.setItem("authTokenDetails", JSON.stringify(authTokenDetails))
         console.log(JSON.parse(localStorage.getItem("authTokenDetails")))
         window.location.href = `https://nestservices.google.com/u/${authTokenDetails.authuser}/partnerconnections/f4f5bdc3-964c-466b-bf80-9508f2709ad5/auth?redirect_uri=http://localhost:3000&access_type=offline&prompt=consent&client_id=589825515650-ej6sq8icgc3itevo7b731oes8q1tqk4u.apps.googleusercontent.com&response_type=code&scope=https://www.googleapis.com/auth/sdm.service`;
-        //the problem is that window.location stuff causes page refreshes and react rerenders - logged in user is lost. 
-        //localStorage? open in smaller window like the login?
       }).catch((err) => console.log(err))
     }}, [hasAuth]) //putting authTokenDetails in useeffect and also setting it from localStorage in useeffect causes endless
     //loop. Avoiding it using hasAuth

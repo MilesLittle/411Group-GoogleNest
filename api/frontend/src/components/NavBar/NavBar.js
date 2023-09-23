@@ -15,11 +15,11 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { useNavigate } from 'react-router-dom';
 
 const NavBar = () => {
-  const { setAuthTokenDetails, googleAccountInfo } = useContext(AuthContext)
+  const { setAuthTokenDetails, googleAccountInfo, setHasAuth } = useContext(AuthContext)
   const { switched, setSwitched } = useContext(DarkModeSwitchContext)
     const navigate = useNavigate()
     const login = useGoogleLogin({
-        onSuccess: (codeResponse) => { console.log(codeResponse); setAuthTokenDetails(codeResponse);},
+        onSuccess: (codeResponse) => { console.log(codeResponse); setAuthTokenDetails(codeResponse); setHasAuth(true);},
         onError: (error) => console.log('Login Failed:', error)
     });
   return (

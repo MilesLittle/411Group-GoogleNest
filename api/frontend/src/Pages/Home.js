@@ -9,7 +9,6 @@ import Grow from "@mui/material/Grow";
 import Grid from '@mui/material/Grid';
 import Container from '@mui/material/Container';
 import ThermoCard from "../components/ThermoCard/ThermoCard";
-import DarkModeSwitchContext from "../components/NavBar/Dark Mode/DarkModeSwitchContext";
 import axios from 'axios';
 import { useLocation } from "react-router-dom";
 
@@ -53,21 +52,11 @@ const Home = () => {
       }
     }, [])
 
-    const login = useGoogleLogin({ //add new stuff to navbar login too
+    const login = useGoogleLogin({
         onSuccess: (codeResponse) => { console.log(codeResponse); setAuthTokenDetails(codeResponse); setHasAuth(true);},
         onError: (error) => console.log('Login Failed:', error)
     });
 
-    //Logins into Google Nest different from google login
-    const loginNest = () => {
-      try {
-        window.location.href = 'https://nestservices.google.com/u/1/partnerconnections/f4f5bdc3-964c-466b-bf80-9508f2709ad5/auth?redirect_uri=http://localhost:3000&access_type=offline&prompt=consent&client_id=589825515650-ej6sq8icgc3itevo7b731oes8q1tqk4u.apps.googleusercontent.com&response_type=code&scope=https://www.googleapis.com/auth/sdm.service';
-      } catch (e){
-        console.log(e);
-      }
-    }
-
-    //This should allow you to get the access token for the nest to read the data
 useEffect(() => 
 {
   const NestLoginAsync = async () => 
@@ -190,11 +179,7 @@ console.log(thermInfo);
               <div>
                 <Grow in={true}>
                     <Button size="large" startIcon={<GoogleIcon />} color="secondary" variant="contained" onClick={() => login()}>Sign in to Google</Button>
-                    
                 </Grow>
-
-                <Button size="large" startIcon={<GoogleIcon />} color="secondary" variant="contained" onClick={() => loginNest()}>Sign in to Google Nest</Button>
-
               </div>
             </Stack> 
           )} 
