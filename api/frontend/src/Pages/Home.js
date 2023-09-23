@@ -3,12 +3,11 @@ import AuthContext from '../Login/AuthContext';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
-import { googleLogout, useGoogleLogin } from "@react-oauth/google";
+import { useGoogleLogin } from "@react-oauth/google";
 import GoogleIcon from '@mui/icons-material/Google'
 import Grow from "@mui/material/Grow";
 import Grid from '@mui/material/Grid';
 import Container from '@mui/material/Container';
-import { redirect, useNavigate } from "react-router-dom";
 import ThermoCard from "../components/ThermoCard/ThermoCard";
 import DarkModeSwitchContext from "../components/NavBar/Dark Mode/DarkModeSwitchContext";
 import axios from 'axios';
@@ -21,8 +20,7 @@ const Home = () => {
     const [devices, setDevices] = useState(null);
     const [thermInfo, setThermInfo] = useState(null);
 
-    const { profile, setProfile, authenticated, setAuthenticated, setCurrentUser } = useContext(AuthContext)
-    const { switched, setSwitched } = useContext(DarkModeSwitchContext)
+    const { setAuthTokenDetails, googleAccountInfo } = useContext(AuthContext)
 
     const nests = [  //mock data
       {
@@ -39,22 +37,11 @@ const Home = () => {
       }
     ];
 
-    const navigate = useNavigate()
     const login = useGoogleLogin({
-        onSuccess: (codeResponse) => { console.log(codeResponse); setCurrentUser(codeResponse); setAuthenticated(true);}, //token stuff
+        onSuccess: (codeResponse) => { console.log(codeResponse); setAuthTokenDetails(codeResponse);},
         //or set access token in state from here later
         onError: (error) => console.log('Login Failed:', error)
     });
-    const logOut = () => {
-        try {
-            googleLogout()
-            setProfile(null)
-            setAuthenticated(false)
-
-        } catch(err) {
-            console.log(err)
-        }
-    } 
 
     //Logins into Google Nest different from google login
     const loginNest = () => {
@@ -163,7 +150,7 @@ console.log(thermInfo);
 
     return (
       <>
-         {authenticated && profile ? (
+         {googleAccountInfo ? (
             <>
               <Stack direction="column" textAlign={'center'} spacing={4} m={8}>
                 <Grow in={true}><Typography variant="h3">Your Nest Thermostats</Typography></Grow>
@@ -191,7 +178,7 @@ console.log(thermInfo);
                     
                 </Grow>
 
-                <Button size="large" startIcon={<GoogleIcon />} color="secondary" variant="contained" onClick={() => loginNest()}>Sign in to Google</Button>
+                <Button size="large" startIcon={<GoogleIcon />} color="secondary" variant="contained" onClick={() => loginNest()}>Sign in to Google Nest</Button>
 
               </div>
             </Stack> 
