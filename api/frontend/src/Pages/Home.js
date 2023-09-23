@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import AuthContext from '../Login/AuthContext';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
@@ -11,7 +11,7 @@ import Container from '@mui/material/Container';
 import ThermoCard from "../components/ThermoCard/ThermoCard";
 import DarkModeSwitchContext from "../components/NavBar/Dark Mode/DarkModeSwitchContext";
 import axios from 'axios';
-import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 
 
 const Home = () => {
@@ -20,7 +20,8 @@ const Home = () => {
     const [devices, setDevices] = useState(null);
     const [thermInfo, setThermInfo] = useState(null);
 
-    const { setAuthTokenDetails, googleAccountInfo } = useContext(AuthContext)
+    const { setAuthTokenDetails, googleAccountInfo, setGoogleAccountInfo, setHasAuth } = useContext(AuthContext)
+    const location = useLocation()
 
     const nests = [  //mock data
       {
@@ -37,16 +38,30 @@ const Home = () => {
       }
     ];
 
-    const login = useGoogleLogin({
-        onSuccess: (codeResponse) => { console.log(codeResponse); setAuthTokenDetails(codeResponse);},
-        //or set access token in state from here later
+    useEffect(() => {
+      if (location.search.includes('?')) {
+        console.log(location.search)
+        console.log('There is a question mark so there must be a query string with the code')
+        console.log(JSON.parse(localStorage.getItem("googleAccountInfo")))
+        setGoogleAccountInfo(JSON.parse(localStorage.getItem("googleAccountInfo")))
+        console.log(JSON.parse(localStorage.getItem("authTokenDetails")))
+        setAuthTokenDetails(JSON.parse(localStorage.getItem("authTokenDetails")))
+        //localStorage.clear()  //the problem, but need to clear localstorage for safety (clearing in logout func for now)
+        //might rerun if query string isn't removed from URL after code is gotten and u navigate to home again
+      } else {
+        console.log('The URL does not have the code')
+      }
+    }, [])
+
+    const login = useGoogleLogin({ //add new stuff to navbar login too
+        onSuccess: (codeResponse) => { console.log(codeResponse); setAuthTokenDetails(codeResponse); setHasAuth(true);},
         onError: (error) => console.log('Login Failed:', error)
     });
 
     //Logins into Google Nest different from google login
     const loginNest = () => {
       try {
-        window.location.href = 'https://nestservices.google.com/u/0/partnerconnections/f4f5bdc3-964c-466b-bf80-9508f2709ad5/auth?redirect_uri=http://localhost:3000&access_type=offline&prompt=consent&client_id=589825515650-ej6sq8icgc3itevo7b731oes8q1tqk4u.apps.googleusercontent.com&response_type=code&scope=https://www.googleapis.com/auth/sdm.service';
+        window.location.href = 'https://nestservices.google.com/u/1/partnerconnections/f4f5bdc3-964c-466b-bf80-9508f2709ad5/auth?redirect_uri=http://localhost:3000&access_type=offline&prompt=consent&client_id=589825515650-ej6sq8icgc3itevo7b731oes8q1tqk4u.apps.googleusercontent.com&response_type=code&scope=https://www.googleapis.com/auth/sdm.service';
       } catch (e){
         console.log(e);
       }

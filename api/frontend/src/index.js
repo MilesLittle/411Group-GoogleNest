@@ -16,15 +16,15 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
 <GoogleOAuthProvider clientId='589825515650-ej6sq8icgc3itevo7b731oes8q1tqk4u.apps.googleusercontent.com'>
   <React.StrictMode>
+    <BrowserRouter>
     <AuthProvider>
       <DarkModeSwitchProvider>
         <CustomTheme>
-          <BrowserRouter>
             <App />
-          </BrowserRouter>
         </CustomTheme>
       </DarkModeSwitchProvider>
     </AuthProvider>
+    </BrowserRouter>
   </React.StrictMode>
 </GoogleOAuthProvider>
 );

@@ -10,14 +10,16 @@ import DarkModeSwitchContext from "../components/NavBar/Dark Mode/DarkModeSwitch
 
 const Profile = () => {
     const navigate = useNavigate()
-    const { googleAccountInfo, setGoogleAccountInfo } = useContext(AuthContext)
+    const { googleAccountInfo, setGoogleAccountInfo, setHasAuth, setAuthTokenDetails } = useContext(AuthContext)
     const { switched } = useContext(DarkModeSwitchContext)
 
     const logOut = () => {
         try {
             googleLogout()
+            setAuthTokenDetails(null)
             setGoogleAccountInfo(null)
-            //setAuthTokenDetails null here? Check with console.log if still there after logout
+            setHasAuth(false)
+            localStorage.clear()
             navigate("/")
         } catch(err) {
             console.log(err)
