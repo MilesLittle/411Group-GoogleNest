@@ -10,7 +10,7 @@ import DarkModeSwitchContext from "../components/NavBar/Dark Mode/DarkModeSwitch
 
 const Profile = () => {
     const navigate = useNavigate()
-    const { googleAccountInfo, setGoogleAccountInfo, setHasAuth, setAuthTokenDetails } = useContext(AuthContext)
+    const { googleAccountInfo, setGoogleAccountInfo, setHasAuth, setAuthTokenDetails, setNestTokens, setCode } = useContext(AuthContext)
     const { switched } = useContext(DarkModeSwitchContext)
 
     const logOut = () => {
@@ -18,7 +18,9 @@ const Profile = () => {
             googleLogout()
             setAuthTokenDetails(null)
             setGoogleAccountInfo(null)
+            setNestTokens(null)
             setHasAuth(false)
+            setCode('')
             localStorage.clear()
             navigate("/")
         } catch(err) {

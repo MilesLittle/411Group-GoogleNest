@@ -10,17 +10,25 @@ import Grid from '@mui/material/Grid';
 import Container from '@mui/material/Container';
 import ThermoCard from "../components/ThermoCard/ThermoCard";
 import axios from 'axios';
-import { useLocation } from "react-router-dom";
+import { useLocation, useSearchParams, useNavigate } from "react-router-dom";
 
 
 const Home = () => {
+    const project_id = 'f4f5bdc3-964c-466b-bf80-9508f2709ad5'
+    const client_id = '589825515650-ej6sq8icgc3itevo7b731oes8q1tqk4u.apps.googleusercontent.com'
+    const client_secret = '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'
+    const redirect_uri = 'http://localhost:3000'
+    var code = ''
+
   //This is used by googleNest Login to store access token
     const [accessToken, setaccessToken] = useState(null);
     const [devices, setDevices] = useState(null);
     const [thermInfo, setThermInfo] = useState(null);
 
-    const { setAuthTokenDetails, googleAccountInfo, setGoogleAccountInfo, setHasAuth } = useContext(AuthContext)
+    const { setAuthTokenDetails, googleAccountInfo, setGoogleAccountInfo, setHasAuth, nestTokens, setNestTokens } = useContext(AuthContext)
     const location = useLocation()
+    const navigate = useNavigate()
+    const [searchParams, setSearchParams] = useSearchParams()
 
     const nests = [  //mock data
       {
@@ -40,13 +48,13 @@ const Home = () => {
     useEffect(() => {
       if (location.search.includes('?')) {
         console.log(location.search)
-        console.log('There is a question mark so there must be a query string with the code')
-        console.log(JSON.parse(localStorage.getItem("googleAccountInfo")))
         setGoogleAccountInfo(JSON.parse(localStorage.getItem("googleAccountInfo")))
-        console.log(JSON.parse(localStorage.getItem("authTokenDetails")))
         setAuthTokenDetails(JSON.parse(localStorage.getItem("authTokenDetails")))
         //localStorage.clear()  //the problem, but need to clear localstorage for safety (clearing in logout func for now)
-        //might rerun if query string isn't removed from URL after code is gotten and u navigate to home again
+        code = searchParams.get('code')
+        navigate("/")
+        console.log(code)
+        getNestTokens() //calling twice?
       } else {
         console.log('The URL does not have the code')
       }
@@ -57,6 +65,25 @@ const Home = () => {
         onError: (error) => console.log('Login Failed:', error)
     });
 
+    const getNestTokens = async () => { //nest tokens being set twice?
+      try {
+        const param = new URLSearchParams()
+        param.append('client_id', client_id)
+        param.append('client_secret', client_secret)
+        param.append('code', code)
+        param.append('grant_type', 'authorization_code')
+        param.append('redirect_uri', redirect_uri)
+        await axios.post('https://www.googleapis.com/oauth2/v4/token', param)
+        .then((res) => {
+            console.log(res.status)
+            console.log(res.data)
+            setNestTokens(res.data)
+        })
+      } catch(err) {
+        console.log(err)
+      }
+    }
+/*
 useEffect(() => 
 {
   const NestLoginAsync = async () => 
@@ -147,7 +174,7 @@ NestLoginAsync()
 console.log(thermInfo);
 }, [accessToken]);
 
-
+*/
 
 
 

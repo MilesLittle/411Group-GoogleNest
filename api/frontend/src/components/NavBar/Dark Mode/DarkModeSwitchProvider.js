@@ -4,7 +4,6 @@ import DarkModeSwitchContext from './DarkModeSwitchContext'
 const DarkModeSwitchProvider = ({ children }) => {
     const [switched, setSwitched] = useState(false)
     useEffect(() => {
-        console.log(`Dark mode switch is ${switched}`)
         if (switched) {
             document.body.style.background = '#1a1a1a';
         } else {
