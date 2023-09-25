@@ -50,17 +50,17 @@ const Home = () => {
       } else {
         console.log('The URL does not have the code')
       }
-    }, []) //need to make sure user can't go back to the url with the query string (location/history.replace?)
+    }, []) //need to make sure user can't go back to the url with the query string (location/history.replace instead of navigate?)
 
     useEffect(() => {
       if (code) { //make sure getNestTokens doesn't run when logging out and setting code to null
         console.log(code)
-        getNestTokens() //calling twice?
+        getNestTokens()
       }
     }, [code])
 
     const login = useGoogleLogin({
-        onSuccess: (codeResponse) => { console.log(codeResponse); setAuthTokenDetails(codeResponse); setHasAuth(true);},
+        onSuccess: (codeResponse) => { console.log('Got Login Auth token'); console.log(codeResponse); setAuthTokenDetails(codeResponse); setHasAuth(true);},
         onError: (error) => console.log('Login Failed:', error)
     });
 /*

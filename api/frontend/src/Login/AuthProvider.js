@@ -24,9 +24,13 @@ const AuthProvider = ({ children }) => {
       param.append('redirect_uri', redirect_uri)
       await axios.post('https://www.googleapis.com/oauth2/v4/token', param)
       .then((res) => {
-          console.log(res.status)
+        if (res.status === 200) {
+          console.log('Got the Google Nest access and refresh tokens')
           console.log(res.data)
           setNestTokens(res.data) //nest access token and refresh token are set here
+        } else {
+          console.log('Not OK')
+        }
       })
     } catch(err) {
       console.log(err)
@@ -41,12 +45,16 @@ const AuthProvider = ({ children }) => {
           Accept: 'application/json'
         }
       }).then((res) => {
-        setGoogleAccountInfo(res.data) //if statement for only if 200 ok
-        console.log(res.data)
-        console.log(res.status)
-        localStorage.setItem("googleAccountInfo", JSON.stringify(res.data))
-        localStorage.setItem("authTokenDetails", JSON.stringify(authTokenDetails))
-        window.location.href = `https://nestservices.google.com/u/${authTokenDetails.authuser}/partnerconnections/f4f5bdc3-964c-466b-bf80-9508f2709ad5/auth?redirect_uri=http://localhost:3000&access_type=offline&prompt=consent&client_id=589825515650-ej6sq8icgc3itevo7b731oes8q1tqk4u.apps.googleusercontent.com&response_type=code&scope=https://www.googleapis.com/auth/sdm.service`;
+        if (res.status === 200) {
+          console.log('Got Google account data')
+          setGoogleAccountInfo(res.data)
+          console.log(res.data)
+          localStorage.setItem("googleAccountInfo", JSON.stringify(res.data))
+          localStorage.setItem("authTokenDetails", JSON.stringify(authTokenDetails))
+          window.location.href = `https://nestservices.google.com/u/${authTokenDetails.authuser}/partnerconnections/f4f5bdc3-964c-466b-bf80-9508f2709ad5/auth?redirect_uri=http://localhost:3000&access_type=offline&prompt=consent&client_id=589825515650-ej6sq8icgc3itevo7b731oes8q1tqk4u.apps.googleusercontent.com&response_type=code&scope=https://www.googleapis.com/auth/sdm.service`;
+        } else {
+          console.log('Not OK')
+        }
       }).catch((err) => 
         console.log(err)
       )
