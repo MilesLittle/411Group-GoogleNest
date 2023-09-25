@@ -20,7 +20,7 @@ const Profile = () => {
             setGoogleAccountInfo(null)
             setNestTokens(null)
             setHasAuth(false)
-            setCode('')
+            setCode(null)
             localStorage.clear()
             navigate("/")
         } catch(err) {

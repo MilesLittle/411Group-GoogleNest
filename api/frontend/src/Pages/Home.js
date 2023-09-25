@@ -14,18 +14,12 @@ import { useLocation, useSearchParams, useNavigate } from "react-router-dom";
 
 
 const Home = () => {
-    const project_id = 'f4f5bdc3-964c-466b-bf80-9508f2709ad5'
-    const client_id = '589825515650-ej6sq8icgc3itevo7b731oes8q1tqk4u.apps.googleusercontent.com'
-    const client_secret = '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'
-    const redirect_uri = 'http://localhost:3000'
-    var code = ''
-
   //This is used by googleNest Login to store access token
     const [accessToken, setaccessToken] = useState(null);
     const [devices, setDevices] = useState(null);
     const [thermInfo, setThermInfo] = useState(null);
 
-    const { setAuthTokenDetails, googleAccountInfo, setGoogleAccountInfo, setHasAuth, nestTokens, setNestTokens } = useContext(AuthContext)
+    const { setAuthTokenDetails, googleAccountInfo, setGoogleAccountInfo, nestTokens, code, setCode, getNestTokens, setHasAuth } = useContext(AuthContext)
     const location = useLocation()
     const navigate = useNavigate()
     const [searchParams, setSearchParams] = useSearchParams()
@@ -46,43 +40,29 @@ const Home = () => {
     ];
 
     useEffect(() => {
-      if (location.search.includes('?')) {
+      if (location.search.includes('?code=')) {
         console.log(location.search)
         setGoogleAccountInfo(JSON.parse(localStorage.getItem("googleAccountInfo")))
-        setAuthTokenDetails(JSON.parse(localStorage.getItem("authTokenDetails")))
+        setAuthTokenDetails(JSON.parse(localStorage.getItem("authTokenDetails"))) //endless loop back to authcontext useEffect?
         //localStorage.clear()  //the problem, but need to clear localstorage for safety (clearing in logout func for now)
-        code = searchParams.get('code')
+        setCode(searchParams.get('code'))
         navigate("/")
-        console.log(code)
-        getNestTokens() //calling twice?
       } else {
         console.log('The URL does not have the code')
       }
-    }, [])
+    }, []) //need to make sure user can't go back to the url with the query string (location/history.replace?)
+
+    useEffect(() => {
+      if (code) { //make sure getNestTokens doesn't run when logging out and setting code to null
+        console.log(code)
+        getNestTokens() //calling twice?
+      }
+    }, [code])
 
     const login = useGoogleLogin({
         onSuccess: (codeResponse) => { console.log(codeResponse); setAuthTokenDetails(codeResponse); setHasAuth(true);},
         onError: (error) => console.log('Login Failed:', error)
     });
-
-    const getNestTokens = async () => { //nest tokens being set twice?
-      try {
-        const param = new URLSearchParams()
-        param.append('client_id', client_id)
-        param.append('client_secret', client_secret)
-        param.append('code', code)
-        param.append('grant_type', 'authorization_code')
-        param.append('redirect_uri', redirect_uri)
-        await axios.post('https://www.googleapis.com/oauth2/v4/token', param)
-        .then((res) => {
-            console.log(res.status)
-            console.log(res.data)
-            setNestTokens(res.data)
-        })
-      } catch(err) {
-        console.log(err)
-      }
-    }
 /*
 useEffect(() => 
 {

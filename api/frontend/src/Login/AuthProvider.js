@@ -4,15 +4,15 @@ import axios from 'axios';
 
 const AuthProvider = ({ children }) => {
   const [authTokenDetails, setAuthTokenDetails] = useState(null)
-  const [hasAuth, setHasAuth] = useState(false)
   const [googleAccountInfo, setGoogleAccountInfo] = useState(null)
   const [nestTokens, setNestTokens] = useState(null)
+  const [hasAuth, setHasAuth] = useState(false) //using this just to stop an endless loop
 
   const project_id = 'f4f5bdc3-964c-466b-bf80-9508f2709ad5'
   const client_id = '589825515650-ej6sq8icgc3itevo7b731oes8q1tqk4u.apps.googleusercontent.com'
   const client_secret = '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'
   const redirect_uri = 'http://localhost:3000'
-  const [code, setCode] = useState('')
+  const [code, setCode] = useState(null)
 
   const getNestTokens = async () => {
     try {
@@ -50,10 +50,10 @@ const AuthProvider = ({ children }) => {
       }).catch((err) => 
         console.log(err)
       )
-    }}, [hasAuth]) //don't need hasAuth anymore?
+    }}, [hasAuth]) 
 
   return (
-    <AuthContext.Provider value={{authTokenDetails, setAuthTokenDetails, googleAccountInfo, setGoogleAccountInfo, hasAuth, setHasAuth, nestTokens, setNestTokens, project_id, client_id, client_secret, redirect_uri, code, setCode, getNestTokens }}>
+    <AuthContext.Provider value={{authTokenDetails, setAuthTokenDetails, googleAccountInfo, setGoogleAccountInfo, nestTokens, setNestTokens, project_id, client_id, client_secret, redirect_uri, code, setCode, getNestTokens, hasAuth, setHasAuth }}>
         {children}
     </AuthContext.Provider>
   )
