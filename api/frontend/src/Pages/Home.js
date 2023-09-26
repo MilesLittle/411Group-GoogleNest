@@ -70,7 +70,8 @@ const Home = () => {
           if (res.status === 200) {
             console.log('Got list of devices')
             console.log(res.data)
-            setThermostats(res.data) //not only thermostats but just for now
+            const thermos = res.data.devices.filter((device) => device.type == 'sdm.devices.types.THERMOSTAT')
+            setThermostats(thermos)
           } else {
             console.log('Not OK')
           }
@@ -79,6 +80,13 @@ const Home = () => {
         )
       }
     }, [nestTokens])
+
+    useEffect(() => {
+      if (thermostats) {
+        console.log('Set the thermostats')
+        console.log(thermostats)
+      }
+    }, [thermostats])
 
     const login = useGoogleLogin({
         onSuccess: (codeResponse) => { console.log('Got Login Auth token'); console.log(codeResponse); setAuthTokenDetails(codeResponse); setHasAuth(true);}, //this sets off the useEffect chain
