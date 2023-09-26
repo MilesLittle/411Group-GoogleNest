@@ -12,14 +12,14 @@ import ThermoCard from "../components/ThermoCard/ThermoCard";
 import axios from 'axios';
 import { useLocation, useSearchParams, useNavigate } from "react-router-dom";
 
-
 const Home = () => {
   //This is used by googleNest Login to store access token
-    const [accessToken, setaccessToken] = useState(null);
-    const [devices, setDevices] = useState(null);
+  //  const [accessToken, setaccessToken] = useState(null);
+  //  const [devices, setDevices] = useState(null);
+    const [thermostats, setThermostats] = useState(null)
     const [thermInfo, setThermInfo] = useState(null);
 
-    const { setAuthTokenDetails, googleAccountInfo, setGoogleAccountInfo, nestTokens, code, setCode, getNestTokens, setHasAuth } = useContext(AuthContext)
+    const { setAuthTokenDetails, googleAccountInfo, setGoogleAccountInfo, nestTokens, code, setCode, getNestTokens, setHasAuth, project_id } = useContext(AuthContext)
     const location = useLocation()
     const navigate = useNavigate()
     const [searchParams, setSearchParams] = useSearchParams()
@@ -39,7 +39,7 @@ const Home = () => {
       }
     ];
 
-    useEffect(() => {
+    useEffect(() => { //#2
       if (location.search.includes('?code=')) {
         console.log(location.search)
         setGoogleAccountInfo(JSON.parse(localStorage.getItem("googleAccountInfo")))
@@ -52,15 +52,36 @@ const Home = () => {
       }
     }, []) //need to make sure user can't go back to the url with the query string (location/history.replace instead of navigate?)
 
-    useEffect(() => {
+    useEffect(() => { //#3
       if (code) { //make sure getNestTokens doesn't run when logging out and setting code to null
         console.log(code)
         getNestTokens()
       }
     }, [code])
 
+    useEffect(() => { //#4
+      if (nestTokens) {
+        axios.get(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices`, { //await it?
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${nestTokens.access_token}`
+          }
+        }).then((res) => {
+          if (res.status === 200) {
+            console.log('Got list of devices')
+            console.log(res.data)
+            setThermostats(res.data) //not only thermostats but just for now
+          } else {
+            console.log('Not OK')
+          }
+        }).catch((err) => 
+          console.log(err)
+        )
+      }
+    }, [nestTokens])
+
     const login = useGoogleLogin({
-        onSuccess: (codeResponse) => { console.log('Got Login Auth token'); console.log(codeResponse); setAuthTokenDetails(codeResponse); setHasAuth(true);},
+        onSuccess: (codeResponse) => { console.log('Got Login Auth token'); console.log(codeResponse); setAuthTokenDetails(codeResponse); setHasAuth(true);}, //this sets off the useEffect chain
         onError: (error) => console.log('Login Failed:', error)
     });
 /*
