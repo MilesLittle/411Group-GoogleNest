@@ -24,21 +24,6 @@ const Home = () => {
     const navigate = useNavigate()
     const [searchParams, setSearchParams] = useSearchParams()
 
-    const nests = [  //mock data
-      {
-        id: 1,
-        deviceName: "DeviceName1",
-        type: "Nest Thermostat",
-        location: "Home1 - Hallway"
-      }, 
-      {
-        id: 2,
-        deviceName: "DeviceName2",
-        type: "Nest Learning Thermostat",
-        location: "Home2 - LivingRoom"
-      }
-    ];
-
     useEffect(() => { //#2
       if (location.search.includes('?code=')) {
         console.log(location.search)
@@ -190,17 +175,21 @@ console.log(thermInfo);
 
     return (
       <>
-         {googleAccountInfo ? (
+         {googleAccountInfo && thermostats ? (
             <>
               <Stack direction="column" textAlign={'center'} spacing={4} m={8}>
                 <Grow in={true}><Typography variant="h3">Your Nest Thermostats</Typography></Grow>
               </Stack>
               <Container sx={{ marginBottom: '2rem' }}>
                 <Grid container direction="row" justifyContent="space-around">
-                  { nests ? (nests.map((nest) => {
+                  { thermostats ? (thermostats.map((thermostat) => {
                     return (
                       <Grid item>
-                        <ThermoCard id={nest.id} deviceName={nest.deviceName} type={nest.type} location={nest.location} />
+                        <ThermoCard 
+                          id={thermostat.name} 
+                          deviceName={'Set this later'} 
+                          roomName={thermostat.parentRelations[0].displayName}
+                         />
                       </Grid>
                     )
                   })) : (<>You have no Nest thermostats associated with your account.</>) }
