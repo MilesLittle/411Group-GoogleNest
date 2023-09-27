@@ -6,7 +6,6 @@ import Button from '@mui/material/Button';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import Divider from '@mui/material/Divider';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 
@@ -83,22 +82,26 @@ const ChangeLog = () =>  {
     <> 
         <Box sx={{ 
             backgroundColor: 'primary.light', 
-             height: 500,
-             width: 500 ,  
+             height: 700,
+             width: 800 ,  
              flexGrow:1 }}>
                 
-            <Grid container spacing = {2}>
+            <Grid container spacing={1}>
+
         `       <Grid item xs={12}>
+                    <Typography align="center" > Name of Thermostat </Typography> 
+                </Grid> 
 
-                    <Item> Name of Thermostat </Item> 
+                <Grid item xs={5}>
+                     <Item> Log The Temperature every </Item> 
+                 </Grid>    
 
-                </Grid>`
-
-                
-                <Grid item xs={12}>
-                     <Typography> Log The Temperature every <TextField label="4" variant="outlined">  </TextField> </Typography> 
+                <Grid item xs={2}>
+                      <TextField label="6" variant="outlined">  </TextField> 
+                </Grid>
                      
-                    <Grid item alignItems="auto" style={{display:"flex"}}>
+               {/* Time Menu */}      
+                <Grid item xs={2}>
                         <Button 
                           id="drop-down-button"
                           alignItems = "flex-end"
@@ -120,17 +123,21 @@ const ChangeLog = () =>  {
                         anchorEl={anchorEl}
                         open={open}
                         onClose={handleClose}
-                        >
+                          >
                     
                       <MenuItem onClick={handleClose} disableRipple> Minutes </MenuItem>
                       <MenuItem onClick={handleClose} disableRipple> Hours </MenuItem>
                       <MenuItem onClick={handleClose} disableRipple> Days </MenuItem>
                   </StyledMenu> 
                   
-                  </Grid>
+                </Grid> 
+                
+                <Grid item xs={2}>
+                  <Item> in the </Item> 
+                </Grid>
 
-                  <Typography> in the </Typography> 
-                    
+                {/* Room Menu */} 
+                <Grid item xs={1}>
                      <Button
                           id="drop-down-button"
                           aria-controls={open ? 'drop-down-menu' : undefined}
@@ -158,31 +165,23 @@ const ChangeLog = () =>  {
                       
                   </StyledMenu>  
 
-                </Grid>`
+                </Grid>  
 
-                <Grid item xs={12}>
-                <Item> Starting at 
-                          
-                   </Item>
+                <Grid item xs={5}>
+                  <Item> Starting at </Item>
                 </Grid>
-            
-            </Grid>
 
+                <Grid item>
                           
-            <Button
-
-             variant="contained"> Save </Button>
-
+                        </Grid>
             
+            </Grid>    
 
-
-
-
+          <Typography align="center">
+          <Button variant="contained"> Save </Button>
+          </Typography>
         </Box>
-
-      
     </>
-    ); 
-    }
+    );}
 
 export default ChangeLog 
