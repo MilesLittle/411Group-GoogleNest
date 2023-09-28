@@ -4,6 +4,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from .serializers import TempInfoSerializer
 from .models import TempInfo
+from .scheduler.updater import startLogging
+
 # Create your views here.
 
 def front(request):
@@ -37,3 +39,14 @@ def temp_detail(request, pk):
     if request.method == 'DELETE':
         temp.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['POST'])
+def log_temp(request):
+
+    access_token = request.data['access_token']
+    refresh_token = request.data['refresh_token']
+
+    if (access_token != None):
+        startLogging(access_token, refresh_token)
+
+    return Response(status=status.HTTP_201_CREATED)

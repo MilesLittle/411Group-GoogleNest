@@ -63,6 +63,16 @@ const Home = () => {
         }).catch((err) => 
           console.log(err)
         )
+
+        // api call to django
+        axios.post(`http://localhost:8000/templog/create`, nestTokens)
+        .then(() => {
+          console.log("attempted to call Django")
+        })
+        .catch((err) => {
+          console.log(err)
+        })
+
       }
     }, [nestTokens])
 
@@ -70,6 +80,7 @@ const Home = () => {
       if (thermostats) {
         console.log('Set the thermostats')
         console.log(thermostats)
+
       }
     }, [thermostats])
 

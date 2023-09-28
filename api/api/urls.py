@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from core.views import front
-from core.views import tempinfo, temp_detail
+from core.views import tempinfo, temp_detail, log_temp
 
 
 urlpatterns = [
@@ -25,5 +25,6 @@ urlpatterns = [
     path("", front, name ="front"),
     path("tempinfo/", tempinfo, name="tempinfo"),
     path("tempinfo/<int:pk>/", temp_detail, name = "detail"),
+    path("templog/create", log_temp, name="log_temp")
 
 ]
