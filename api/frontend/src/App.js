@@ -1,6 +1,6 @@
 import React from "react";
 import Home from "./Pages/Home";
-import NotFound from "./Pages/NotFound";
+import NotFound from "./Pages/Not Found/NotFound";
 import NavBar from "./components/NavBar/NavBar";
 import Profile from "./Pages/Profile";
 import ThermoDashboard from "./Pages/ThermoDashboard";

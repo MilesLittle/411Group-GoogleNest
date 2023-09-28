@@ -37,7 +37,7 @@ const NavBar = () => {
             <Grid item>
               <div onClick={() => navigate("/")} style={{ cursor: 'pointer'}}>
               <Typography fontSize={'1.3rem'} sx={{ textDecoration: 'none', color: '#FFFFFF' }}>
-                No logo (yet)
+                Still no logo (yet)
               </Typography>
               </div>
             </Grid>

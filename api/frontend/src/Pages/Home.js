@@ -14,6 +14,7 @@ import axios from 'axios';
 import { useLocation, useSearchParams, useNavigate } from "react-router-dom";
 
 const Home = () => {
+    document.title = 'Welcome to TempWise Assistant'
     const [thermostats, setThermostats] = useState(null)
     const { setAuthTokenDetails, googleAccountInfo, setGoogleAccountInfo, nestTokens, code, setCode, getNestTokens, setHasAuth, project_id } = useContext(AuthContext)
     const { switched } = useContext(DarkModeSwitchContext)
@@ -95,6 +96,7 @@ const Home = () => {
                 <Grid container direction="row" justifyContent="space-around">
                   { thermostats ? (thermostats.map((thermostat) => {
                     return (
+                      <Grow in={true}>
                       <Grid item>
                         <ThermoCard 
                           deviceId={getDeviceId(thermostat.name)} 
@@ -102,6 +104,7 @@ const Home = () => {
                           roomName={thermostat.parentRelations[0].displayName}
                          />
                       </Grid>
+                      </Grow>
                     )
                   })) : (<Typography variant="h6" color={ switched ? 'primary.main' : 'secondary.main' }>You have no Nest thermostats associated with your account.</Typography>) }
                 </Grid>
