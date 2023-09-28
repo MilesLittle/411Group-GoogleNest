@@ -4,21 +4,22 @@ import Toolbar from '@mui/material/Toolbar';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
-import DarkModeSwitch from './DarkModeSwitch';
+import DarkModeSwitch from './Dark Mode/DarkModeSwitch';
 import Card from '@mui/material/Card';
 import Avatar from '@mui/material/Avatar';
 import GoogleIcon from '@mui/icons-material/Google';
 import AuthContext from '../../Login/AuthContext';
+import DarkModeSwitchContext from './Dark Mode/DarkModeSwitchContext';
 import { Link } from 'react-router-dom';
 import { useGoogleLogin } from "@react-oauth/google";
 import { useNavigate } from 'react-router-dom';
 
 const NavBar = () => {
-  const { setCurrentUser, profile, authenticated, setAuthenticated } = useContext(AuthContext)
+  const { setAuthTokenDetails, googleAccountInfo, setHasAuth } = useContext(AuthContext)
+  const { switched, setSwitched } = useContext(DarkModeSwitchContext)
     const navigate = useNavigate()
     const login = useGoogleLogin({
-        onSuccess: (codeResponse) => { console.log(codeResponse); setCurrentUser(codeResponse); setAuthenticated(true);}, //token stuff
-        //or set access token in state from here later
+        onSuccess: (codeResponse) => { console.log(codeResponse); setAuthTokenDetails(codeResponse); setHasAuth(true);},
         onError: (error) => console.log('Login Failed:', error)
     });
   return (
@@ -30,37 +31,39 @@ const NavBar = () => {
           {/*Dark mode switch item is matching width of profile card item so the 2nd item is centered using 
            justifyContent='space-between'. Could also do marginRight: 'auto' on the 1st flex item and marginLeft: 'auto'
            on the 3rd flex item.*/}
-            <DarkModeSwitch /> 
+            <DarkModeSwitch checked={switched} onChange={(e) => setSwitched(e.target.checked)} /> 
           </Grid>
-           <Card sx={{ padding: '8px', backgroundColor: 'secondary.main'}}>
+           <Card sx={{ padding: '8px', backgroundColor: '#000000'}}>
             <Grid item>
-              <Typography fontSize={'1.3rem'} sx={{ textDecoration: 'none', color: 'secondary.light' }}>
+              <div onClick={() => navigate("/")} style={{ cursor: 'pointer'}}>
+              <Typography fontSize={'1.3rem'} sx={{ textDecoration: 'none', color: '#FFFFFF' }}>
                 No logo (yet)
               </Typography>
+              </div>
             </Grid>
            </Card>
           <Grid item>
-            { authenticated && profile ? 
+            { googleAccountInfo ? 
               (<Link to="/profile" style={{ textDecoration: 'none' }}>
-                <Card sx={{ padding: '3px', borderRadius: '30px', backgroundColor: 'secondary.main', width: '13rem'}}>
+                <Card sx={{ padding: '3px', borderRadius: '30px', backgroundColor: '#000000', width: '13rem'}}>
                   <Grid container direction="row" alignItems="center">
                     <Grid item>
-                      <Avatar alt="profile pic" src={profile.picture} /> 
+                      <Avatar alt="profile pic" src={googleAccountInfo.picture} /> 
                     </Grid>
-                    <Grid item>
-                      <Typography sx={{ color: 'secondary.light', marginLeft: '25px' }}>{ profile.name }</Typography> 
+                    <Grid item> {/*How will this look with longer names? Truncate (...) longer ones? */}
+                      <Typography sx={{ color: '#FFFFFF', marginLeft: '25px' }}>{ googleAccountInfo.name }</Typography> 
                     </Grid> 
                   </Grid>
                 </Card>
               </Link>) : 
             (<div onClick={() => login()} style={{ cursor: 'pointer'}}>
-              <Card sx={{ padding: '3px', borderRadius: '30px', backgroundColor: 'secondary.main', width: '13rem'}}>
+              <Card sx={{ padding: '3px', borderRadius: '30px', backgroundColor: '#000000', width: '13rem'}}>
                 <Grid container direction="row" alignItems="center">
                   <Grid item>
-                    <Avatar alt="google" sx={{ bgcolor: 'secondary.main' }}><GoogleIcon /></Avatar>
+                    <Avatar alt="google" sx={{ bgcolor: '#000000' }}><GoogleIcon /></Avatar>
                   </Grid>
                   <Grid item>
-                    <Typography sx={{ color: 'secondary.light', marginLeft: '15px' }}>Sign in to Google</Typography> 
+                    <Typography sx={{ color: '#FFFFFF', marginLeft: '15px' }}>Sign in to Google</Typography> 
                   </Grid> 
                 </Grid>
               </Card>
