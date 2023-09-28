@@ -56,15 +56,6 @@ import TextField from '@mui/material/TextField';
 
 const ChangeLog = () =>  {
     
-// Style the Items 
-    const Item = styled('div')(({ theme }) => ({
-        backgroundColor: theme.palette.mode === 'dark' ? '#262B32' : '#fff',
-        padding: theme.spacing(1),
-        textAlign: 'center',
-        borderRadius: 4,
-      }));
-
-    
 // Opening/closing drop down button 
     const [anchorEl, setAnchorEl] = React.useState(null);
     const open = Boolean(anchorEl);
@@ -80,28 +71,34 @@ const ChangeLog = () =>  {
 // React Stuff 
     return (
     <> 
+    <Grid>
         <Box sx={{ 
             backgroundColor: 'primary.light', 
-             height: 700,
-             width: 800 ,  
-             flexGrow:1 }}>
+             height: 300,
+             width: 850 ,
+             margin: "auto",  
+             flexGrow:1,
+             borderRadius: '16px'
+             }}>
                 
             <Grid container spacing={1}>
 
+           {/*  grid item for first batch */}
+              
         `       <Grid item xs={12}>
                     <Typography align="center" > Name of Thermostat </Typography> 
                 </Grid> 
 
-                <Grid item xs={5}>
-                     <Item> Log The Temperature every </Item> 
+                <Grid item xs={3}>
+                     <Typography> Log The Temperature every </Typography> 
                  </Grid>    
 
                 <Grid item xs={2}>
                       <TextField label="6" variant="outlined">  </TextField> 
                 </Grid>
                      
-               {/* Time Menu */}      
-                <Grid item xs={2}>
+               {/* Time Change  Menu */}      
+                <Grid item xs={1}>
                         <Button 
                           id="drop-down-button"
                           alignItems = "flex-end"
@@ -132,12 +129,12 @@ const ChangeLog = () =>  {
                   
                 </Grid> 
                 
-                <Grid item xs={2}>
-                  <Item> in the </Item> 
+                <Grid item xs={1}>
+                  <Typography> in the </Typography> 
                 </Grid>
 
                 {/* Room Menu */} 
-                <Grid item xs={1}>
+                <Grid item xs={2}>
                      <Button
                           id="drop-down-button"
                           aria-controls={open ? 'drop-down-menu' : undefined}
@@ -164,23 +161,29 @@ const ChangeLog = () =>  {
                       <MenuItem onClick={handleClose} disableRipple> Hallway </MenuItem>
                       
                   </StyledMenu>  
-
-                </Grid>  
+                </Grid> 
 
                 <Grid item xs={5}>
-                  <Item> Starting at </Item>
+                  <Typography> Starting at </Typography>
                 </Grid>
 
                 <Grid item>
-                          
-                        </Grid>
-            
+                      {/* TODO: get date button */}
+                </Grid>
             </Grid>    
 
-          <Typography align="center">
-          <Button variant="contained"> Save </Button>
-          </Typography>
+          <Grid item sx={{
+                display:"flex", 
+                flex: 1,
+                left: "50%"
+          }}>
+             <Button variant="contained" > Save </Button>
+
+          </Grid>
+
+
         </Box>
+      </Grid>
     </>
     );}
 
