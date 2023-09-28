@@ -17,6 +17,7 @@ const Home = () => {
   //  const [accessToken, setaccessToken] = useState(null);
   //  const [devices, setDevices] = useState(null);
     const [thermostats, setThermostats] = useState(null)
+	const [structures, setSturctures] = useState(null)
     const [thermInfo, setThermInfo] = useState(null);
 
     const { setAuthTokenDetails, googleAccountInfo, setGoogleAccountInfo, nestTokens, code, setCode, getNestTokens, setHasAuth, project_id } = useContext(AuthContext)
@@ -63,6 +64,25 @@ const Home = () => {
         }).catch((err) => 
           console.log(err)
         )
+
+		axios.get(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/structures`, { //await it?
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${nestTokens.access_token}`
+          }
+        }).then((res) => {
+          if (res.status === 200) {
+            console.log('Got list of devices')
+            console.log(res.data)
+            //const thermos = res.data.devices.filter((device) => device.type == 'sdm.devices.types.THERMOSTAT')
+            setSturctures(res.data)
+          } else {
+            console.log('Not OK')
+          }
+        }).catch((err) => 
+          console.log(err)
+        )
+
       }
     }, [nestTokens])
 
@@ -77,98 +97,17 @@ const Home = () => {
         onSuccess: (codeResponse) => { console.log('Got Login Auth token'); console.log(codeResponse); setAuthTokenDetails(codeResponse); setHasAuth(true);}, //this sets off the useEffect chain
         onError: (error) => console.log('Login Failed:', error)
     });
-/*
-useEffect(() => 
-{
-  const NestLoginAsync = async () => 
-  {
-  
 
-    if(!accessToken)
-    {
+	function getDeviceId(id) {
+		console.log(id)
+		const regex = new RegExp('/(?<=\/devices\/).*$');
+		const found = id.match(regex);
+		console.log('String to send back')
+		console.log(found)
+		let returnFound = found[0].replace('/', '')
+		return returnFound;
+	}
 
-        try 
-        {
-          const params = new URLSearchParams(window.location.search);
-          const code = params.get('code');
-
-          const param = new URLSearchParams();
-          param.append('client_id', '589825515650-ej6sq8icgc3itevo7b731oes8q1tqk4u.apps.googleusercontent.com');
-          param.append('client_secret', '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');
-          param.append('code', `${code}`);
-          param.append('grant_type', 'authorization_code');
-          param.append('redirect_uri', 'http://localhost:3000');
-
-            await axios.post('https://www.googleapis.com/oauth2/v4/token', param
-            ).then((res) => 
-              {
-                setaccessToken(res.data['token_type'] + ' ' + res.data['access_token']);
-                console.log(res.data['token_type'] + res.data['access_token']);
-              }).catch((err) => console.log(err))
-        }
-        catch(e) 
-        { 
-          console.log(e);
-        }
-      }
-
-
-        if(accessToken) 
-        {
-
-        try 
-        {
-          await axios.get('https://smartdevicemanagement.googleapis.com/v1/enterprises/f4f5bdc3-964c-466b-bf80-9508f2709ad5/devices',
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': accessToken
-            }
-          })
-          .then((res) => {
-            setDevices(res.data)
-          })
-        }
-        catch(e) 
-        {
-          console.log(e);
-        }
-
-        console.log("DEVICES")
-        console.log(devices);
-
-        try 
-        {
-          await axios.get('https://smartdevicemanagement.googleapis.com/v1/' + devices.devices[0].name,
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': accessToken
-            }
-          
-          })
-          .then((res) => {
-            console.log(res.data);
-            setThermInfo(res.data);
-          })
-        }
-        catch (e) 
-        {
-          console.log(e);
-        }
-        console.log("Its doing something")
-      }
-      else 
-      {
-        console.log("Its not doing anything")
-      }
-  }
-
-NestLoginAsync()
-console.log(thermInfo);
-}, [accessToken]);
-
-*/
 
 
 
@@ -186,9 +125,10 @@ console.log(thermInfo);
                     return (
                       <Grid item>
                         <ThermoCard 
-                          id={thermostat.name} 
-                          deviceName={'Set this later'} 
-                          roomName={thermostat.parentRelations[0].displayName}
+						
+                          id={getDeviceId(thermostat.name)} 
+                          deviceName={thermostat.parentRelations[0].displayName} 
+                          roomName={structures.structures[0].traits["sdm.structures.traits.Info"].customName}
                          />
                       </Grid>
                     )

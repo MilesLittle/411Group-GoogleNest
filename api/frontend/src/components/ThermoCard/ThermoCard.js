@@ -28,7 +28,7 @@ const ThermoCard = ({ id, deviceName, roomName }) => { //later, pass in some the
                 <Grid container direction="column" justifyContent="flex-start">
                     <Grid item>
                         <Typography mb={1}>
-                            Room: {roomName}
+                            House: {roomName}
                         </Typography>
                     </Grid>
                 </Grid>
