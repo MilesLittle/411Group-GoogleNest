@@ -39,7 +39,7 @@ const AuthProvider = ({ children }) => {
   //need to define func to refresh nest token. useEffect that runs every hour?
   useEffect(() => //#1
     {if (hasAuth) {
-      axios.get(`https://www.googleapis.com/oauth2/v1/userinfo?access_token=${authTokenDetails.access_token}`, { //works, but await it
+      axios.get(`https://www.googleapis.com/oauth2/v1/userinfo?access_token=${authTokenDetails.access_token}`, { //await it?
         headers: {
           Authorization: `Bearer ${authTokenDetails.access_token}`,
           Accept: 'application/json'

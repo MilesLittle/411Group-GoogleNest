@@ -9,6 +9,7 @@ import Grid from "@mui/material/Grid";
 import DarkModeSwitchContext from "../components/NavBar/Dark Mode/DarkModeSwitchContext";
 
 const Profile = () => {
+    document.title = 'Your Google Profile'
     const navigate = useNavigate()
     const { googleAccountInfo, setGoogleAccountInfo, setHasAuth, setAuthTokenDetails, setNestTokens, setCode } = useContext(AuthContext)
     const { switched } = useContext(DarkModeSwitchContext)
