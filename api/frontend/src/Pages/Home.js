@@ -24,7 +24,7 @@ const Home = () => {
 
     function getDeviceId(id) { //grab the actual device-id out the name property
       console.log(id)
-      const regex = new RegExp('/(?<=\/devices\/).*$');
+      const regex = new RegExp('(?<=\/devices\/).*$');
       const found = id.match(regex);
       console.log('String to send back')
       console.log(found)
@@ -32,6 +32,7 @@ const Home = () => {
       return returnFound;
     }
 
+    //somewhere in this useEffect things are being called more than they need to? Fix sometime
     useEffect(() => { //#2
       if (location.search.includes('?code=')) {
         console.log(location.search)
