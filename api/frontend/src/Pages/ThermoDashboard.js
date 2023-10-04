@@ -8,8 +8,12 @@ import ListItem from '@mui/material/ListItem'
 import ListItemText from '@mui/material/ListItemText'
 import Box from '@mui/material/Box'
 import Divider from '@mui/material/Divider'
+import Grid from '@mui/material/Grid'
+import TextField from '@mui/material/TextField'
 import AuthContext from "../Login/AuthContext";
 import axios from 'axios'
+import Button from "@mui/material/Button";
+import Container from '@mui/material/Container'
 
 const ThermoDashboard = () => {
     document.title = 'Nest Thermostat Dashboard'
@@ -17,8 +21,12 @@ const ThermoDashboard = () => {
     const { deviceId } = useParams() 
     console.log(deviceId)
     const [device, setDevice] = useState(null)
+    const [temp, setTemp] = useState(0)
     const CtoF = (cTemp) => {
         return (cTemp * 9/5) + 32
+    }
+    const FtoC = (fTemp) => {
+        return (fTemp - 32) * 5/9
     }
     useEffect(() => {
         axios.get(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}`, {
@@ -31,6 +39,15 @@ const ThermoDashboard = () => {
                 console.log('Got the device')
                 console.log(res.data)
                 setDevice(res.data)
+                if (res.data.traits["sdm.devices.traits.ThermostatMode"].mode === "COOL" || "HEATCOOL") {
+                    console.log('Nest in cool or heatcool mode')
+                    setTemp(Math.round(CtoF(res.data.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius)))
+                } else if (res.data.traits["sdm.devices.traits.ThermostatMode"].mode === "HEAT" || "HEATCOOL") {
+                    console.log('Nest in heat or heatcool mode ')
+                    setTemp(Math.round(CtoF(res.data.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].heatCelsius)))
+                } else {
+                    console.log('The thermostat is most likely off')
+                }
             } else {
                 console.log('Not OK')
             }
@@ -39,10 +56,24 @@ const ThermoDashboard = () => {
         })
     }, [])
 
+    const tempHandler = () => {
+        if (temp) {
+            alert(`New temperature: ${temp}`)
+        } else{
+            alert('State not set yet')
+        }
+    }
+
     return (
+        <>
         <Stack direction="column" textAlign={'center'} alignItems="center" spacing={4} m={8}>
-            <Grow in={true}><Typography fontSize={'3rem'} variant="h3">Thermostat Dashboard</Typography></Grow>
             { device &&
+            <>
+            <Grow in={true}>
+                <Typography fontSize={'3rem'} variant="h3">
+                    {device.traits["sdm.devices.traits.Info"].customName.length === 0 ? 'No custom name set.' : device.traits["sdm.devices.traits.Info"].customName}
+                </Typography>
+            </Grow>
             <Grow in={true}>
             <Box sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', width: '40rem' }}>
                 <List>
@@ -61,15 +92,30 @@ const ThermoDashboard = () => {
                     </ListItem>
                     <Divider variant="middle"/>
                     <ListItem>
-                        <ListItemText primary={`Target Temperature: ${Math.round(CtoF(device.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius))} F`}
+                        <ListItemText 
+                        primary={`Target Temperature: ${Math.round(CtoF(device.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius))} F`}
                         primaryTypographyProps={{ fontSize: '2rem' }}
                         />
                     </ListItem>
                 </List>
             </Box>
             </Grow>
+            </>
             }
         </Stack>
+        <Box component="form" sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', padding: '1rem', marginBottom: '2rem', marginLeft: '20rem', marginRight: '20rem' }}>
+            <Container>
+                <Grid container direction="row" justifyContent="center" alignItems="center" spacing={2}>
+                    <Grid item>
+                        <TextField variant="outlined" label="Set temperature in F" defaultValue={temp.toString} onChange={(e) => setTemp(parseInt(e.target.value))} />
+                    </Grid> 
+                    <Grid item>
+                        <Button variant="contained" color="secondary" onClick={() => tempHandler()}>Set Temperature</Button>
+                    </Grid>
+                </Grid>   
+            </Container>
+        </Box>
+        </>
     )
 }
 
