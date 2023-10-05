@@ -58,17 +58,20 @@ const ThermoDashboard = () => {
     const tempHandler = async () => {
         if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "COOL") {
             await axios.post(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}:executeCommand`, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${nestTokens.access_token}`
-                },
                 command: "sdm.devices.commands.ThermostatTemperatureSetpoint.SetCool",
                 params: {
                     "coolCelsius": FtoC(temp)
                 }
-            }).then((res) => {
+            }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${nestTokens.access_token}`
+                }
+            }
+            ).then((res) => {
                 if (res.status === 200) {
                     console.log('Successfully set temperature')
+                    console.log(res.data)
                 }
             }).catch((err) => {
                 console.log(err)
