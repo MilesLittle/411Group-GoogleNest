@@ -19,7 +19,6 @@ const ThermoDashboard = () => {
     document.title = 'Nest Thermostat Dashboard'
     const { nestTokens, project_id } = useContext(AuthContext)
     const { deviceId } = useParams() 
-    console.log(deviceId)
     const [device, setDevice] = useState(null)
     const [temp, setTemp] = useState(0)
     const CtoF = (cTemp) => {
@@ -56,11 +55,43 @@ const ThermoDashboard = () => {
         })
     }, [])
 
-    const tempHandler = () => {
-        if (temp) {
-            alert(`New temperature: ${temp}`)
-        } else{
-            alert('State not set yet')
+    const tempHandler = async () => {
+        if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "COOL") {
+            await axios.post(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}:executeCommand`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${nestTokens.access_token}`
+                },
+                command: "sdm.devices.commands.ThermostatTemperatureSetpoint.SetCool",
+                params: {
+                    "coolCelsius": FtoC(temp)
+                }
+            }).then((res) => {
+                if (res.status === 200) {
+                    console.log('Successfully set temperature')
+                }
+            }).catch((err) => {
+                console.log(err)
+            })
+        } else if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "HEAT") {
+            await axios.post(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}:executeCommand`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${nestTokens.access_token}`
+                },
+                command: "sdm.devices.commands.ThermostatTemperatureSetpoint.SetHeat",
+                params: {
+                    "heatCelsius": FtoC(temp)
+                }
+            }).then((res) => {
+                if (res.status === 200) {
+                    console.log('Successfully set temperature')
+                }
+            }).catch((err) => {
+                console.log(err)
+            })
+        } else {
+            console.log('Thermostat is in heatcool mode or off')
         }
     }
 
