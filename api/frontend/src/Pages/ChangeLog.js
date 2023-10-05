@@ -81,20 +81,20 @@ const ChangeLog = () =>  {
              borderRadius: '16px'
              }}>
                 
-            <Grid container spacing={1}>
+            <Grid container spacing={5}  
+                  alignItems = "flex-end"  
+                  justifyContent = "center">
 
-           {/*  grid item for first batch */}
-              
         `       <Grid item xs={12}>
-                    <Typography align="center" > Name of Thermostat </Typography> 
+                    <Typography fontSize={28} align="center" > Name of Thermostat </Typography> 
                 </Grid> 
 
-                <Grid item xs={3}>
-                     <Typography> Log The Temperature every </Typography> 
+                <Grid item xs={4}>
+                     <Typography fontSize={18}> Log The Temperature every </Typography> 
                  </Grid>    
 
                 <Grid item xs={2}>
-                      <TextField label="6" variant="outlined">  </TextField> 
+                      <TextField label="6" variant="outlined" size="small" sx={{width: 50}}>  </TextField> 
                 </Grid>
                      
                {/* Time Change  Menu */}      
@@ -119,9 +119,7 @@ const ChangeLog = () =>  {
                           }}
                         anchorEl={anchorEl}
                         open={open}
-                        onClose={handleClose}
-                          >
-                    
+                        onClose={handleClose}>
                       <MenuItem onClick={handleClose} disableRipple> Minutes </MenuItem>
                       <MenuItem onClick={handleClose} disableRipple> Hours </MenuItem>
                       <MenuItem onClick={handleClose} disableRipple> Days </MenuItem>
@@ -129,8 +127,8 @@ const ChangeLog = () =>  {
                   
                 </Grid> 
                 
-                <Grid item xs={1}>
-                  <Typography> in the </Typography> 
+                <Grid item xs={2}>
+                  <Typography fontSize={18}> in the </Typography> 
                 </Grid>
 
                 {/* Room Menu */} 
@@ -159,8 +157,8 @@ const ChangeLog = () =>  {
                       <MenuItem onClick={handleClose} disableRipple> Living Room </MenuItem>
                       <MenuItem onClick={handleClose} disableRipple> Kitchen </MenuItem>
                       <MenuItem onClick={handleClose} disableRipple> Hallway </MenuItem>
-                      
                   </StyledMenu>  
+                  
                 </Grid> 
 
                 <Grid item xs={5}>
@@ -172,17 +170,12 @@ const ChangeLog = () =>  {
                 </Grid>
             </Grid>    
 
-          <Grid item sx={{
-                display:"flex", 
-                flex: 1,
-                left: "50%"
-          }}>
-             <Button variant="contained" > Save </Button>
-
-          </Grid>
-
-
         </Box>
+        
+        {/* change color of button to be darker and make bigger  */}
+         <div style={{ display: 'flex', justifyContent: 'center' }}>
+             <Button variant="contained" > Save </Button>
+         </div>
       </Grid>
     </>
     );}
