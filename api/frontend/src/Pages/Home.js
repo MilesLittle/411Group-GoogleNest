@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useRef } from "react";
 import AuthContext from '../Login/AuthContext';
 import DarkModeSwitchContext from '../components/NavBar/Dark Mode/DarkModeSwitchContext'
 import Typography from '@mui/material/Typography';
@@ -21,6 +21,15 @@ const Home = () => {
     const location = useLocation()
     const navigate = useNavigate()
     const [searchParams, setSearchParams] = useSearchParams()
+    const endRef = useRef(null)
+
+    const scrollToBottom = () => {
+      endRef.current?.scrollIntoView({ behavior: "smooth" })
+    }
+
+    useEffect(() => {
+      scrollToBottom()
+    }, [thermostats])
 
     function getDeviceId(id) { //grab the actual device-id out the name property
       console.log(id)
@@ -74,13 +83,6 @@ const Home = () => {
       }
     }, [nestTokens])
 
-    useEffect(() => {
-      if (thermostats) {
-        console.log('Set the thermostats')
-        console.log(thermostats)
-      }
-    }, [thermostats])
-
     const login = useGoogleLogin({
         onSuccess: (codeResponse) => { console.log('Got Login Auth token'); console.log(codeResponse); setAuthTokenDetails(codeResponse); setHasAuth(true);}, //this sets off the useEffect chain
         onError: (error) => console.log('Login Failed:', error)
@@ -90,11 +92,11 @@ const Home = () => {
       <>
          {googleAccountInfo ? (
             <>
-              <Stack direction="column" textAlign={'center'} spacing={4} m={8}>
+              <Stack direction="column" textAlign={'center'} spacing={4} m={6}>
                 <Grow in={true}><Typography variant="h3">Your Nest Thermostats</Typography></Grow>
               </Stack>
               <Container sx={{ marginBottom: '2rem' }}>
-                <Grid container direction="row" justifyContent="space-around">
+                <Grid container direction="row" justifyContent="space-around" ref={endRef}>
                   { thermostats ? (thermostats.map((thermostat) => {
                     return (
                       <Grow in={true}>

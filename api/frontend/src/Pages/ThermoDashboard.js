@@ -21,6 +21,7 @@ const ThermoDashboard = () => {
     const { deviceId } = useParams() 
     const [device, setDevice] = useState(null)
     const [temp, setTemp] = useState(0)
+    const [refresh, setRefresh] = useState(false)
     const CtoF = (cTemp) => {
         return (cTemp * 9/5) + 32
     }
@@ -53,7 +54,7 @@ const ThermoDashboard = () => {
         }).catch((err) => {
             console.log(err)
         })
-    }, [])
+    }, [refresh])
 
     const tempHandler = async () => {
         if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "COOL") {
@@ -72,23 +73,28 @@ const ThermoDashboard = () => {
                 if (res.status === 200) {
                     console.log('Successfully set temperature')
                     console.log(res.data)
+                    setRefresh(!refresh) //something stupid to call the single device endpoint again and let the user see the new temp that they set
                 }
             }).catch((err) => {
                 console.log(err)
             })
         } else if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "HEAT") {
             await axios.post(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}:executeCommand`, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${nestTokens.access_token}`
-                },
                 command: "sdm.devices.commands.ThermostatTemperatureSetpoint.SetHeat",
                 params: {
                     "heatCelsius": FtoC(temp)
                 }
-            }).then((res) => {
+            }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${nestTokens.access_token}`
+                }
+            }
+            ).then((res) => {
                 if (res.status === 200) {
                     console.log('Successfully set temperature')
+                    console.log(res.data)
+                    setRefresh(!refresh)
                 }
             }).catch((err) => {
                 console.log(err)
@@ -100,7 +106,7 @@ const ThermoDashboard = () => {
 
     return (
         <>
-        <Stack direction="column" textAlign={'center'} alignItems="center" spacing={4} m={8}>
+        <Stack direction="column" textAlign={'center'} alignItems="center" spacing={4} m={6}>
             { device &&
             <>
             <Grow in={true}>
@@ -134,21 +140,23 @@ const ThermoDashboard = () => {
                 </List>
             </Box>
             </Grow>
+            <Grow in={true}>
+            <Box component="form" sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', padding: '1rem', marginBottom: '2rem', marginLeft: '20rem', marginRight: '20rem' }}>
+                <Container>
+                    <Grid container direction="row" justifyContent="center" alignItems="center" spacing={2}>
+                        <Grid item>
+                            <TextField variant="outlined" color="secondary" label="Set temperature in F" onChange={(e) => setTemp(parseInt(e.target.value))} />
+                        </Grid> 
+                        <Grid item>
+                            <Button variant="contained" color="secondary" onClick={() => tempHandler()}>Set Temperature</Button>
+                        </Grid>
+                    </Grid>   
+                </Container>
+            </Box>
+            </Grow>
             </>
             }
         </Stack>
-        <Box component="form" sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', padding: '1rem', marginBottom: '2rem', marginLeft: '20rem', marginRight: '20rem' }}>
-            <Container>
-                <Grid container direction="row" justifyContent="center" alignItems="center" spacing={2}>
-                    <Grid item>
-                        <TextField variant="outlined" label="Set temperature in F" defaultValue={temp.toString} onChange={(e) => setTemp(parseInt(e.target.value))} />
-                    </Grid> 
-                    <Grid item>
-                        <Button variant="contained" color="secondary" onClick={() => tempHandler()}>Set Temperature</Button>
-                    </Grid>
-                </Grid>   
-            </Container>
-        </Box>
         </>
     )
 }
