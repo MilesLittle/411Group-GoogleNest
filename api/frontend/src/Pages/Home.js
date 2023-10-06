@@ -13,7 +13,7 @@ import axios from 'axios';
 import { useLocation, useSearchParams, useNavigate } from "react-router-dom";
 
 const Home = () => {
-  //This is used by googleNest Login to store access token
+  //  This is used by googleNest Login to store access token
   //  const [accessToken, setaccessToken] = useState(null);
   //  const [devices, setDevices] = useState(null);
     const [thermostats, setThermostats] = useState(null)
@@ -64,10 +64,17 @@ const Home = () => {
           console.log(err)
         )
 
-        // api call to django
-        axios.post(`http://localhost:8000/templog/create`, nestTokens)
-        .then(() => {
-          console.log("attempted to call Django")
+        // TEMPORARY: this just does stuff for current logged in user. The solution should change to handle users simultaneously and in the background after sign-in
+        // api call to django to log temps
+        axios.post(`http://localhost:8000/user/create`,
+          {
+            tokens: nestTokens,
+            accInfo: JSON.parse(localStorage.getItem("googleAccountInfo"))
+          }
+        )
+        .then((res) => {
+          console.log("Sending tokens and Google acc info to Django...")
+          console.log(res)
         })
         .catch((err) => {
           console.log(err)

@@ -1,10 +1,12 @@
+import json
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import TempInfoSerializer
-from .models import TempInfo
 from .scheduler.updater import startLogging
+from .models import User, Tokens, TempInfo
+from django.core.exceptions import ObjectDoesNotExist
 
 # Create your views here.
 
@@ -40,13 +42,62 @@ def temp_detail(request, pk):
         temp.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
+
+# TEMPORARY: makes user, token records in db. This endpoint should be used after the user gives permission
+# for the app to use Google info or something, since it's storing potentially sensitive information.
+# When revoking access, these records should be deleted
 @api_view(['POST'])
-def log_temp(request):
+def setup_user(request):
 
-    access_token = request.data['access_token']
-    refresh_token = request.data['refresh_token']
+    try:
+        # create user
+        print("request.data['accInfo']: ", request.data['accInfo'])
+        accData = request.data['accInfo']
+        gId = accData['id']
+        print(gId)
 
-    if (access_token != None):
-        startLogging(access_token, refresh_token)
+        if User.objects.filter(_google_id=gId).exists():
+            print("Google user exists")
 
-    return Response(status=status.HTTP_201_CREATED)
+            usId = User.objects.get(_google_id=gId).getId()
+
+            print("google id: ", usId)
+        else:
+            print("google_id not exist in database. Attempting to save...")
+            User( _google_id = gId ).save()
+
+        
+
+        # tokens
+        access_token = request.data['tokens']['access_token']
+        refresh_token = request.data['tokens']['refresh_token']
+
+        # make sure to add tokens to existing user
+        user = User.objects.get(_google_id=gId)
+
+        try:
+            # don't have duplicate token records for the same user
+            if Tokens.objects.filter(user_owner=user).exists():
+                print("edit token object")
+                tokenObj = Tokens.objects.get(user_owner=user)
+                tokenObj._access = access_token
+                tokenObj._refresh = refresh_token
+                tokenObj.save()
+
+            else:
+                print("create token object")
+                Tokens(user_owner=user, _access=access_token, _refresh=refresh_token).save()
+
+        except User.DoesNotExist:
+            print("user doesn't exist")
+            
+
+        if (access_token != None):
+            startLogging(access_token, refresh_token)
+
+        return Response(status=status.HTTP_201_CREATED)
+
+    except:
+        print("Something went wrong in setup_user")
+        return Response(status=status.HTTP_400_BAD_REQUEST)
