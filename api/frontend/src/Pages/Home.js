@@ -72,7 +72,7 @@ const Home = () => {
           if (res.status === 200) {
             console.log('Got list of devices')
             console.log(res.data)
-            const thermos = res.data.devices.filter((device) => device.type == 'sdm.devices.types.THERMOSTAT')
+            const thermos = res.data.devices.filter((device) => device.type === 'sdm.devices.types.THERMOSTAT')
             setThermostats(thermos)
           } else {
             console.log('Not OK')
@@ -103,8 +103,8 @@ const Home = () => {
                       <Grid item>
                         <ThermoCard 
                           deviceId={getDeviceId(thermostat.name)} 
-                          deviceName={thermostat.traits["sdm.devices.traits.Info"].customName.length === 0 ? 'No custom name set.' : thermostat.traits["sdm.devices.traits.Info"].customName} 
-                          roomName={thermostat.parentRelations[0].displayName}
+                          deviceName={thermostat.parentRelations[0].displayName.length === 0 ? 'No custom name set.' : thermostat.parentRelations[0].displayName} 
+                          mode={thermostat.traits["sdm.devices.traits.ThermostatMode"].mode}
                          />
                       </Grid>
                       </Grow>

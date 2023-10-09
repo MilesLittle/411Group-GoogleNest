@@ -111,7 +111,7 @@ const ThermoDashboard = () => {
             <>
             <Grow in={true}>
                 <Typography fontSize={'3rem'} variant="h3">
-                    {device.traits["sdm.devices.traits.Info"].customName.length === 0 ? 'No custom name set.' : device.traits["sdm.devices.traits.Info"].customName}
+                    {device.parentRelations[0].displayName.length === 0 ? 'No custom name set.' : device.parentRelations[0].displayName}
                 </Typography>
             </Grow>
             <Grow in={true}>
