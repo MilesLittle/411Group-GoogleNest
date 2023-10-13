@@ -8,7 +8,7 @@ import TuneIcon from '@mui/icons-material/Tune';
 import { useNavigate } from "react-router-dom";
 import nestthermostat from './NestThermostat.jpg'
 
-const ThermoCard = ({ deviceId, deviceName, roomName }) => {
+const ThermoCard = ({ deviceId, deviceName, mode }) => {
     const navigate = useNavigate()
     return (
         <Card sx={{ width: '25rem', borderRadius: '2rem', bgcolor: 'primary.main' }} elevation={15} key={deviceId}>
@@ -32,7 +32,7 @@ const ThermoCard = ({ deviceId, deviceName, roomName }) => {
                             Nest Thermostat
                         </Typography>
                         <Typography mb={1}>
-                            Room: {roomName}
+                            Mode: {mode}
                         </Typography>
                     </Grid>
                 </Grid>
