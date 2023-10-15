@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import TempInfoSerializer
-from .models import TempInfo
+from .models import TempInfo, Job, JobLog
 # Create your views here.
 
 def front(request):
