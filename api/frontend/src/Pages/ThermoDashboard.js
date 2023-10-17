@@ -14,6 +14,8 @@ import AuthContext from "../Login/AuthContext";
 import axios from 'axios'
 import Button from "@mui/material/Button";
 import Container from '@mui/material/Container'
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
 
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
@@ -25,6 +27,7 @@ const ThermoDashboard = () => {
     const [device, setDevice] = useState(null)
     const [temp, setTemp] = useState(0)
     const [refresh, setRefresh] = useState(false)
+    const [jobs, setJobs] = useState(null)
     const CtoF = (cTemp) => {
         return (cTemp * 9/5) + 32
     }
@@ -64,6 +67,7 @@ const ThermoDashboard = () => {
         .then((res) => {
             if (res.status === 200) {
                 console.log(res.data)
+                setJobs(res.data.data)
             } else {
                 console.log(res)
             }
@@ -120,7 +124,7 @@ const ThermoDashboard = () => {
         }
     }
 
-    return (
+    return ( //work on formatting this page better later (put everything in a container)
         <>
         <Stack direction="column" textAlign={'center'} alignItems="center" spacing={4} m={6}>
             { device &&
@@ -173,6 +177,31 @@ const ThermoDashboard = () => {
             </>
             }
         </Stack>
+        { device &&
+        <Box sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', padding: '1rem', marginBottom: '2rem', marginLeft: '21rem', marginRight: '21rem' }}>
+            <Stack direction="column" textAlign={'center'} mt={1} mb={4}>
+                <Typography variant="h4">Your Jobs</Typography>
+            </Stack>
+            <Container>
+                <Grid container direction="row" justifyContent="space-around" spacing={2}>
+                    {jobs ? (jobs.map((job) => {
+                        return (
+                            <Grid item>
+                                <div onClick={() => alert(JSON.stringify(job.JobLogs))} style={{ cursor: 'pointer' }}>
+                                    <Card sx={{ borderRadius: '2rem', bgcolor: '#000', width: '15rem'}}>
+                                        <CardContent>
+                                            <Typography gutterBottom variant="h6" color='#fff' component="div">{job.Id}</Typography>
+                                            <Typography variant="body2" color='#fff'>{job.Description}</Typography>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            </Grid>
+                        )
+                    })) : (<Typography variant="h6">You have no jobs for this thermostat.</Typography>)}
+                </Grid>
+            </Container>
+        </Box>
+        }
         </>
     )
 }
