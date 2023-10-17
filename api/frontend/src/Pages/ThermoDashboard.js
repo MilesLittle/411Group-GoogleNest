@@ -62,7 +62,11 @@ const ThermoDashboard = () => {
     useEffect(() => {
         axios.get(`/logjobs?googleId=${googleAccountInfo.id}&thermostatId=${deviceId}`)
         .then((res) => {
-            console.log(res)
+            if (res.status === 200) {
+                console.log(res.data)
+            } else {
+                console.log(res)
+            }
         }).catch((err) => {
             console.log(err)
         })

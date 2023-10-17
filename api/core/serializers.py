@@ -12,7 +12,7 @@ class JobLogSerializer(serializers.ModelSerializer):
         fields = ('Id', 'JobId', 'ActualTemp', 'SetPointTemp', 'TimeLogged')
 
 class JobSerializer(serializers.ModelSerializer):
-    JobLogs = JobLogSerializer()
+    JobLogs = JobLogSerializer(many=True)
     class Meta:
         model = Job
-        fields = ('Id', 'GoogleId', 'ThermostatId', 'Description')
+        fields = ('Id', 'GoogleId', 'ThermostatId', 'Description', 'JobLogs')
