@@ -16,6 +16,7 @@ import Button from "@mui/material/Button";
 import Container from '@mui/material/Container'
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
 
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
@@ -28,6 +29,7 @@ const ThermoDashboard = () => {
     const [temp, setTemp] = useState(0)
     const [refresh, setRefresh] = useState(false)
     const [jobs, setJobs] = useState(null)
+    const [chartData, setChartData] = useState(null)
     const CtoF = (cTemp) => {
         return (cTemp * 9/5) + 32
     }
@@ -187,7 +189,7 @@ const ThermoDashboard = () => {
                     {jobs ? (jobs.map((job) => {
                         return (
                             <Grid item>
-                                <div onClick={() => alert(JSON.stringify(job.JobLogs))} style={{ cursor: 'pointer' }}>
+                                <div onClick={() => setChartData(job.JobLogs)} style={{ cursor: 'pointer' }}>
                                     <Card sx={{ borderRadius: '2rem', bgcolor: '#000', width: '15rem'}}>
                                         <CardContent>
                                             <Typography gutterBottom variant="h6" color='#fff' component="div">{job.Id}</Typography>
@@ -201,6 +203,17 @@ const ThermoDashboard = () => {
                 </Grid>
             </Container>
         </Box>
+        }
+        { chartData &&
+            <LineChart width={700} height={500} margin={{ top: 5, bottom: 5}} data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="TimeLogged"/>
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="ActualTemp" stroke="#ff3333" activeDot={{ r: 8 }} />
+                <Line type="monotone" dataKey="SetPointTemp" stroke="#3385ff" activeDot={{ r: 8 }}/>
+            </LineChart>
         }
         </>
     )
