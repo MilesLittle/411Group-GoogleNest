@@ -22,7 +22,7 @@ class Job(models.Model): #mirror table for apscheduler jobs to make mapping data
     
 class JobLog(models.Model):
     Id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False) #in case we run out of ints perhaps 
-    JobId = models.ForeignKey(Job, on_delete=models.CASCADE) #delete logs associated with a job
+    JobId = models.ForeignKey(Job, on_delete=models.CASCADE, related_name='JobLogs') #delete logs associated with a job
     ActualTemp = models.DecimalField(max_digits=9,decimal_places=6) #store it raw, convert on front end for graphing. Remember Google API uses C so it will be stored in C
     SetPointTemp = models.DecimalField(max_digits=9,decimal_places=6) #same here
     TimeLogged = models.DateTimeField(auto_now_add=True) #USE_TZ = True in settings.py so this handles offset stuff i think?

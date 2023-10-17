@@ -2,7 +2,7 @@ from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import TempInfoSerializer
+from .serializers import TempInfoSerializer, JobSerializer
 from .models import TempInfo, Job, JobLog
 from apscheduler.triggers.interval import IntervalTrigger
 from datetime import datetime
@@ -120,9 +120,14 @@ def deleteLogJob(name):
         return Response(data={'status': 404, 'message': 'No job was found, or something went wrong'}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['GET'])
-def getLogJobs(googleId, thermoId):
-    ljs = Job.objects.get(GoogleId=googleId, ThermostatId=thermoId) #need serializer
-    if ljs is None:
+def getLogJobs(request):
+    googleId = request.GET['googleId']
+    thermoId = request.GET['thermostatId']
+    try:
+        logsandjobs = Job.objects.prefetch_related('JobLogs').get(GoogleId=googleId, ThermostatId=thermoId)
+        serializedlogsandjobs = JobSerializer(logsandjobs)
+        return Response(data={'status': 200, 'message': 'Got the jobs and their logs', 'data': serializedlogsandjobs}, status=status.HTTP_200_OK)
+    except Job.DoesNotExist:
         return Response(data={'status': 404, 'message': 'No jobs found for this thermostat created by the logged in user'}, status=status.HTTP_404_NOT_FOUND)
-    else:
-        return Response(data={'status': 200, 'message': 'Got the jobs and their logs', 'data': ljs}, status=status.HTTP_200_OK)
+
+        

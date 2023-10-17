@@ -15,9 +15,12 @@ import axios from 'axios'
 import Button from "@mui/material/Button";
 import Container from '@mui/material/Container'
 
+axios.defaults.xsrfCookieName = 'csrftoken'
+axios.defaults.xsrfHeaderName = 'X-CSRFToken'
+
 const ThermoDashboard = () => {
     document.title = 'Nest Thermostat Dashboard'
-    const { nestTokens, project_id } = useContext(AuthContext)
+    const { nestTokens, project_id, googleAccountInfo } = useContext(AuthContext)
     const { deviceId } = useParams() 
     const [device, setDevice] = useState(null)
     const [temp, setTemp] = useState(0)
@@ -55,6 +58,15 @@ const ThermoDashboard = () => {
             console.log(err)
         })
     }, [refresh])
+
+    useEffect(() => {
+        axios.get(`/logjobs?googleId=${googleAccountInfo.id}&thermostatId=${deviceId}`)
+        .then((res) => {
+            console.log(res)
+        }).catch((err) => {
+            console.log(err)
+        })
+    }, [])
 
     const tempHandler = async () => {
         if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "COOL") {

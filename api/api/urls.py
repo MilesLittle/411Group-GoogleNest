@@ -27,5 +27,5 @@ urlpatterns = [
 
     path('logjob', createLogJob),
     path('logjob/<str:name>/delete', deleteLogJob),
-    path('logjobs/googleId?=<str:googleId>&thermostatId?=<str:thermoId>', getLogJobs)
+    path('logjobs', getLogJobs)
 ]

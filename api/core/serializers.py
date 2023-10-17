@@ -6,12 +6,13 @@ class TempInfoSerializer(serializers.ModelSerializer):
         model = TempInfo
         fields = ('id', 'temp', 'humidity')
 
-class JobSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Job
-        fields = ('Id', 'GoogleId', 'ThermostatId', 'Description')
-
 class JobLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = JobLog
         fields = ('Id', 'JobId', 'ActualTemp', 'SetPointTemp', 'TimeLogged')
+
+class JobSerializer(serializers.ModelSerializer):
+    JobLogs = JobLogSerializer()
+    class Meta:
+        model = Job
+        fields = ('Id', 'GoogleId', 'ThermostatId', 'Description')
