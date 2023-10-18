@@ -16,7 +16,8 @@ import Button from "@mui/material/Button";
 import Container from '@mui/material/Container'
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import DarkModeSwitchContext from "../components/NavBar/Dark Mode/DarkModeSwitchContext";
 
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
@@ -24,6 +25,7 @@ axios.defaults.xsrfHeaderName = 'X-CSRFToken'
 const ThermoDashboard = () => {
     document.title = 'Nest Thermostat Dashboard'
     const { nestTokens, project_id, googleAccountInfo } = useContext(AuthContext)
+    const { switched } = useContext(DarkModeSwitchContext)
     const { deviceId } = useParams() 
     const [device, setDevice] = useState(null)
     const [temp, setTemp] = useState(0)
@@ -67,8 +69,14 @@ const ThermoDashboard = () => {
     useEffect(() => {
         axios.get(`/logjobs?googleId=${googleAccountInfo.id}&thermostatId=${deviceId}`)
         .then((res) => {
-            if (res.status === 200) {
+            if (res.status === 200) { 
                 console.log(res.data)
+                res.data.data.forEach((jobanditslogs) => {
+                    jobanditslogs.JobLogs.forEach((joblog) => {
+                        joblog.ActualTemp = Math.round(CtoF(joblog.ActualTemp))
+                        joblog.SetPointTemp = Math.round(CtoF(joblog.SetPointTemp))
+                    })
+                })
                 setJobs(res.data.data)
             } else {
                 console.log(res)
@@ -180,20 +188,20 @@ const ThermoDashboard = () => {
             }
         </Stack>
         { device &&
-        <Box sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', padding: '1rem', marginBottom: '2rem', marginLeft: '21rem', marginRight: '21rem' }}>
-            <Stack direction="column" textAlign={'center'} mt={1} mb={4}>
-                <Typography variant="h4">Your Jobs</Typography>
+        <>
+            <Stack direction="column" textAlign={'center'} mt={1} mb={3}>
+                <Typography variant="h3">Your Jobs</Typography>
             </Stack>
             <Container>
-                <Grid container direction="row" justifyContent="space-around" spacing={2}>
+                <Grid container direction="row" justifyContent="center" spacing={5}>
                     {jobs ? (jobs.map((job) => {
                         return (
                             <Grid item>
                                 <div onClick={() => setChartData(job.JobLogs)} style={{ cursor: 'pointer' }}>
-                                    <Card sx={{ borderRadius: '2rem', bgcolor: '#000', width: '15rem'}}>
+                                    <Card sx={{ borderRadius: '2rem', bgcolor: 'primary.main', width: '15rem'}} elevation={0}>
                                         <CardContent>
-                                            <Typography gutterBottom variant="h6" color='#fff' component="div">{job.Id}</Typography>
-                                            <Typography variant="body2" color='#fff'>{job.Description}</Typography>
+                                            <Typography gutterBottom variant="h6" color='#000' component="div">{job.Id}</Typography>
+                                            <Typography variant="body2" color='#000'>{job.Description}</Typography>
                                         </CardContent>
                                     </Card>
                                 </div>
@@ -202,18 +210,20 @@ const ThermoDashboard = () => {
                     })) : (<Typography variant="h6">You have no jobs for this thermostat.</Typography>)}
                 </Grid>
             </Container>
-        </Box>
-        }
-        { chartData &&
-            <LineChart width={700} height={500} margin={{ top: 5, bottom: 5}} data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="TimeLogged"/>
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="ActualTemp" stroke="#ff3333" activeDot={{ r: 8 }} />
-                <Line type="monotone" dataKey="SetPointTemp" stroke="#3385ff" activeDot={{ r: 8 }}/>
-            </LineChart>
+            { chartData &&
+                <ResponsiveContainer height={400}>
+                    <LineChart margin={{ top: 50, bottom: 30, right: 100, left: 50 }} data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="TimeLogged" />
+                            <YAxis />
+                            <Tooltip />
+                            <Legend />
+                            <Line type="monotone" dataKey="ActualTemp" stroke="#ff3333" activeDot={{ r: 8 }} name="Actual Temp"/>
+                            <Line type="monotone" dataKey="SetPointTemp" stroke="#3385ff" activeDot={{ r: 8 }} name="Set Point Temp"/>
+                    </LineChart>
+                </ResponsiveContainer>
+            }
+        </>
         }
         </>
     )
