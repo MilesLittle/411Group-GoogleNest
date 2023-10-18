@@ -188,17 +188,17 @@ const ThermoDashboard = () => {
             }
         </Stack>
         { device &&
-        <>
+            <>
             <Stack direction="column" textAlign={'center'} mt={1} mb={3}>
                 <Typography variant="h3">Your Jobs</Typography>
             </Stack>
             <Container>
-                <Grid container direction="row" justifyContent="center" spacing={5}>
+                <Grid container direction="row" justifyContent="center" spacing={5} marginBottom="2rem">
                     {jobs ? (jobs.map((job) => {
                         return (
                             <Grid item>
                                 <div onClick={() => setChartData(job.JobLogs)} style={{ cursor: 'pointer' }}>
-                                    <Card sx={{ borderRadius: '2rem', bgcolor: 'primary.main', width: '15rem'}} elevation={0}>
+                                    <Card sx={{ borderRadius: '2rem', bgcolor: 'primary.main', width: '15rem'}} elevation={(job.JobLogs === chartData ? 8 : 0)}>
                                         <CardContent>
                                             <Typography gutterBottom variant="h6" color='#000' component="div">{job.Id}</Typography>
                                             <Typography variant="body2" color='#000'>{job.Description}</Typography>
@@ -207,21 +207,32 @@ const ThermoDashboard = () => {
                                 </div>
                             </Grid>
                         )
-                    })) : (<Typography variant="h6">You have no jobs for this thermostat.</Typography>)}
+                    })) : (<Typography variant="h6" color={ switched ? 'primary.main' : 'secondary.main' } sx={{ mt: '2rem', mb: '1rem', ml: '1.7rem' }}>You have no jobs set on this thermostat.</Typography>)}
                 </Grid>
             </Container>
-            { chartData &&
+            { chartData ? (
                 <ResponsiveContainer height={400}>
-                    <LineChart margin={{ top: 50, bottom: 30, right: 100, left: 50 }} data={chartData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="TimeLogged" />
-                            <YAxis />
-                            <Tooltip />
-                            <Legend />
-                            <Line type="monotone" dataKey="ActualTemp" stroke="#ff3333" activeDot={{ r: 8 }} name="Actual Temp"/>
-                            <Line type="monotone" dataKey="SetPointTemp" stroke="#3385ff" activeDot={{ r: 8 }} name="Set Point Temp"/>
+                    <LineChart margin={{ bottom: 30, right: 100, left: 50 }} data={chartData}>
+                        <CartesianGrid stroke={(switched ? '#7BF1A8' : '#000')} strokeDasharray="3 3" />
+                        <XAxis dataKey="TimeLogged" stroke={(switched ? '#7BF1A8' : '#000')} />
+                        <YAxis stroke={(switched ? '#7BF1A8' : '#000')}/>
+                        <Tooltip />
+                        <Legend wrapperStyle={{ right: 75 }}/>
+                        <Line type="monotone" dataKey="ActualTemp" stroke="#ff3333" activeDot={{ r: 8 }} name="Actual Temp"/>
+                        <Line type="monotone" dataKey="SetPointTemp" stroke="#3385ff" activeDot={{ r: 8 }} name="Set Point Temp"/>
                     </LineChart>
-                </ResponsiveContainer>
+                </ResponsiveContainer> )
+                : (<ResponsiveContainer height={400}>
+                    <LineChart margin={{ bottom: 30, right: 100, left: 50 }}>
+                        <CartesianGrid stroke={(switched ? '#7BF1A8' : '#000')} strokeDasharray="3 3" />
+                        <XAxis />
+                        <YAxis />
+                        <Legend wrapperStyle={{ right: 75 }}/>
+                        <Line stroke="#ff3333" name="Actual Temp"/>
+                        <Line stroke="#3385ff" name="Set Point Temp"/>
+                    </LineChart>
+                   </ResponsiveContainer>
+                )
             }
         </>
         }
