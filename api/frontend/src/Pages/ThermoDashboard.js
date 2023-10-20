@@ -16,11 +16,13 @@ import Button from "@mui/material/Button";
 import Container from '@mui/material/Container'
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import ToolTip from '@mui/material/Tooltip'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Label } from 'recharts'
 import DarkModeSwitchContext from "../components/NavBar/Dark Mode/DarkModeSwitchContext";
+import moment from 'moment'
 
-axios.defaults.xsrfCookieName = 'csrftoken'
-axios.defaults.xsrfHeaderName = 'X-CSRFToken'
+//axios.defaults.xsrfCookieName = 'csrftoken'
+//axios.defaults.xsrfHeaderName = 'X-CSRFToken'
 
 const ThermoDashboard = () => {
     document.title = 'Nest Thermostat Dashboard'
@@ -70,14 +72,19 @@ const ThermoDashboard = () => {
         axios.get(`/logjobs?googleId=${googleAccountInfo.id}&thermostatId=${deviceId}`)
         .then((res) => {
             if (res.status === 200) { 
-                console.log(res.data)
-                res.data.data.forEach((jobanditslogs) => {
+                console.log(res.data) //raw data from Django, temp unconverted (How are the temps already converted in the console before the forEach functions run below?)
+                var convertedData = []
+                convertedData = res.data.data
+                convertedData.forEach((jobanditslogs) => { //but when I comment out this block it somehow changes the res.data log even though its before this even runs
                     jobanditslogs.JobLogs.forEach((joblog) => {
+                        var formattedDate = moment(`${joblog.TimeLogged}`).format('llll') 
                         joblog.ActualTemp = Math.round(CtoF(joblog.ActualTemp))
                         joblog.SetPointTemp = Math.round(CtoF(joblog.SetPointTemp))
+                        joblog.TimeLogged = formattedDate
                     })
                 })
-                setJobs(res.data.data)
+                console.log(convertedData) //temperatures changed from C to F, date changed (but somehow they are already changed above?)
+                setJobs(convertedData)
             } else {
                 console.log(res)
             }
@@ -198,12 +205,14 @@ const ThermoDashboard = () => {
                         return (
                             <Grid item>
                                 <div onClick={() => setChartData(job.JobLogs)} style={{ cursor: 'pointer' }}>
-                                    <Card sx={{ borderRadius: '2rem', bgcolor: 'primary.main', width: '15rem'}} elevation={(job.JobLogs === chartData ? 8 : 0)}>
-                                        <CardContent>
-                                            <Typography gutterBottom variant="h6" color='#000' component="div">{job.Id}</Typography>
-                                            <Typography variant="body2" color='#000'>{job.Description}</Typography>
-                                        </CardContent>
-                                    </Card>
+                                    <ToolTip title={`Job Description: ${job.Description}`} arrow>
+                                        <Card sx={{ borderRadius: '2rem', bgcolor: (job.JobLogs === chartData ? 'primary.dark' : 'primary.main'), width: '15rem' }} elevation={(job.JobLogs === chartData ? 8 : 0)}>
+                                            <CardContent>
+                                                <Typography gutterBottom variant="h6" color='#000' component="div">{job.Id}</Typography>
+                                                <Typography variant="body2" color='#000'>{(job.Description.length > 30 ? `${job.Description.substr(0, 32)}...` : job.Description)}</Typography>
+                                            </CardContent>
+                                        </Card>
+                                    </ToolTip>
                                 </div>
                             </Grid>
                         )
@@ -211,23 +220,31 @@ const ThermoDashboard = () => {
                 </Grid>
             </Container>
             { chartData ? (
-                <ResponsiveContainer height={400}>
+                <ResponsiveContainer height={525}>
                     <LineChart margin={{ bottom: 30, right: 100, left: 50 }} data={chartData}>
                         <CartesianGrid stroke={(switched ? '#7BF1A8' : '#000')} strokeDasharray="3 3" />
-                        <XAxis dataKey="TimeLogged" stroke={(switched ? '#7BF1A8' : '#000')} />
-                        <YAxis stroke={(switched ? '#7BF1A8' : '#000')}/>
-                        <Tooltip />
-                        <Legend wrapperStyle={{ right: 75 }}/>
+                        <XAxis dataKey="TimeLogged" stroke={(switched ? '#7BF1A8' : '#000')} angle={-55} height={170} dx={-50} dy={75}>
+                            <Label value="Dates Logged" position="bottom" style={{ fill: (switched ? '#7BF1A8' : '#000')}}/>
+                        </XAxis>
+                        <YAxis stroke={(switched ? '#7BF1A8' : '#000')}>
+                            <Label value='Temperature in Fahrenheit' angle={-90} position="left" dy={-90} dx={10} style={{ fill: (switched ? '#7BF1A8' : '#000')}}/>
+                        </YAxis>
+                        <Tooltip contentStyle={{ backgroundColor: (switched ? '#000' : '#fff'), borderColor: (switched ? '#000' : '#fff'), borderRadius: '1rem' }} labelStyle={{ color: (switched ? '#7BF1A8' : '#000')}}/>
+                        <Legend wrapperStyle={{ right: 75 }} verticalAlign="top" height={40}/>
                         <Line type="monotone" dataKey="ActualTemp" stroke="#ff3333" activeDot={{ r: 8 }} name="Actual Temp"/>
                         <Line type="monotone" dataKey="SetPointTemp" stroke="#3385ff" activeDot={{ r: 8 }} name="Set Point Temp"/>
                     </LineChart>
                 </ResponsiveContainer> )
-                : (<ResponsiveContainer height={400}>
+                : (<ResponsiveContainer height={375}>
                     <LineChart margin={{ bottom: 30, right: 100, left: 50 }}>
                         <CartesianGrid stroke={(switched ? '#7BF1A8' : '#000')} strokeDasharray="3 3" />
-                        <XAxis />
-                        <YAxis />
-                        <Legend wrapperStyle={{ right: 75 }}/>
+                        <XAxis>
+                            <Label value="Dates Logged" position="bottom" />
+                        </XAxis>
+                        <YAxis>
+                            <Label value='Temperature in Fahrenheit' angle={-90} position='left' dy={-90} dx={10}/>
+                        </YAxis>
+                        <Legend wrapperStyle={{ right: 75 }} verticalAlign="top" height={40}/>
                         <Line stroke="#ff3333" name="Actual Temp"/>
                         <Line stroke="#3385ff" name="Set Point Temp"/>
                     </LineChart>
