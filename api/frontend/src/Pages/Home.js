@@ -114,8 +114,15 @@ const Home = () => {
               </Container>
             </>
           ) : (
-            <Stack direction="column" textAlign={'center'} spacing={4} m={8}>
+            <Stack direction="column" textAlign={'center'} spacing={4} m={5}>
               <Grow in={true}><Typography variant="h3">Welcome to TempWise Assistant</Typography></Grow>
+              <center>
+              <iframe 
+                src='https://www.youtube.com/embed/-tagcWAI_D0?si=VdInvAuabRpMKNjd' 
+                width='500' 
+                height='250'
+                style={{ borderStyle: 'solid', borderRadius: '1rem', borderColor: '#7BF1A8', borderWidth: '0.1rem' }}/>
+              </center>
               <div>
                 <Grow in={true}>
                   { switched ? 

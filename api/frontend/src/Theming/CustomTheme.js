@@ -10,7 +10,7 @@ const CustomTheme = ({children}) => {
            primary: { //primary components (some shade of green w black text)
                 main: '#7BF1A8',
                 light: '#D1FAE1',
-                dark: '#5DEE95',
+                dark: '#46ec86',
                 contrastText: '#000000'
            },
            secondary: { //secondary components (black w white or green text)
@@ -29,7 +29,7 @@ const CustomTheme = ({children}) => {
            primary: { 
                 main: '#7BF1A8',
                 light: '#D1FAE1',
-                dark: '#5DEE95',
+                dark: '#46ec86',
                 contrastText: '#7BF1A8'
            },
            secondary: {
