@@ -110,14 +110,21 @@ def createLogJob(request):
         return Response(data={'status': 201, 'message': "Log job succesfully created."}, status=status.HTTP_201_CREATED)
 
 @api_view(['DELETE'])
-def deleteLogJob(name):
-    if myscheduler.get_job(job_id=name):
-        myscheduler.remove_job(job_id=name)
-        jobtodelete = Job.objects.get(Id = name)
+def deleteLogJob(request, name): #keep request even if not used, fixes 500 got multiple values for argument 'name' TypeError
+#    if myscheduler.get_job(job_id=name):  #code for Django apscheduler job
+#        myscheduler.remove_job(job_id=name)
+#        jobtodelete = Job.objects.get(Id = name)
+#        jobtodelete.delete()
+#        return Response(data={'status': 200, 'message': 'Log job successfully deleted.'}, status=status.HTTP_200_OK)
+#    else:
+#        return Response(data={'status': 404, 'message': 'No job was found, or something went wrong'}, status=status.HTTP_404_NOT_FOUND)
+    try:
+        jobtodelete = Job.objects.get(Id=name)
         jobtodelete.delete()
         return Response(data={'status': 200, 'message': 'Log job successfully deleted.'}, status=status.HTTP_200_OK)
-    else:
-        return Response(data={'status': 404, 'message': 'No job was found, or something went wrong'}, status=status.HTTP_404_NOT_FOUND)
+    except Job.DoesNotExist:
+        return Response(data={'status': 404, 'message': 'No job was found.'}, status=status.HTTP_404_NOT_FOUND)
+
 
 @api_view(['GET'])
 def getLogJobs(request):

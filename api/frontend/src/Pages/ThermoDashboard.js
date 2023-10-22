@@ -20,9 +20,12 @@ import ToolTip from '@mui/material/Tooltip'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Label } from 'recharts'
 import DarkModeSwitchContext from "../components/NavBar/Dark Mode/DarkModeSwitchContext";
 import moment from 'moment'
+import DeleteIcon from '@mui/icons-material/Delete';
+import PauseCircleIcon from '@mui/icons-material/PauseCircle';
 
-//axios.defaults.xsrfCookieName = 'csrftoken'
-//axios.defaults.xsrfHeaderName = 'X-CSRFToken'
+axios.defaults.xsrfCookieName = 'csrftoken'
+axios.defaults.xsrfHeaderName = 'X-CSRFToken'
+//axios.defaults.withCredentials = true //somehow this messes with the Google login?
 
 const ThermoDashboard = () => {
     document.title = 'Nest Thermostat Dashboard'
@@ -31,7 +34,8 @@ const ThermoDashboard = () => {
     const { deviceId } = useParams() 
     const [device, setDevice] = useState(null)
     const [temp, setTemp] = useState(0)
-    const [refresh, setRefresh] = useState(false)
+    const [deviceRefresh, setDeviceRefresh] = useState(false)
+    const [jobRefresh, setJobRefresh] = useState(false)
     const [jobs, setJobs] = useState(null)
     const [chartData, setChartData] = useState(null)
     const CtoF = (cTemp) => {
@@ -66,7 +70,7 @@ const ThermoDashboard = () => {
         }).catch((err) => {
             console.log(err)
         })
-    }, [refresh])
+    }, [deviceRefresh])
 
     useEffect(() => {
         axios.get(`/logjobs?googleId=${googleAccountInfo.id}&thermostatId=${deviceId}`)
@@ -91,7 +95,7 @@ const ThermoDashboard = () => {
         }).catch((err) => {
             console.log(err)
         })
-    }, [])
+    }, [jobRefresh])
 
     const tempHandler = async () => {
         if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "COOL") {
@@ -110,7 +114,7 @@ const ThermoDashboard = () => {
                 if (res.status === 200) {
                     console.log('Successfully set temperature')
                     console.log(res.data)
-                    setRefresh(!refresh) //something stupid to call the single device endpoint again and let the user see the new temp that they set
+                    setDeviceRefresh(!deviceRefresh) //something stupid to call the single device endpoint again and let the user see the new temp that they set
                 }
             }).catch((err) => {
                 console.log(err)
@@ -131,7 +135,7 @@ const ThermoDashboard = () => {
                 if (res.status === 200) {
                     console.log('Successfully set temperature')
                     console.log(res.data)
-                    setRefresh(!refresh)
+                    setDeviceRefresh(!deviceRefresh)
                 }
             }).catch((err) => {
                 console.log(err)
@@ -139,6 +143,22 @@ const ThermoDashboard = () => {
         } else {
             console.log('Thermostat is in heatcool mode or off')
         }
+    }
+
+    const deleteJob = async (id) => {
+        await axios.delete(`/logjob/${id}/delete`)
+        .then((res) => {
+            if (res.status === 200) { //needs confirmation window
+                console.log('Successfully deleted the job')
+                console.log(res.data)
+                setJobRefresh(!jobRefresh)
+            } else if (res.status === 404) {
+                console.log('The job was not found')
+                console.log(res.data)
+            }
+        }).catch((err) => {
+            console.log(err)
+        })
     }
 
     return ( //work on formatting this page better later (put everything in a container)
@@ -203,18 +223,52 @@ const ThermoDashboard = () => {
                 <Grid container direction="row" justifyContent="center" spacing={5} marginBottom="2rem">
                     {jobs ? (jobs.map((job) => {
                         return (
-                            <Grid item>
-                                <div onClick={() => setChartData(job.JobLogs)} style={{ cursor: 'pointer' }}>
+                            <Grow in={true}>
+                                <Grid item>
                                     <ToolTip title={`Job Description: ${job.Description}`} arrow>
-                                        <Card sx={{ borderRadius: '2rem', bgcolor: (job.JobLogs === chartData ? 'primary.dark' : 'primary.main'), width: '15rem' }} elevation={(job.JobLogs === chartData ? 8 : 0)}>
+                                        <Card sx={{ borderRadius: '2rem', bgcolor: (job.JobLogs === chartData ? 'primary.dark' : 'primary.main'), width: '15rem' }} elevation={(job.JobLogs === chartData ? 8 : 0)} key={job.Id}>
                                             <CardContent>
-                                                <Typography gutterBottom variant="h6" color='#000' component="div">{job.Id}</Typography>
-                                                <Typography variant="body2" color='#000'>{(job.Description.length > 30 ? `${job.Description.substr(0, 32)}...` : job.Description)}</Typography>
+                                                <Grid container direction="row" justifyContent="space-between">
+                                                    <Grid item>
+                                                        <Typography gutterBottom variant="h6" color='#000' component="div">
+                                                            <div onClick={() => setChartData(job.JobLogs)} style={{ cursor: 'pointer' }}>
+                                                                {job.Id}
+                                                            </div>
+                                                        </Typography>
+                                                    </Grid>
+                                                    <Grid item>
+                                                        <Grid container justifyContent="flex-end">
+                                                            <Grid item>
+                                                                <div onClick={() => deleteJob(job.Id)} style={{ cursor: 'pointer' }}>
+                                                                    <ToolTip title="Delete Job">
+                                                                        <DeleteIcon />
+                                                                    </ToolTip>
+                                                                </div>
+                                                            </Grid>
+                                                            <Grid item>
+                                                                <div onClick={() => alert(`Pause job ${job.Id}`)} style={{ cursor: 'pointer' }}>
+                                                                    <ToolTip title="Pause Job">
+                                                                        <PauseCircleIcon />
+                                                                    </ToolTip>
+                                                                </div>
+                                                            </Grid>
+                                                        </Grid>
+                                                    </Grid>
+                                                </Grid>
+                                                <Grid container direction="column">
+                                                    <Grid item>
+                                                        <Typography variant="body2" color='#000'>
+                                                            <div onClick={() => setChartData(job.JobLogs)} style={{ cursor: 'pointer' }}>
+                                                                {(job.Description.length > 30 ? `${job.Description.substr(0, 32)}...` : job.Description)}
+                                                            </div>
+                                                        </Typography>
+                                                    </Grid>
+                                                </Grid>
                                             </CardContent>
                                         </Card>
                                     </ToolTip>
-                                </div>
-                            </Grid>
+                                </Grid>
+                            </Grow>
                         )
                     })) : (<Typography variant="h6" color={ switched ? 'primary.main' : 'secondary.main' } sx={{ mt: '2rem', mb: '1rem', ml: '1.7rem' }}>You have no jobs set on this thermostat.</Typography>)}
                 </Grid>
