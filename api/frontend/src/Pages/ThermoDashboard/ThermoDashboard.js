@@ -23,6 +23,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import PauseCircleIcon from '@mui/icons-material/PauseCircle';
 import Snackbar from "@mui/material/Snackbar";
 import SnackbarContent from "@mui/material/SnackbarContent";
+import AddCircleIcon from '@mui/icons-material/AddCircle';
 
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
@@ -185,7 +186,7 @@ const ThermoDashboard = () => {
             <Snackbar open={alertOpen} anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}>
                 <SnackbarContent message={responseMessage} sx={{ backgroundColor: '#7BF1A8', color: '#000' }}/>
             </Snackbar>
-            <Grid container direction="column" justifyContent="center" alignItems="center" mt={1} spacing={3}>
+            <Grid container direction="column" justifyContent="center" alignItems="center" mt={1} mb={3} spacing={3}>
                 <Grid item>
                     { device &&
                         <Grow in={true}>
@@ -346,6 +347,28 @@ const ThermoDashboard = () => {
                             }
                         </>
                     }
+                    <Grid item>
+                        { device &&
+                            <Container>
+                                <Grid container direction="row" justifyContent="space-around" alignItems="center" spacing={2}>
+                                    <Grid item>
+                                        { switched ?
+                                            <Button variant="outlined" color="primary" size="large" startIcon={<AddCircleIcon/>}>Add Logging Job</Button>
+                                            :
+                                            <Button variant="contained" color="secondary" size="large" startIcon={<AddCircleIcon/>}>Add Logging Job</Button>
+                                        }
+                                    </Grid>
+                                    <Grid item>
+                                        { switched ?
+                                            <Button variant="outlined" color="primary" size="large" startIcon={<AddCircleIcon/>}>Add Setting Job</Button>
+                                            :
+                                            <Button variant="contained" color="secondary" size="large" startIcon={<AddCircleIcon/>}>Add Setting Job</Button>
+                                        }
+                                    </Grid>
+                                </Grid> 
+                            </Container>
+                        }
+                    </Grid>
             </Grid>
         </>
     )
