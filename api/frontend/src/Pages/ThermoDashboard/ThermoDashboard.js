@@ -1,6 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import Stack from "@mui/material/Stack";
 import Grow from "@mui/material/Grow";
 import Typography from '@mui/material/Typography';
 import List from '@mui/material/List'
@@ -24,7 +23,6 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import PauseCircleIcon from '@mui/icons-material/PauseCircle';
 import Snackbar from "@mui/material/Snackbar";
 import SnackbarContent from "@mui/material/SnackbarContent";
-import Alert from "@mui/material/Alert";
 
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
@@ -182,155 +180,173 @@ const ThermoDashboard = () => {
         }
     }, [responseMessage])
 
-    return ( //work on formatting this page better later (put everything in a container)
+    return (
         <>
-        <Snackbar open={alertOpen} anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}>
-            <SnackbarContent message={responseMessage} sx={{ backgroundColor: '#7BF1A8', color: '#000' }}/>
-        </Snackbar>
-        <Stack direction="column" textAlign={'center'} alignItems="center" spacing={4} m={6}>
-            { device &&
-            <>
-            <Grow in={true}>
-                <Typography fontSize={'3rem'} variant="h3">
-                    {device.parentRelations[0].displayName.length === 0 ? 'No custom name set.' : device.parentRelations[0].displayName}
-                </Typography>
-            </Grow>
-            <Grow in={true}>
-            <Box sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', width: '40rem' }}>
-                <List>
-                    <ListItem>
-                        <ListItemText 
-                        primary={`Humidity Percent: ${device.traits["sdm.devices.traits.Humidity"].ambientHumidityPercent}%`}
-                        primaryTypographyProps={{ fontSize: '2rem' }}
-                        />
-                    </ListItem>
-                    <Divider variant="middle" />
-                    <ListItem>
-                        <ListItemText 
-                        primary={`Current Temperature: ${Math.round(CtoF(device.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius))} F`}
-                        primaryTypographyProps={{ fontSize: '2rem'}}
-                        />
-                    </ListItem>
-                    <Divider variant="middle"/>
-                    <ListItem>
-                        <ListItemText 
-                        primary={`Target Temperature: ${Math.round(CtoF(device.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius))} F`}
-                        primaryTypographyProps={{ fontSize: '2rem' }}
-                        />
-                    </ListItem>
-                </List>
-            </Box>
-            </Grow>
-            <Grow in={true}>
-            <Box component="form" sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', padding: '1rem', marginBottom: '2rem', marginLeft: '20rem', marginRight: '20rem' }}>
-                <Container>
-                    <Grid container direction="row" justifyContent="center" alignItems="center" spacing={2}>
-                        <Grid item>
-                            <TextField variant="outlined" color="secondary" label="Set temperature in F" onChange={(e) => setTemp(parseInt(e.target.value))} />
-                        </Grid> 
-                        <Grid item>
-                            <Button variant="contained" color="secondary" onClick={() => tempHandler()}>Set Temperature</Button>
-                        </Grid>
-                    </Grid>   
-                </Container>
-            </Box>
-            </Grow>
-            </>
-            }
-        </Stack>
-        { device &&
-            <>
-            <Stack direction="column" textAlign={'center'} mt={1} mb={3}>
-                <Typography variant="h3">Your Jobs</Typography>
-            </Stack>
-            <Container>
-                <Grid container direction="row" justifyContent="center" spacing={5} marginBottom="2rem">
-                    {jobs ? (jobs.map((job) => {
-                        return (
-                            <Grow in={true}>
-                                <Grid item>
-                                    <ToolTip title={<>Job Name: {job.Id}<br/>Job Description: {job.Description}</>} arrow>
-                                        <Card sx={{ borderRadius: '2rem', bgcolor: (job.JobLogs === chartData ? 'primary.dark' : 'primary.main'), width: '15rem' }} elevation={(job.JobLogs === chartData ? 8 : 0)} key={job.Id}>
-                                            <CardContent>
-                                                <Grid container direction="row" justifyContent="space-between">
-                                                    <Grid item>
-                                                        <Typography gutterBottom variant="h6" color='#000' component="div">
-                                                            <div onClick={() => setChartData(job.JobLogs)} style={{ cursor: 'pointer' }}>
-                                                                {(job.Id.length > 17 ? `${job.Id.substr(0, 13)}...` : job.Id)}
-                                                            </div>
-                                                        </Typography>
-                                                    </Grid>
-                                                    <Grid item>
-                                                        <Grid container justifyContent="flex-end">
-                                                            <Grid item>
-                                                                <div onClick={() => alert(`Pause job ${job.Id}`)} style={{ cursor: 'pointer' }}>
-                                                                    <ToolTip title="Pause Job">
-                                                                        <PauseCircleIcon />
-                                                                    </ToolTip>
-                                                                </div>
-                                                            </Grid>
-                                                            <Grid item>
-                                                                <div onClick={() => deleteJob(job.Id)} style={{ cursor: 'pointer' }}>
-                                                                    <ToolTip title="Delete Job">
-                                                                        <DeleteIcon />
-                                                                    </ToolTip>
-                                                                </div>
-                                                            </Grid>
-                                                        </Grid>
-                                                    </Grid>
-                                                </Grid>
-                                                <Grid container direction="column">
-                                                    <Grid item>
-                                                        <Typography variant="body2" color='#000'>
-                                                            <div onClick={() => setChartData(job.JobLogs)} style={{ cursor: 'pointer' }}>
-                                                                {(job.Description.length > 36 ? `${job.Description.substr(0, 32)}...` : job.Description)}
-                                                            </div>
-                                                        </Typography>
-                                                    </Grid>
-                                                </Grid>
-                                            </CardContent>
-                                        </Card>
-                                    </ToolTip>
-                                </Grid>
-                            </Grow>
-                        )
-                    })) : (<Typography variant="h6" color={ switched ? 'primary.main' : 'secondary.main' } sx={{ mt: '2rem', mb: '1rem', ml: '1.7rem' }}>You have no jobs set on this thermostat.</Typography>)}
+            <Snackbar open={alertOpen} anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}>
+                <SnackbarContent message={responseMessage} sx={{ backgroundColor: '#7BF1A8', color: '#000' }}/>
+            </Snackbar>
+            <Grid container direction="column" justifyContent="center" alignItems="center" mt={1} spacing={3}>
+                <Grid item>
+                    { device &&
+                        <Grow in={true}>
+                            <Typography fontSize={'3rem'} variant="h3" textAlign="center">
+                                {device.parentRelations[0].displayName.length === 0 ? 'No custom name set.' : device.parentRelations[0].displayName}
+                            </Typography>
+                        </Grow>
+                    }
                 </Grid>
-            </Container>
-            { chartData ? (
-                <ResponsiveContainer height={525}>
-                    <LineChart margin={{ bottom: 30, right: 100, left: 50 }} data={chartData}>
-                        <CartesianGrid stroke={(switched ? '#7BF1A8' : '#000')} strokeDasharray="3 3" />
-                        <XAxis dataKey="TimeLogged" stroke={(switched ? '#7BF1A8' : '#000')} angle={-55} height={170} dx={-50} dy={75}>
-                            <Label value="Dates Logged" position="bottom" style={{ fill: (switched ? '#7BF1A8' : '#000')}}/>
-                        </XAxis>
-                        <YAxis stroke={(switched ? '#7BF1A8' : '#000')}>
-                            <Label value='Temperature in Fahrenheit' angle={-90} position="left" dy={-90} dx={10} style={{ fill: (switched ? '#7BF1A8' : '#000')}}/>
-                        </YAxis>
-                        <Tooltip contentStyle={{ backgroundColor: (switched ? '#000' : '#fff'), borderColor: (switched ? '#000' : '#fff'), borderRadius: '1rem' }} labelStyle={{ color: (switched ? '#7BF1A8' : '#000')}}/>
-                        <Legend wrapperStyle={{ right: 75 }} verticalAlign="top" height={40}/>
-                        <Line type="monotone" dataKey="ActualTemp" stroke="#ff3333" activeDot={{ r: 8 }} name="Actual Temp"/>
-                        <Line type="monotone" dataKey="SetPointTemp" stroke="#3385ff" activeDot={{ r: 8 }} name="Set Point Temp"/>
-                    </LineChart>
-                </ResponsiveContainer> )
-                : (<ResponsiveContainer height={375}>
-                    <LineChart margin={{ bottom: 30, right: 100, left: 50 }}>
-                        <CartesianGrid stroke={(switched ? '#7BF1A8' : '#000')} strokeDasharray="3 3" />
-                        <XAxis>
-                            <Label value="Dates Logged" position="bottom" />
-                        </XAxis>
-                        <YAxis>
-                            <Label value='Temperature in Fahrenheit' angle={-90} position='left' dy={-90} dx={10}/>
-                        </YAxis>
-                        <Legend wrapperStyle={{ right: 75 }} verticalAlign="top" height={40}/>
-                        <Line stroke="#ff3333" name="Actual Temp"/>
-                        <Line stroke="#3385ff" name="Set Point Temp"/>
-                    </LineChart>
-                   </ResponsiveContainer>
-                )
-            }
-        </>
-        }
+                <Grid item>
+                    { device && 
+                        <>
+                            <Grow in={true}>
+                                <Box sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', width: '40rem' }}>
+                                    <List>
+                                        <ListItem>
+                                            <ListItemText 
+                                            primary={`Humidity Percent: ${device.traits["sdm.devices.traits.Humidity"].ambientHumidityPercent}%`}
+                                            primaryTypographyProps={{ fontSize: '2rem' }}
+                                            />
+                                        </ListItem>
+                                        <Divider variant="middle" />
+                                        <ListItem>
+                                            <ListItemText 
+                                            primary={`Current Temperature: ${Math.round(CtoF(device.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius))} F`}
+                                            primaryTypographyProps={{ fontSize: '2rem'}}
+                                            />
+                                        </ListItem>
+                                        <Divider variant="middle"/>
+                                        <ListItem>
+                                            <ListItemText 
+                                            primary={`Target Temperature: ${Math.round(CtoF(device.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius))} F`}
+                                            primaryTypographyProps={{ fontSize: '2rem' }}
+                                            />
+                                        </ListItem>
+                                    </List>
+                                </Box>
+                            </Grow>
+                        </>
+                    }
+                </Grid>
+                <Grid item>
+                    { device &&
+                        <Grow in={true}>
+                            <Box component="form" sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', padding: '1rem', marginBottom: '2rem', marginLeft: '20rem', marginRight: '20rem' }}>
+                                <Container>
+                                    <Grid container direction="row" justifyContent="center" alignItems="center" spacing={2}>
+                                        <Grid item>
+                                            <TextField variant="outlined" color="secondary" label="Set temperature in F" onChange={(e) => setTemp(parseInt(e.target.value))} />
+                                        </Grid> 
+                                        <Grid item>
+                                            <Button variant="contained" color="secondary" onClick={() => tempHandler()}>Set Temperature</Button>
+                                        </Grid>
+                                    </Grid>   
+                                </Container>
+                            </Box>
+                        </Grow>
+                    }
+                </Grid>
+                <Grid item>
+                    { device && 
+                        <Grow in={true}>
+                            <Typography variant="h3">Your Jobs</Typography>
+                        </Grow>
+                    }
+                </Grid>
+                <Grid item>
+                    { device &&
+                        <Container>
+                            <Grid container direction="row" justifyContent="center" spacing={5} marginBottom="2rem">
+                                {jobs ? (jobs.map((job) => {
+                                    return (
+                                        <Grow in={true}>
+                                            <Grid item>
+                                                <ToolTip title={<>Job Name: {job.Id}<br/>Job Description: {job.Description}</>} arrow>
+                                                    <Card sx={{ borderRadius: '2rem', bgcolor: (job.JobLogs === chartData ? 'primary.dark' : 'primary.main'), width: '15rem' }} elevation={(job.JobLogs === chartData ? 8 : 0)} key={job.Id}>
+                                                        <CardContent>
+                                                            <Grid container direction="row" justifyContent="space-between">
+                                                                <Grid item>
+                                                                    <Typography gutterBottom variant="h6" color='#000' component="div">
+                                                                        <div onClick={() => setChartData(job.JobLogs)} style={{ cursor: 'pointer' }}>
+                                                                            {(job.Id.length > 17 ? `${job.Id.substr(0, 13)}...` : job.Id)}
+                                                                        </div>
+                                                                    </Typography>
+                                                                </Grid>
+                                                                <Grid item>
+                                                                    <Grid container justifyContent="flex-end">
+                                                                        <Grid item>
+                                                                            <div onClick={() => alert(`Pause job ${job.Id}`)} style={{ cursor: 'pointer' }}>
+                                                                                <ToolTip title="Pause Job">
+                                                                                    <PauseCircleIcon />
+                                                                                </ToolTip>
+                                                                            </div>
+                                                                        </Grid>
+                                                                        <Grid item>
+                                                                            <div onClick={() => deleteJob(job.Id)} style={{ cursor: 'pointer' }}>
+                                                                                <ToolTip title="Delete Job">
+                                                                                    <DeleteIcon />
+                                                                                </ToolTip>
+                                                                            </div>
+                                                                        </Grid>
+                                                                    </Grid>
+                                                                </Grid>
+                                                            </Grid>
+                                                            <Grid container direction="column">
+                                                                <Grid item>
+                                                                    <Typography variant="body2" color='#000'>
+                                                                        <div onClick={() => setChartData(job.JobLogs)} style={{ cursor: 'pointer' }}>
+                                                                            {(job.Description.length > 36 ? `${job.Description.substr(0, 32)}...` : job.Description)}
+                                                                        </div>
+                                                                    </Typography>
+                                                                </Grid>
+                                                            </Grid>
+                                                        </CardContent>
+                                                    </Card>
+                                                </ToolTip>
+                                            </Grid>
+                                        </Grow>
+                                    )
+                                })) : (<Typography variant="h6" color={ switched ? 'primary.main' : 'secondary.main' } sx={{ mt: '2rem', mb: '1rem', ml: '1.7rem' }}>You have no jobs set on this thermostat.</Typography>)}
+                            </Grid>
+                        </Container>
+                    }
+                </Grid>
+                    { device && 
+                        <>
+                            { chartData ? //charts don't show up when in a grid item for some reason
+                                (<ResponsiveContainer height={525}>
+                                    <LineChart margin={{ bottom: 30, right: 100, left: 75 }} data={chartData}>
+                                        <CartesianGrid stroke={(switched ? '#7BF1A8' : '#000')} strokeDasharray="3 3" />
+                                        <XAxis dataKey="TimeLogged" stroke={(switched ? '#7BF1A8' : '#000')} angle={-55} height={170} dx={-50} dy={75}>
+                                            <Label value="Dates Logged" position="bottom" style={{ fill: (switched ? '#7BF1A8' : '#000')}}/>
+                                        </XAxis>
+                                        <YAxis stroke={(switched ? '#7BF1A8' : '#000')}>
+                                            <Label value='Temperature in Fahrenheit' angle={-90} position="left" dy={-90} dx={10} style={{ fill: (switched ? '#7BF1A8' : '#000')}}/>
+                                        </YAxis>
+                                        <Tooltip contentStyle={{ backgroundColor: (switched ? '#000' : '#fff'), borderColor: (switched ? '#000' : '#fff'), borderRadius: '1rem' }} labelStyle={{ color: (switched ? '#7BF1A8' : '#000')}}/>
+                                        <Legend wrapperStyle={{ right: 75 }} verticalAlign="top" height={40}/>
+                                        <Line type="monotone" dataKey="ActualTemp" stroke="#ff3333" activeDot={{ r: 8 }} name="Actual Temp"/>
+                                        <Line type="monotone" dataKey="SetPointTemp" stroke="#3385ff" activeDot={{ r: 8 }} name="Set Point Temp"/>
+                                    </LineChart>
+                                </ResponsiveContainer>)
+                                : 
+                                (<ResponsiveContainer height={375}>
+                                    <LineChart margin={{ bottom: 30, right: 100, left: 75 }}>
+                                        <CartesianGrid stroke={(switched ? '#7BF1A8' : '#000')} strokeDasharray="3 3" />
+                                        <XAxis>
+                                            <Label value="Dates Logged" position="bottom" />
+                                        </XAxis>
+                                        <YAxis>
+                                            <Label value='Temperature in Fahrenheit' angle={-90} position='left' dy={-90} dx={10}/>
+                                        </YAxis>
+                                        <Legend wrapperStyle={{ right: 75 }} verticalAlign="top" height={40}/>
+                                        <Line stroke="#ff3333" name="Actual Temp"/>
+                                        <Line stroke="#3385ff" name="Set Point Temp"/>
+                                    </LineChart>
+                                </ResponsiveContainer>)
+                            }
+                        </>
+                    }
+            </Grid>
         </>
     )
 }
