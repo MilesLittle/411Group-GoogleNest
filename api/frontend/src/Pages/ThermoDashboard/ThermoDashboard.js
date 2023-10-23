@@ -10,7 +10,7 @@ import Box from '@mui/material/Box'
 import Divider from '@mui/material/Divider'
 import Grid from '@mui/material/Grid'
 import TextField from '@mui/material/TextField'
-import AuthContext from "../Login/AuthContext";
+import AuthContext from "../../Login/AuthContext";
 import axios from 'axios'
 import Button from "@mui/material/Button";
 import Container from '@mui/material/Container'
@@ -18,10 +18,13 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import ToolTip from '@mui/material/Tooltip'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Label } from 'recharts'
-import DarkModeSwitchContext from "../components/NavBar/Dark Mode/DarkModeSwitchContext";
+import DarkModeSwitchContext from "../../components/NavBar/Dark Mode/DarkModeSwitchContext";
 import moment from 'moment'
 import DeleteIcon from '@mui/icons-material/Delete';
 import PauseCircleIcon from '@mui/icons-material/PauseCircle';
+import Snackbar from "@mui/material/Snackbar";
+import SnackbarContent from "@mui/material/SnackbarContent";
+import Alert from "@mui/material/Alert";
 
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
@@ -38,6 +41,8 @@ const ThermoDashboard = () => {
     const [jobRefresh, setJobRefresh] = useState(false)
     const [jobs, setJobs] = useState(null)
     const [chartData, setChartData] = useState(null)
+    const [alertOpen, setAlertOpen] = useState(false)
+    const [responseMessage, setResponseMessage] = useState('')
     const CtoF = (cTemp) => {
         return (cTemp * 9/5) + 32
     }
@@ -148,21 +153,40 @@ const ThermoDashboard = () => {
     const deleteJob = async (id) => {
         await axios.delete(`/logjob/${id}/delete`)
         .then((res) => {
-            if (res.status === 200) { //needs confirmation window
+            if (res.status === 200) { //needs confirmation window before deletion
                 console.log('Successfully deleted the job')
                 console.log(res.data)
+                setResponseMessage(res.data.message)
                 setJobRefresh(!jobRefresh)
+                setTimeout(() => {
+                    setAlertOpen(false)
+                    setResponseMessage('')
+                }, 5000)
             } else if (res.status === 404) {
                 console.log('The job was not found')
                 console.log(res.data)
+                setResponseMessage(res.data.message)
+                setTimeout(() => {
+                    setAlertOpen(false)
+                    setResponseMessage('')
+                }, 5000)
             }
         }).catch((err) => {
             console.log(err)
         })
     }
 
+    useEffect(() => {
+        if (responseMessage.length > 0) {
+            setAlertOpen(true)
+        }
+    }, [responseMessage])
+
     return ( //work on formatting this page better later (put everything in a container)
         <>
+        <Snackbar open={alertOpen} anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}>
+            <SnackbarContent message={responseMessage} sx={{ backgroundColor: '#7BF1A8', color: '#000' }}/>
+        </Snackbar>
         <Stack direction="column" textAlign={'center'} alignItems="center" spacing={4} m={6}>
             { device &&
             <>
@@ -225,30 +249,30 @@ const ThermoDashboard = () => {
                         return (
                             <Grow in={true}>
                                 <Grid item>
-                                    <ToolTip title={`Job Description: ${job.Description}`} arrow>
+                                    <ToolTip title={<>Job Name: {job.Id}<br/>Job Description: {job.Description}</>} arrow>
                                         <Card sx={{ borderRadius: '2rem', bgcolor: (job.JobLogs === chartData ? 'primary.dark' : 'primary.main'), width: '15rem' }} elevation={(job.JobLogs === chartData ? 8 : 0)} key={job.Id}>
                                             <CardContent>
                                                 <Grid container direction="row" justifyContent="space-between">
                                                     <Grid item>
                                                         <Typography gutterBottom variant="h6" color='#000' component="div">
                                                             <div onClick={() => setChartData(job.JobLogs)} style={{ cursor: 'pointer' }}>
-                                                                {job.Id}
+                                                                {(job.Id.length > 17 ? `${job.Id.substr(0, 13)}...` : job.Id)}
                                                             </div>
                                                         </Typography>
                                                     </Grid>
                                                     <Grid item>
                                                         <Grid container justifyContent="flex-end">
                                                             <Grid item>
-                                                                <div onClick={() => deleteJob(job.Id)} style={{ cursor: 'pointer' }}>
-                                                                    <ToolTip title="Delete Job">
-                                                                        <DeleteIcon />
+                                                                <div onClick={() => alert(`Pause job ${job.Id}`)} style={{ cursor: 'pointer' }}>
+                                                                    <ToolTip title="Pause Job">
+                                                                        <PauseCircleIcon />
                                                                     </ToolTip>
                                                                 </div>
                                                             </Grid>
                                                             <Grid item>
-                                                                <div onClick={() => alert(`Pause job ${job.Id}`)} style={{ cursor: 'pointer' }}>
-                                                                    <ToolTip title="Pause Job">
-                                                                        <PauseCircleIcon />
+                                                                <div onClick={() => deleteJob(job.Id)} style={{ cursor: 'pointer' }}>
+                                                                    <ToolTip title="Delete Job">
+                                                                        <DeleteIcon />
                                                                     </ToolTip>
                                                                 </div>
                                                             </Grid>
@@ -259,7 +283,7 @@ const ThermoDashboard = () => {
                                                     <Grid item>
                                                         <Typography variant="body2" color='#000'>
                                                             <div onClick={() => setChartData(job.JobLogs)} style={{ cursor: 'pointer' }}>
-                                                                {(job.Description.length > 30 ? `${job.Description.substr(0, 32)}...` : job.Description)}
+                                                                {(job.Description.length > 36 ? `${job.Description.substr(0, 32)}...` : job.Description)}
                                                             </div>
                                                         </Typography>
                                                     </Grid>
