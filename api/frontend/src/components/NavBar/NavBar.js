@@ -13,7 +13,7 @@ import DarkModeSwitchContext from './Dark Mode/DarkModeSwitchContext';
 import { Link } from 'react-router-dom';
 import { useGoogleLogin } from "@react-oauth/google";
 import { useNavigate } from 'react-router-dom';
-import tempwiseLogo from './tempwiseLogo.png';
+import tempwiseLogo from "./Ashton's friend's logo.jpg";
 const NavBar = () => {
   const { setAuthTokenDetails, googleAccountInfo, setHasAuth } = useContext(AuthContext)
   const { switched, setSwitched } = useContext(DarkModeSwitchContext)
@@ -33,14 +33,15 @@ const NavBar = () => {
            on the 3rd flex item.*/}
             <DarkModeSwitch checked={switched} onChange={(e) => setSwitched(e.target.checked)} /> 
           </Grid>
-           <Card sx={{ padding: '8px', backgroundColor: '#000000'}}>
-            <Grid item>
-              <div onClick={() => navigate("/")} style={{ cursor: 'pointer'}}>
-              <img src = {tempwiseLogo} alt = "I'M NOT GOING TO SUGARCOAT IT" />
-              
-              </div>
-            </Grid>
-           </Card>
+          <Grid item>
+            <div onClick={() => navigate("/")} style={{ cursor: 'pointer'}}>
+              <img 
+                src={tempwiseLogo} 
+                alt="I'M NOT GOING TO SUGARCOAT IT"
+                style={{ borderRadius: '0.5rem', width: '3rem', height: '3rem' }} 
+              />
+            </div>
+          </Grid>
           <Grid item>
             { googleAccountInfo ? 
               (<Link to="/profile" style={{ textDecoration: 'none' }}>

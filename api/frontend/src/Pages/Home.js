@@ -13,10 +13,6 @@ import ThermoCard from "../components/ThermoCard/ThermoCard";
 import axios from 'axios';
 import { useLocation, useSearchParams, useNavigate } from "react-router-dom";
 
-
-
-
-
 const Home = () => {
     document.title = 'Welcome to TempWise Assistant'
     const [thermostats, setThermostats] = useState(null)
@@ -29,8 +25,7 @@ const Home = () => {
     
     const CtoF = (cTemp) => {
       return (cTemp * 9/5) + 32
-  }
-    
+    }
 
     const scrollToBottom = () => {
       endRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -114,8 +109,9 @@ const Home = () => {
                           deviceId={getDeviceId(thermostat.name)} 
                           deviceName={thermostat.parentRelations[0].displayName.length === 0 ? 'No custom name set.' : thermostat.parentRelations[0].displayName} 
                           mode={thermostat.traits["sdm.devices.traits.ThermostatMode"].mode}
-                          tempf = {Math.round(CtoF(thermostat.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius))} 
-                          tempc = {Math.round(thermostat.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius)}
+                          actualTempF = {Math.round(CtoF(thermostat.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius))} 
+                          actualTempC = {Math.round(thermostat.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius)}
+                          setPointTempF = {Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius))}
                           humidity = {thermostat.traits["sdm.devices.traits.Humidity"].ambientHumidityPercent}
                          />
                       </Grid>

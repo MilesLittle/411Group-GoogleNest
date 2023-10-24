@@ -1,0 +1,21 @@
+.setpointtemp {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white
+}
+
+.actualtemp {
+    position: absolute;
+    color: white;
+    top: 191px;
+    left: 222px;
+}
+
+.mode {
+    position: absolute;
+    color: white;
+    top: 89px;
+    left: 155px;
+}
