@@ -13,7 +13,7 @@ import DarkModeSwitchContext from './Dark Mode/DarkModeSwitchContext';
 import { Link } from 'react-router-dom';
 import { useGoogleLogin } from "@react-oauth/google";
 import { useNavigate } from 'react-router-dom';
-
+import tempwiseLogo from './tempwiseLogo.png';
 const NavBar = () => {
   const { setAuthTokenDetails, googleAccountInfo, setHasAuth } = useContext(AuthContext)
   const { switched, setSwitched } = useContext(DarkModeSwitchContext)
@@ -36,9 +36,8 @@ const NavBar = () => {
            <Card sx={{ padding: '8px', backgroundColor: '#000000'}}>
             <Grid item>
               <div onClick={() => navigate("/")} style={{ cursor: 'pointer'}}>
-              <Typography fontSize={'1.3rem'} sx={{ textDecoration: 'none', color: '#FFFFFF' }}>
-                Still no logo (yet)
-              </Typography>
+              <img src = {tempwiseLogo} alt = "I'M NOT GOING TO SUGARCOAT IT" />
+              
               </div>
             </Grid>
            </Card>

@@ -13,6 +13,10 @@ import ThermoCard from "../components/ThermoCard/ThermoCard";
 import axios from 'axios';
 import { useLocation, useSearchParams, useNavigate } from "react-router-dom";
 
+
+
+
+
 const Home = () => {
     document.title = 'Welcome to TempWise Assistant'
     const [thermostats, setThermostats] = useState(null)
@@ -22,6 +26,11 @@ const Home = () => {
     const navigate = useNavigate()
     const [searchParams, setSearchParams] = useSearchParams()
     const endRef = useRef(null)
+    
+    const CtoF = (cTemp) => {
+      return (cTemp * 9/5) + 32
+  }
+    
 
     const scrollToBottom = () => {
       endRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -105,6 +114,9 @@ const Home = () => {
                           deviceId={getDeviceId(thermostat.name)} 
                           deviceName={thermostat.parentRelations[0].displayName.length === 0 ? 'No custom name set.' : thermostat.parentRelations[0].displayName} 
                           mode={thermostat.traits["sdm.devices.traits.ThermostatMode"].mode}
+                          tempf = {Math.round(CtoF(thermostat.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius))} 
+                          tempc = {Math.round(thermostat.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius)}
+                          humidity = {thermostat.traits["sdm.devices.traits.Humidity"].ambientHumidityPercent}
                          />
                       </Grid>
                       </Grow>
@@ -114,8 +126,15 @@ const Home = () => {
               </Container>
             </>
           ) : (
-            <Stack direction="column" textAlign={'center'} spacing={4} m={8}>
+            <Stack direction="column" textAlign={'center'} spacing={4} m={5}>
               <Grow in={true}><Typography variant="h3">Welcome to TempWise Assistant</Typography></Grow>
+              <center>
+              <iframe 
+                src='https://www.youtube.com/embed/-tagcWAI_D0?si=VdInvAuabRpMKNjd' 
+                width='500' 
+                height='250'
+                style={{ borderStyle: 'solid', borderRadius: '1rem', borderColor: '#7BF1A8', borderWidth: '0.1rem' }}/>
+              </center>
               <div>
                 <Grow in={true}>
                   { switched ? 
