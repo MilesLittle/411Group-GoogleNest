@@ -7,12 +7,29 @@ import Typography from '@mui/material/Typography'
 import TuneIcon from '@mui/icons-material/Tune';
 import { useNavigate } from "react-router-dom";
 import nestthermostat from './NestThermostat.jpg'
+import ThermostatIcon from '@mui/icons-material/Thermostat';
+import { brown } from '@mui/material/colors';
 
-const ThermoCard = ({ deviceId, deviceName, mode }) => {
+
+
+
+
+
+const ThermoCard = ({ deviceId, deviceName, mode, tempf, tempc ,humidity }) => {
+    
     const navigate = useNavigate()
     return (
-        <Card sx={{ width: '25rem', borderRadius: '2rem', bgcolor: 'primary.main' }} elevation={15} key={deviceId}>
-            <CardMedia sx={{ height: 300, borderRadius: '2rem' }} image={nestthermostat} title='Nest Device' />
+        <Card sx={{ width: '20rem', borderRadius: '5rem', bgcolor: 'primary.main' }} elevation={15} key={deviceId}>
+            <div style ={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '20vh' }}> 
+            <ThermostatIcon
+            sx={{ fontSize: 150,
+            color: brown [500] }} >
+             
+            </ThermostatIcon>
+           
+
+              </div>
+            
             <CardContent sx={{ margin: '0.5rem' }}>
                 <Grid container direction="row" justifyContent="space-between">
                     <Grid item>
@@ -30,6 +47,15 @@ const ThermoCard = ({ deviceId, deviceName, mode }) => {
                     <Grid item>
                         <Typography mb={1}>
                             Nest Thermostat
+                        </Typography>
+                        <Typography > 
+                            Temperature: {tempf} F / {tempc} C
+
+                           
+
+                        </Typography>
+                        <Typography mb = {1}>
+                        Humidity: {humidity}%
                         </Typography>
                         <Typography mb={1}>
                             Mode: {mode}
