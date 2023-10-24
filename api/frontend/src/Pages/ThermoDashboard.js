@@ -6,7 +6,7 @@ import Typography from '@mui/material/Typography';
 
 const ThermoDashboard = () => {
     const { id } = useParams() 
-    console.log(id)
+    
     //Google might not even have ids for every thermostat but at least the routing is set up. Look more into their API. 
     return (
         <Stack direction="column" textAlign={'center'} spacing={4} m={8}>
