@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardMedia from '@mui/material/CardMedia';
@@ -7,13 +7,16 @@ import Typography from '@mui/material/Typography'
 import TuneIcon from '@mui/icons-material/Tune';
 import { useNavigate } from "react-router-dom";
 import blanknestthermostat from './blanknestthermo.jpg'
+import blanknestthermostatdark from './blanknestthermodark.jpg'
+import DarkModeSwitchContext from "../NavBar/Dark Mode/DarkModeSwitchContext";
 import './thermocard.css'
 
 const ThermoCard = ({ deviceId, deviceName, mode, actualTempF, actualTempC, setPointTempF, humidity }) => {    
     const navigate = useNavigate()
+    const { switched } = useContext(DarkModeSwitchContext)
     return (
         <Card sx={{ width: '25rem', borderRadius: '3rem', bgcolor: 'primary.main' }} elevation={15} key={deviceId}>
-            <CardMedia sx={{ height: 300, borderRadius: '3rem', position: 'relative' }} image={blanknestthermostat} title='Nest Device'>
+            <CardMedia sx={{ height: 300, borderRadius: '3rem', position: 'relative', border: '0.1rem solid #7BF1A8' }} image={(switched ? blanknestthermostatdark : blanknestthermostat)} title='Nest Device'>
                 <Typography variant="h2" className="setpointtemp">{setPointTempF}</Typography>
                 <Typography variant="body1" className="actualtemp">{actualTempF}</Typography>
                 <Typography variant="body2" className="mode">{mode}</Typography>
@@ -34,7 +37,7 @@ const ThermoCard = ({ deviceId, deviceName, mode, actualTempF, actualTempC, setP
                 <Grid container direction="column" justifyContent="flex-start">
                     <Grid item>
                         <Typography mb={1}> 
-                            Temperature: {actualTempC} C
+                            Current Temperature: {actualTempC} C
                         </Typography>
                         <Typography mb={1}>
                             Humidity: {humidity}%
