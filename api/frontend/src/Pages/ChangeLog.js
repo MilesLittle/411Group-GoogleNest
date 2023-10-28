@@ -6,11 +6,12 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
-
+import MenuItem from '@mui/material/MenuItem';
+import  TextField  from '@mui/material/TextField';
 
 const ChangeLog = () =>  {  
 
-// Open and close the button for the modal 
+// Open and close the buttons for the modal 
 const [open, setOpen] = React.useState(false);
 
 const OpenModal = () => {
@@ -21,7 +22,22 @@ const CloseModal = () => {
   setOpen(false); 
 }
 
-// get the number and time -> days minutes hours 
+// Time options 
+const timeValues = [
+  {
+    value: "minutes", 
+    label: "minutes", 
+  }, 
+  {
+    value: "hours",  
+    label: "hours"
+  }, 
+  
+  {
+    value: "days",  
+    label: "days"
+  }
+]
 
 // React Stuff 
     return (
@@ -32,10 +48,29 @@ const CloseModal = () => {
           <Dialog open={open} onClose={CloseModal}>
             <DialogTitle> Thermostat 1 Log Setting </DialogTitle> 
               <DialogContent>  
-                <DialogContentText> Test </DialogContentText>
+                <DialogContentText> Set the Log: </DialogContentText>
+                  <TextField
+                    id="outlined-number"
+                    label="Number"
+                    type="number"
+                    InputLabelProps={{shrink: true,}}
+                  >
+                    
+                  </TextField>
 
-
-
+                  <TextField
+                    id="select-time"
+                    select 
+                    label = "Select"
+                    defaultValue="Minutes"
+                    helperText="Please Select a time"  
+                  >
+                    {timeValues.map((option) => (
+                        <MenuItem key={option.value} value={option.value}> 
+                          {option.label}
+                        </MenuItem>
+                    ))}
+                  </TextField>
                 </DialogContent>
 
             <DialogActions> 
