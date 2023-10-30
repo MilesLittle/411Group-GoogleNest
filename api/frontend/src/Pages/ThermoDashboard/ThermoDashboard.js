@@ -24,6 +24,7 @@ import PauseCircleIcon from '@mui/icons-material/PauseCircle';
 import Snackbar from "@mui/material/Snackbar";
 import SnackbarContent from "@mui/material/SnackbarContent";
 import AddCircleIcon from '@mui/icons-material/AddCircle';
+import ChangeLog from "../../components/ChangeLog/ChangeLog";
 
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
@@ -180,6 +181,21 @@ const ThermoDashboard = () => {
             setAlertOpen(true)
         }
     }, [responseMessage])
+
+
+    // ChangeLog stuff
+    // Open and close the buttons for the modal 
+    const [open, setOpen] = React.useState(false);
+
+    const OpenModal = () => {
+    setOpen(true); 
+    }
+
+    const CloseModal = () => {
+    setOpen(false); 
+    }
+
+
 
     return (
         <>
@@ -347,11 +363,14 @@ const ThermoDashboard = () => {
                             }
                         </>
                     }
+
+                    <ChangeLog open={open} onClose={CloseModal} />
+
                     <Grid item>
                         { device &&
                             <Container>
                                 <Grid container direction="row" justifyContent="space-around" alignItems="center" spacing={2}>
-                                    <Grid item>
+                                    <Grid onClick={() => OpenModal()} item>
                                         { switched ?
                                             <Button variant="outlined" color="primary" size="large" startIcon={<AddCircleIcon/>}>Add Logging Job</Button>
                                             :
