@@ -24,7 +24,12 @@ import PauseCircleIcon from '@mui/icons-material/PauseCircle';
 import Snackbar from "@mui/material/Snackbar";
 import SnackbarContent from "@mui/material/SnackbarContent";
 import AddCircleIcon from '@mui/icons-material/AddCircle';
-import ChangeLog from "../../components/ChangeLog/ChangeLog";
+import Dialog from '@mui/material/Dialog'
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import MenuItem from '@mui/material/MenuItem';
 
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
@@ -187,6 +192,7 @@ const ThermoDashboard = () => {
     // Open and close the buttons for the modal 
     const [open, setOpen] = React.useState(false);
 
+
     const OpenModal = () => {
     setOpen(true); 
     }
@@ -194,6 +200,24 @@ const ThermoDashboard = () => {
     const CloseModal = () => {
     setOpen(false); 
     }
+
+
+    // Time options 
+    const timeValues = [
+    {
+        value: "minutes", 
+        label: "minutes", 
+    }, 
+    {
+        value: "hours",  
+        label: "hours"
+    }, 
+    
+    {
+        value: "days", 
+        label: "days",
+    }
+    ]
 
 
 
@@ -364,7 +388,43 @@ const ThermoDashboard = () => {
                         </>
                     }
 
-                    <ChangeLog open={open} onClose={CloseModal} />
+                    {/* changeLog dialogue*/}
+                    <div style={{textAlign: 'center'}}>
+
+                        <Dialog open={open} onClose={CloseModal}>
+                            <DialogTitle> Thermostat 1 Log Setting </DialogTitle> 
+                            <DialogContent>  
+                                <DialogContentText> Set the Log: </DialogContentText>
+                                <TextField
+                                    id="outlined-number"
+                                    label="Number"
+                                    type="number"
+                                    InputLabelProps={{shrink: true,}}
+                                >
+                                    
+                                </TextField>
+
+                                <TextField
+                                    id="select-time"
+                                    select 
+                                    label = "Select"
+                                    defaultValue="Minutes"
+                                    helperText="Please Select a time"  
+                                >
+                                    {timeValues.map((option) => (
+                                        <MenuItem key={option.value} value={option.value}> 
+                                        {option.label}
+                                        </MenuItem>
+                                    ))}
+                                </TextField>
+                                </DialogContent>
+
+                            <DialogActions> 
+                            <Button onClick={CloseModal} color="secondary"> Cancel </Button>
+                            <Button onClick={CloseModal} color="primary"> Save </Button>
+                            </DialogActions>
+                        </Dialog>
+                    </div>
 
                     <Grid item>
                         { device &&

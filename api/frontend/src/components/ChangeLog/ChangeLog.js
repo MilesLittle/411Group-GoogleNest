@@ -10,9 +10,8 @@ import MenuItem from '@mui/material/MenuItem';
 import  TextField  from '@mui/material/TextField';
 
 
-const ChangeLog = ({open, onClose}) =>  {  
+const ChangeLog = () =>  {  
 
-  /*
 // Open and close the buttons for the modal 
 const [open, setOpen] = React.useState(props.open);
 
@@ -24,7 +23,7 @@ const OpenModal = () => {
 const CloseModal = () => {
   setOpen(false); 
 }
-*/
+
 
 // Time options 
 const timeValues = [
@@ -43,20 +42,14 @@ const timeValues = [
   }
 ]
 
-/*
-useEffect(() => {
-  setOpen(prevState => ({ ...prevState, open: props.open }));
-}, [props.open]);
-*/
-
 
 // React Stuff 
     return (
     <>
       <div style={{textAlign: 'center'}}>
-          {/*<Button onClick={OpenModal} color="primary" variant="contained"> Test Button </Button>*/}
+          <Button onClick={OpenModal} color="primary" variant="contained"> Test Button </Button>
 
-          <Dialog open={open} onClose={onClose}>
+          <Dialog open={open} onClose={CloseModal}>
             <DialogTitle> Thermostat 1 Log Setting </DialogTitle> 
               <DialogContent>  
                 <DialogContentText> Set the Log: </DialogContentText>
@@ -85,8 +78,8 @@ useEffect(() => {
                 </DialogContent>
 
             <DialogActions> 
-              <Button onClick={onClose} color="secondary"> Cancel </Button>
-              <Button onClick={onClose} color="primary"> Save </Button>
+              <Button onClick={CloseModal} color="secondary"> Cancel </Button>
+              <Button onClick={CloseModal} color="primary"> Save </Button>
             </DialogActions>
           </Dialog>
         </div>
