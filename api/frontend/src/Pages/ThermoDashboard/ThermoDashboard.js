@@ -191,14 +191,35 @@ const ThermoDashboard = () => {
     // ChangeLog stuff
     // Open and close the buttons for the modal 
     const [open, setOpen] = React.useState(false);
+    const [modalInput, setModalInput] = React.useState(60);
+
+
+    useEffect(() => {
+
+    },[modalInput])
 
 
     const OpenModal = () => {
-    setOpen(true); 
+        setOpen(true); 
     }
 
     const CloseModal = () => {
-    setOpen(false); 
+        setOpen(false); 
+    }
+
+    // restrict modal input
+    const handleInput = (input) => {
+        // find way to forbid ., e, +, - characters? input is a string, and TextField with type="number" allows those chars
+        input = Number(input) | 0   // cast so the number actually shows up in modal form. Bitwise OR to force integer
+
+        // limit input. Somehow disallow user to submit log every 1 minute? That would be an excessive amount of logs
+        if (input < 1) {
+            input = null    // make sure null is not submitted in post request, or maybe make the modalInput state's purpose only for display, submit actual form value?
+        } else if (input > 60) {
+            input = 60
+        }
+
+        setModalInput(input)
     }
 
 
@@ -392,32 +413,44 @@ const ThermoDashboard = () => {
                     <div style={{textAlign: 'center'}}>
 
                         <Dialog open={open} onClose={CloseModal}>
-                            <DialogTitle> Thermostat 1 Log Setting </DialogTitle> 
-                            <DialogContent>  
-                                <DialogContentText> Set the Log: </DialogContentText>
-                                <TextField
-                                    id="outlined-number"
-                                    label="Number"
-                                    type="number"
-                                    InputLabelProps={{shrink: true,}}
-                                >
-                                    
-                                </TextField>
+                            <DialogTitle> Thermostat 1 Log Setting </DialogTitle>
+                            <form>
+                                <DialogContent>  
+                                    <DialogContentText> Set the Log: </DialogContentText>
 
-                                <TextField
-                                    id="select-time"
-                                    select 
-                                    label = "Select"
-                                    defaultValue="Minutes"
-                                    helperText="Please Select a time"  
-                                >
-                                    {timeValues.map((option) => (
-                                        <MenuItem key={option.value} value={option.value}> 
-                                        {option.label}
-                                        </MenuItem>
-                                    ))}
-                                </TextField>
+                                    <TextField
+                                        id="outlined-number"
+                                        label="Number"
+                                        type="number"
+                                        margin="dense"
+                                        fullWidth
+                                        value={modalInput}
+                                        onChange={(e) => handleInput(e.target.value)}
+                                        InputLabelProps={{shrink: true,}}
+                                        inputProps={{
+                                            min: 1,
+                                            max: 60,
+                                        }}
+                                    >
+                                        
+                                    </TextField>
+
+                                    <TextField
+                                        id="select-time"
+                                        select 
+                                        label = "Select"
+                                        defaultValue="Minutes"
+                                        helperText="Please Select a time"
+                                        margin="dense"
+                                    >
+                                        {timeValues.map((option) => (
+                                            <MenuItem key={option.value} value={option.value}> 
+                                            {option.label}
+                                            </MenuItem>
+                                        ))}
+                                    </TextField>
                                 </DialogContent>
+                            </form>
 
                             <DialogActions> 
                             <Button onClick={CloseModal} color="secondary"> Cancel </Button>
