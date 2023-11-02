@@ -24,6 +24,8 @@ import PauseCircleIcon from '@mui/icons-material/PauseCircle';
 import Snackbar from "@mui/material/Snackbar";
 import SnackbarContent from "@mui/material/SnackbarContent";
 import AddCircleIcon from '@mui/icons-material/AddCircle';
+import Modal from "@mui/material/Modal";
+import Fade from "@mui/material/Fade";
 
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
@@ -41,6 +43,8 @@ const ThermoDashboard = () => {
     const [jobs, setJobs] = useState(null)
     const [chartData, setChartData] = useState(null)
     const [alertOpen, setAlertOpen] = useState(false)
+    const [deleteConfOpen, setDeleteConfOpen] = useState(false)
+    const [jobToDeleteId, setJobToDeleteId] = useState('')
     const [responseMessage, setResponseMessage] = useState('')
 
     const CtoF = (cTemp) => {
@@ -189,6 +193,8 @@ const ThermoDashboard = () => {
                 console.log(res.data)
                 setResponseMessage(res.data.message)
                 setJobRefresh(!jobRefresh)
+                setDeleteConfOpen(false)
+                setJobToDeleteId('')
                 setTimeout(() => {
                     setAlertOpen(false)
                     setResponseMessage('')
@@ -205,6 +211,7 @@ const ThermoDashboard = () => {
         }).catch((err) => {
             console.log(err)
         })
+       //alert(`The id passed is ${id}`)
     }
 
     useEffect(() => {
@@ -213,11 +220,41 @@ const ThermoDashboard = () => {
         }
     }, [responseMessage])
 
+    useEffect(() => {
+        if (jobToDeleteId.length > 0) {
+            setDeleteConfOpen(true)
+        }
+    }, [jobToDeleteId])
+
     return (
         <>
             <Snackbar open={alertOpen} anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}>
                 <SnackbarContent message={responseMessage} sx={{ backgroundColor: '#7BF1A8', color: '#000' }}/>
             </Snackbar>
+            <Modal open={deleteConfOpen} onClose={() => setDeleteConfOpen(false)}>
+                <Fade in={deleteConfOpen}>
+                <Box sx={{ bgcolor: '#7BF1A8', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', p: 4, borderRadius: '1rem' }}>
+                    <Grid container direction="column" spacing={2}>
+                        <Grid item>
+                            <Typography variant="h4">Delete job</Typography>
+                        </Grid>
+                        <Grid item>
+                            <Typography>Are you sure you want to delete the job {jobToDeleteId}?</Typography>
+                        </Grid>
+                        <Grid item>
+                            <Grid container direction="row" alignItems="center" justifyContent="center" spacing={2} mt={0.5}>
+                                <Grid item>
+                                    <Button variant="contained" color="secondary" onClick={() => { setDeleteConfOpen(false); setJobToDeleteId(''); }}>Cancel</Button>
+                                </Grid>
+                                <Grid item>
+                                    <Button variant="contained" color="error" onClick={() => deleteJob(jobToDeleteId)}>Yes, Delete</Button>
+                                </Grid>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                </Box>
+                </Fade>
+            </Modal>
             <Grid container direction="column" justifyContent="center" alignItems="center" mt={1} mb={3} spacing={3}>
                 <Grid item>
                     { device &&
@@ -314,7 +351,7 @@ const ThermoDashboard = () => {
                                                                             </div>
                                                                         </Grid>
                                                                         <Grid item>
-                                                                            <div onClick={() => deleteJob(job.Id)} style={{ cursor: 'pointer' }}>
+                                                                            <div onClick={() => setJobToDeleteId(job.Id)} style={{ cursor: 'pointer' }}>
                                                                                 <ToolTip title="Delete Job">
                                                                                     <DeleteIcon />
                                                                                 </ToolTip>
