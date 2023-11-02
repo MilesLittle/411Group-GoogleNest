@@ -14,6 +14,8 @@ import { Link } from 'react-router-dom';
 import { useGoogleLogin } from "@react-oauth/google";
 import { useNavigate } from 'react-router-dom';
 import tempwiseLogo from "./Ashton's friend's logo.jpg";
+import './Navbar.css';
+
 const NavBar = () => {
   const { setAuthTokenDetails, googleAccountInfo, setHasAuth } = useContext(AuthContext)
   const { switched, setSwitched } = useContext(DarkModeSwitchContext)
@@ -23,7 +25,7 @@ const NavBar = () => {
         onError: (error) => console.log('Login Failed:', error)
     });
   return (
-    <Box sx={{ flexGrow: 1, marginTop: '1rem', marginBottom: '1rem', marginLeft: '4rem', marginRight: '4rem', position: 'sticky', top: '0' }}>
+    <Box sx={{ flexGrow: 1, marginTop: '1rem', marginBottom: '1rem', marginLeft: '4rem', marginRight: '4rem', position: 'sticky', top: '0' }} className="navbar">
       <AppBar position="sticky" sx={{ borderRadius: '30px' }} elevation={10}> 
         <Toolbar>
         <Grid container direction="row" justifyContent="space-between" alignItems="center">
