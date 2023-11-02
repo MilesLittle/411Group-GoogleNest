@@ -31,6 +31,14 @@ const Home = () => {
       endRef.current?.scrollIntoView({ behavior: "smooth" })
     }
 
+    const checkIfSetPointNaN = (thermostat) => {
+      if (isNaN(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius)) {
+        return Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].heatCelsius))
+      } else {
+        return Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius))
+      }
+    }
+
     useEffect(() => {
       scrollToBottom()
     }, [thermostats])
@@ -111,7 +119,7 @@ const Home = () => {
                           mode={thermostat.traits["sdm.devices.traits.ThermostatMode"].mode}
                           actualTempF = {Math.round(CtoF(thermostat.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius))} 
                           actualTempC = {Math.round(thermostat.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius)}
-                          setPointTempF = {Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius))}
+                          setPointTempF = {checkIfSetPointNaN(thermostat)}
                           humidity = {thermostat.traits["sdm.devices.traits.Humidity"].ambientHumidityPercent}
                          />
                       </Grid>
