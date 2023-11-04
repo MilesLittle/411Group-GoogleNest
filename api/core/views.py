@@ -44,6 +44,8 @@ def front(request):
 
     return render(request, "index.html", context)
 
+
+
 @api_view(['GET', 'POST'])
 def tempinfo(request):
 
@@ -114,6 +116,8 @@ def createLogJob(request):
             newJobMirror.save()
         return Response(data={'status': 201, 'message': "Log job succesfully created."}, status=status.HTTP_201_CREATED)
 """
+
+    return Response(status=status.HTTP_200_OK)
         
         
 @api_view(['DELETE'])
@@ -145,10 +149,3 @@ def getLogJobs(request):
         return Response(data={'status': 404, 'message': 'No jobs found for this thermostat created by the logged in user'}, status=status.HTTP_404_NOT_FOUND)
 
         
-@app.after_request
-def after_request(response):
-  response.headers.add('Access-Control-Allow-Origin', 'http://localhost:8000')
-  response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-  response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-  response.headers.add('Access-Control-Allow-Credentials', 'true')
-  return response

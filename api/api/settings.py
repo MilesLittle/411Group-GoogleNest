@@ -149,7 +149,7 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'frontend', 'build', 'static')]
 CORS_ORIGIN_ALLOW_ALL = False
 
 CORS_ORIGIN_WHITELIST = [
-    'https://localhost:3000',
+    'http://localhost:3000',
 ]
 
 CSRF_COOKIE_NAME = "csrftoken"
