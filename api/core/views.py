@@ -14,7 +14,7 @@ from django_apscheduler.jobstores import register_events, register_job
 from django.conf import settings
 
 # Create your views here.
-"""
+
 project_id = 'f4f5bdc3-964c-466b-bf80-9508f2709ad5'
 
 myscheduler = BackgroundScheduler(settings.SCHEDULER_CONFIG)
@@ -36,7 +36,7 @@ def startScheduler():
     # Add the scheduled jobs to the Django admin interface
     register_events(myscheduler)
     myscheduler.start()
-"""
+
     
 def front(request):
     context = {
@@ -71,9 +71,12 @@ def temp_detail(request, pk):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 #the fuck shit
-"""
 @api_view(['POST'])
 def createLogJob(request):
+
+    print(request.data)
+
+    """
     def newJob():
         projectid = project_id
         deviceid = request.data.deviceId
@@ -112,6 +115,7 @@ def createLogJob(request):
         return Response(data={'status': 201, 'message': "Log job succesfully created."}, status=status.HTTP_201_CREATED)
 """
         
+        
 @api_view(['DELETE'])
 def deleteLogJob(request, name): #keep request even if not used, fixes 500 got multiple values for argument 'name' TypeError
 #    if myscheduler.get_job(job_id=name):  #code for Django apscheduler job
@@ -141,3 +145,10 @@ def getLogJobs(request):
         return Response(data={'status': 404, 'message': 'No jobs found for this thermostat created by the logged in user'}, status=status.HTTP_404_NOT_FOUND)
 
         
+@app.after_request
+def after_request(response):
+  response.headers.add('Access-Control-Allow-Origin', 'http://localhost:8000')
+  response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+  response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+  response.headers.add('Access-Control-Allow-Credentials', 'true')
+  return response
