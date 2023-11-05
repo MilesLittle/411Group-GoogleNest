@@ -12,13 +12,14 @@ class TempInfo(models.Model):
         return self.temp
     
 class Job(models.Model): #mirror table for apscheduler jobs to make mapping data to front end easier
-    Id = models.CharField(primary_key=True, max_length=50) #set by user (like a username, must be unique)
+    Id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=50) #set by user (like a username, must be unique)
     GoogleId = models.CharField(max_length=100) #google ids are LONG, not even in the int range for the ORM
     ThermostatId = models.CharField(max_length=200) #These are also long
     Description = models.TextField()
     #running status boolean?
     def __str__(self):
-        return f'Id: {self.Id}, GoogleId: {self.GoogleId}, ThermostatId: {self.ThermostatId}, Description: {self.Description}'
+        return f'Id: {self.Id}, name: {self.name}, GoogleId: {self.GoogleId}, ThermostatId: {self.ThermostatId}, Description: {self.Description}'
     
 class JobLog(models.Model):
     Id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False) #in case we run out of ints perhaps 
