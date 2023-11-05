@@ -49,30 +49,14 @@ const ThermoDashboard = () => {
     const [alertOpen, setAlertOpen] = useState(false)
     const [responseMessage, setResponseMessage] = useState('')
 
+
+
     const CtoF = (cTemp) => {
         return (cTemp * 9/5) + 32
     }
-
     const FtoC = (fTemp) => {
         return (fTemp - 32) * 5/9
     }
-
-    const getSetPointTemp = (thermostat) => {
-        var setPointTemp
-        if (thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEAT') {
-          setPointTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].heatCelsius))
-        } else if (thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'COOL') {
-          setPointTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius))
-        } else if (thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEATCOOL') {
-          setPointTemp = 'Range - H: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].heatCelsius)) + ', C: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius))
-        } else if (thermostat.traits["sdm.devices.traits.ThermostatEco"].mode === 'MANUAL_ECO') {
-          setPointTemp = 'Range - H: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatEco"].heatCelsius)) + ', C: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatEco"].coolCelsius))
-        } else { //OFF
-          setPointTemp = 'Thermostat is off.'
-        }
-        return setPointTemp
-      }
-
     useEffect(() => {
         axios.get(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}`, {
             headers: {
@@ -84,6 +68,15 @@ const ThermoDashboard = () => {
                 console.log('Got the device')
                 console.log(res.data)
                 setDevice(res.data)
+                if (res.data.traits["sdm.devices.traits.ThermostatMode"].mode === "COOL" || "HEATCOOL") {
+                    console.log('Nest in cool or heatcool mode')
+                    setTemp(Math.round(CtoF(res.data.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius)))
+                } else if (res.data.traits["sdm.devices.traits.ThermostatMode"].mode === "HEAT" || "HEATCOOL") {
+                    console.log('Nest in heat or heatcool mode ')
+                    setTemp(Math.round(CtoF(res.data.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].heatCelsius)))
+                } else {
+                    console.log('The thermostat is most likely off')
+                }
             } else {
                 console.log('Not OK')
             }
@@ -132,20 +125,9 @@ const ThermoDashboard = () => {
             }
             ).then((res) => {
                 if (res.status === 200) {
-                    console.log(res)
+                    console.log('Successfully set temperature')
+                    console.log(res.data)
                     setDeviceRefresh(!deviceRefresh) //something stupid to call the single device endpoint again and let the user see the new temp that they set
-                    setResponseMessage('Temperature successfully set.')
-                    setTimeout(() => {
-                        setAlertOpen(false)
-                        setResponseMessage('')
-                    }, 5000)
-                } else {
-                    console.log(res)
-                    setResponseMessage('Something went wrong.')
-                    setTimeout(() => {
-                        setAlertOpen(false)
-                        setResponseMessage('')
-                    }, 5000)
                 }
             }).catch((err) => {
                 console.log(err)
@@ -164,25 +146,14 @@ const ThermoDashboard = () => {
             }
             ).then((res) => {
                 if (res.status === 200) {
-                    console.log(res)
+                    console.log('Successfully set temperature')
+                    console.log(res.data)
                     setDeviceRefresh(!deviceRefresh)
-                    setResponseMessage('Temperature successfully set.')
-                    setTimeout(() => {
-                        setAlertOpen(false)
-                        setResponseMessage('')
-                    }, 5000)
-                } else {
-                    console.log(res)
-                    setResponseMessage('Something went wrong.')
-                    setTimeout(() => {
-                        setAlertOpen(false)
-                        setResponseMessage('')
-                    }, 5000)
                 }
             }).catch((err) => {
                 console.log(err)
             })
-        } else { //do cases for heatcool, eco, and off
+        } else {
             console.log('Thermostat is in heatcool mode or off')
         }
     }
@@ -223,12 +194,22 @@ const ThermoDashboard = () => {
     // ChangeLog stuff
     // Open and close the buttons for the modal 
     const [open, setOpen] = React.useState(false);
+
+    // states for modal form submission
     const [modalInput, setModalInput] = React.useState(60);
+    const [timeType, setTimeType] = React.useState(null);
 
 
     useEffect(() => {
+        console.log("modalInput = " + modalInput);
+        console.log("timeType = " + timeType);
+    },[modalInput, timeType])
 
-    },[modalInput])
+
+    useEffect(() => {
+        console.log("jobs");
+        console.log(jobs);
+    }, [jobs])
 
 
     const OpenModal = () => {
@@ -252,6 +233,34 @@ const ThermoDashboard = () => {
         }
 
         setModalInput(input)
+    }
+
+    const submitAddJob = async (data) => {
+
+        const reqbody = {
+            name: data.target.name.value,
+            description: data.target.description.value,
+            number: data.target.number.value,
+            timeType: data.target.timeType.value,
+            access_token: nestTokens.access_token,
+            deviceId: deviceId,
+            googleId: googleAccountInfo.id,
+        }
+
+        console.log(reqbody.name);
+        //console.log(reqbody.number);
+        //onsole.log(reqbody.timeType);
+
+        await axios.post(`http://localhost:8000/logjob`, reqbody, {
+            
+        })
+        .then((res) => {
+            console.log(res);
+        })
+        .catch((err) => {
+            console.log("job create error " + err);
+        })
+
     }
 
 
@@ -311,7 +320,7 @@ const ThermoDashboard = () => {
                                         <Divider variant="middle"/>
                                         <ListItem>
                                             <ListItemText 
-                                            primary={`Target Temperature: ${getSetPointTemp(device)} F`}
+                                            primary={`Target Temperature: ${Math.round(CtoF(device.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius))} F`}
                                             primaryTypographyProps={{ fontSize: '2rem' }}
                                             />
                                         </ListItem>
@@ -354,21 +363,21 @@ const ThermoDashboard = () => {
                                     return (
                                         <Grow in={true}>
                                             <Grid item>
-                                                <ToolTip title={<>Job Name: {job.Id}<br/>Job Description: {job.Description}</>} arrow>
+                                                <ToolTip title={<>Job Name: {job.name}<br/>Job Description: {job.Description}</>} arrow>
                                                     <Card sx={{ borderRadius: '2rem', bgcolor: (job.JobLogs === chartData ? 'primary.dark' : 'primary.main'), width: '15rem' }} elevation={(job.JobLogs === chartData ? 8 : 0)} key={job.Id}>
                                                         <CardContent>
                                                             <Grid container direction="row" justifyContent="space-between">
                                                                 <Grid item>
                                                                     <Typography gutterBottom variant="h6" color='#000' component="div">
                                                                         <div onClick={() => setChartData(job.JobLogs)} style={{ cursor: 'pointer' }}>
-                                                                            {(job.Id.length > 17 ? `${job.Id.substr(0, 13)}...` : job.Id)}
+                                                                            {(job.Id.length > 17 ? `${job.Id.substr(0, 13)}...` : job.name)}
                                                                         </div>
                                                                     </Typography>
                                                                 </Grid>
                                                                 <Grid item>
                                                                     <Grid container justifyContent="flex-end">
                                                                         <Grid item>
-                                                                            <div onClick={() => alert(`Pause job ${job.Id}`)} style={{ cursor: 'pointer' }}>
+                                                                            <div onClick={() => alert(`Pause job ${job.name}`)} style={{ cursor: 'pointer' }}>
                                                                                 <ToolTip title="Pause Job">
                                                                                     <PauseCircleIcon />
                                                                                 </ToolTip>
@@ -446,12 +455,36 @@ const ThermoDashboard = () => {
 
                         <Dialog open={open} onClose={CloseModal}>
                             <DialogTitle> Thermostat 1 Log Setting </DialogTitle>
-                            <form>
+                            <form onSubmit={(e) => {e.preventDefault(); submitAddJob(e);}}>
                                 <DialogContent>  
                                     <DialogContentText> Set the Log: </DialogContentText>
 
                                     <TextField
+                                        id="job-name"
+                                        name="name"
+                                        label="Job Name"
+                                        type="text"
+                                        margin="dense"
+                                        fullWidth
+                                        defaultValue={"Job name"}
+                                        InputLabelProps={{shrink: true}}
+                                        inputProps={{ max:200 }}
+                                    />
+
+                                    <TextField
+                                        id="job-description"
+                                        name="description"
+                                        label="Description"
+                                        type="text"
+                                        margin="dense"
+                                        fullWidth
+                                        InputLabelProps={{shirnk: true}}
+                                        inputProps={{ max:200 }}
+                                    />
+
+                                    <TextField
                                         id="outlined-number"
+                                        name="number"
                                         label="Number"
                                         type="number"
                                         margin="dense"
@@ -469,25 +502,27 @@ const ThermoDashboard = () => {
 
                                     <TextField
                                         id="select-time"
-                                        select 
+                                        name="timeType"
+                                        select
                                         label = "Select"
-                                        defaultValue="Minutes"
+                                        defaultValue="days"
                                         helperText="Please Select a time"
                                         margin="dense"
+                                        onChange={(e) => setTimeType(e.target.value)}
                                     >
                                         {timeValues.map((option) => (
-                                            <MenuItem key={option.value} value={option.value}> 
+                                            <MenuItem key={option.value} value={option.value}>
                                             {option.label}
                                             </MenuItem>
                                         ))}
                                     </TextField>
                                 </DialogContent>
-                            </form>
 
-                            <DialogActions> 
-                            <Button onClick={CloseModal} color="secondary"> Cancel </Button>
-                            <Button onClick={CloseModal} color="primary"> Save </Button>
-                            </DialogActions>
+                                <DialogActions> 
+                                <Button onClick={CloseModal} color="secondary"> Cancel </Button>
+                                <Button type="submit" onClick={CloseModal} color="primary"> Save </Button>
+                                </DialogActions>
+                            </form>
                         </Dialog>
                     </div>
 
