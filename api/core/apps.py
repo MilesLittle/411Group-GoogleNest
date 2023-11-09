@@ -6,7 +6,6 @@ class CoreConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'core'
     def ready(self):
-        from .views import startScheduler, resetScheduler
+        from .views import startScheduler
         if settings.SCHEDULER_AUTOSTART:
-            #resetScheduler()
             startScheduler()

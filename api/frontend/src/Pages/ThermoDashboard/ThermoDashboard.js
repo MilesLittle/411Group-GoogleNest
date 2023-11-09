@@ -30,6 +30,9 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import MenuItem from '@mui/material/MenuItem';
+import Modal from "@mui/material/Modal";
+import Fade from "@mui/material/Fade";
+
 
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
@@ -50,7 +53,6 @@ const ThermoDashboard = () => {
     const [deleteConfOpen, setDeleteConfOpen] = useState(false)
     const [jobToDeleteId, setJobToDeleteId] = useState('')
     const [responseMessage, setResponseMessage] = useState('')
-
 
 
     const CtoF = (cTemp) => {
@@ -227,7 +229,7 @@ const ThermoDashboard = () => {
     }, [responseMessage])
 
     useEffect(() => {
-        if (jobToDeleteId.length > 0) {
+        if (jobToDeleteId != 0 && jobToDeleteId != null) {
             setDeleteConfOpen(true)
         }
     }, [jobToDeleteId])
@@ -283,7 +285,7 @@ const ThermoDashboard = () => {
             description: data.target.description.value,
             number: data.target.number.value,
             timeType: data.target.timeType.value,
-            access_token: nestTokens.access_token,
+            refresh_token: nestTokens.refresh_token,
             deviceId: deviceId,
             googleId: googleAccountInfo.id,
         }
@@ -297,6 +299,7 @@ const ThermoDashboard = () => {
         })
         .then((res) => {
             console.log(res);
+            setJobRefresh(!jobRefresh)
         })
         .catch((err) => {
             console.log("job create error " + err);

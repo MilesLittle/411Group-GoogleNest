@@ -27,5 +27,5 @@ urlpatterns = [
 
     path('logjob', createLogJob),
     path('logjob/<str:name>/delete', deleteLogJob),
-    path('logjobs', getLogJobs)
+    path('logjobs', getLogJobs),
 ]
