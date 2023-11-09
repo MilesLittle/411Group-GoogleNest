@@ -350,10 +350,10 @@ function valuetext(value) {
                                        min={50} 
                                         max={90}
                                                  /> </Stack>
-                                            <TextField variant="outlined" color="secondary" label="Set temperature in F" value= {temp} onChange={(e) => setTemp(parseInt(e.target.value))} />
+                                 
                                         </Grid> 
                                         <Grid item>
-                                            <Button variant="contained" color="secondary" onClick={() => tempHandler()}>Set Temperature</Button>
+                                           
                                         </Grid>
                                     </Grid>   
                                 </Container>
