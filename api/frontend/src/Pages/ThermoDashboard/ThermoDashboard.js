@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import Grow from "@mui/material/Grow";
 import Typography from '@mui/material/Typography';
@@ -24,6 +24,12 @@ import PauseCircleIcon from '@mui/icons-material/PauseCircle';
 import Snackbar from "@mui/material/Snackbar";
 import SnackbarContent from "@mui/material/SnackbarContent";
 import AddCircleIcon from '@mui/icons-material/AddCircle';
+import Modal from "@mui/material/Modal";
+import Fade from "@mui/material/Fade";
+import Slider from '@mui/material/Slider';
+import Stack from '@mui/material/Stack';
+import _debounce from 'lodash/debounce';
+import Paper from '@mui/material/Paper'; 
 
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
@@ -41,13 +47,47 @@ const ThermoDashboard = () => {
     const [jobs, setJobs] = useState(null)
     const [chartData, setChartData] = useState(null)
     const [alertOpen, setAlertOpen] = useState(false)
+    const [deleteConfOpen, setDeleteConfOpen] = useState(false)
+    const [jobToDeleteId, setJobToDeleteId] = useState('')
     const [responseMessage, setResponseMessage] = useState('')
+
+    const tempRef = useRef(temp);
+    const handleChangeCommitted = (event, newValue) => {
+        if (typeof newValue === 'number') {
+          setTemp(parseInt(newValue));
+          tempRef.current = parseInt(newValue); // Update the ref when the slider value changes
+          tempHandler();
+        }
+      };
+
+function valuetext(value) {
+    return `${value}°C`;
+  }
+  
     const CtoF = (cTemp) => {
         return (cTemp * 9/5) + 32
     }
+
     const FtoC = (fTemp) => {
         return (fTemp - 32) * 5/9
     }
+
+    const getSetPointTemp = (thermostat) => {
+        var setPointTemp
+        if (thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEAT') {
+          setPointTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].heatCelsius))
+        } else if (thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'COOL') {
+          setPointTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius))
+        } else if (thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEATCOOL') {
+          setPointTemp = 'Range - H: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].heatCelsius)) + ', C: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius))
+        } else if (thermostat.traits["sdm.devices.traits.ThermostatEco"].mode === 'MANUAL_ECO') {
+          setPointTemp = 'Range - H: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatEco"].heatCelsius)) + ', C: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatEco"].coolCelsius))
+        } else { //OFF
+          setPointTemp = 'Thermostat is off.'
+        }
+        return setPointTemp
+      }
+
     useEffect(() => {
         axios.get(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}`, {
             headers: {
@@ -59,15 +99,6 @@ const ThermoDashboard = () => {
                 console.log('Got the device')
                 console.log(res.data)
                 setDevice(res.data)
-                if (res.data.traits["sdm.devices.traits.ThermostatMode"].mode === "COOL" || "HEATCOOL") {
-                    console.log('Nest in cool or heatcool mode')
-                    setTemp(Math.round(CtoF(res.data.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius)))
-                } else if (res.data.traits["sdm.devices.traits.ThermostatMode"].mode === "HEAT" || "HEATCOOL") {
-                    console.log('Nest in heat or heatcool mode ')
-                    setTemp(Math.round(CtoF(res.data.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].heatCelsius)))
-                } else {
-                    console.log('The thermostat is most likely off')
-                }
             } else {
                 console.log('Not OK')
             }
@@ -102,11 +133,13 @@ const ThermoDashboard = () => {
     }, [jobRefresh])
 
     const tempHandler = async () => {
+        const currentTemp = tempRef.current;
         if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "COOL") {
+            console.log("hicool" + currentTemp)
             await axios.post(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}:executeCommand`, {
                 command: "sdm.devices.commands.ThermostatTemperatureSetpoint.SetCool",
                 params: {
-                    "coolCelsius": FtoC(temp)
+                    "coolCelsius": FtoC(currentTemp)
                 }
             }, {
                 headers: {
@@ -116,18 +149,30 @@ const ThermoDashboard = () => {
             }
             ).then((res) => {
                 if (res.status === 200) {
-                    console.log('Successfully set temperature')
-                    console.log(res.data)
+                    console.log(res)
                     setDeviceRefresh(!deviceRefresh) //something stupid to call the single device endpoint again and let the user see the new temp that they set
+                    setResponseMessage('Temperature successfully set.')
+                    setTimeout(() => {
+                        setAlertOpen(false)
+                        setResponseMessage('')
+                    }, 5000)
+                } else {
+                    console.log(res)
+                    setResponseMessage('Something went wrong.')
+                    setTimeout(() => {
+                        setAlertOpen(false)
+                        setResponseMessage('')
+                    }, 5000)
                 }
             }).catch((err) => {
                 console.log(err)
             })
         } else if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "HEAT") {
+            console.log("hiheat" + currentTemp)
             await axios.post(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}:executeCommand`, {
                 command: "sdm.devices.commands.ThermostatTemperatureSetpoint.SetHeat",
                 params: {
-                    "heatCelsius": FtoC(temp)
+                    "heatCelsius": FtoC(currentTemp)
                 }
             }, {
                 headers: {
@@ -137,14 +182,25 @@ const ThermoDashboard = () => {
             }
             ).then((res) => {
                 if (res.status === 200) {
-                    console.log('Successfully set temperature')
-                    console.log(res.data)
+                    console.log(res)
                     setDeviceRefresh(!deviceRefresh)
+                    setResponseMessage('Temperature successfully set.')
+                    setTimeout(() => {
+                        setAlertOpen(false)
+                        setResponseMessage('')
+                    }, 5000)
+                } else {
+                    console.log(res)
+                    setResponseMessage('Something went wrong.')
+                    setTimeout(() => {
+                        setAlertOpen(false)
+                        setResponseMessage('')
+                    }, 5000)
                 }
             }).catch((err) => {
                 console.log(err)
             })
-        } else {
+        } else { //do cases for heatcool, eco, and off
             console.log('Thermostat is in heatcool mode or off')
         }
     }
@@ -157,6 +213,8 @@ const ThermoDashboard = () => {
                 console.log(res.data)
                 setResponseMessage(res.data.message)
                 setJobRefresh(!jobRefresh)
+                setDeleteConfOpen(false)
+                setJobToDeleteId('')
                 setTimeout(() => {
                     setAlertOpen(false)
                     setResponseMessage('')
@@ -173,6 +231,7 @@ const ThermoDashboard = () => {
         }).catch((err) => {
             console.log(err)
         })
+       //alert(`The id passed is ${id}`)
     }
 
     useEffect(() => {
@@ -181,11 +240,41 @@ const ThermoDashboard = () => {
         }
     }, [responseMessage])
 
+    useEffect(() => {
+        if (jobToDeleteId.length > 0) {
+            setDeleteConfOpen(true)
+        }
+    }, [jobToDeleteId])
+
     return (
         <>
             <Snackbar open={alertOpen} anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}>
                 <SnackbarContent message={responseMessage} sx={{ backgroundColor: '#7BF1A8', color: '#000' }}/>
             </Snackbar>
+            <Modal open={deleteConfOpen} onClose={() => setDeleteConfOpen(false)}>
+                <Fade in={deleteConfOpen}>
+                <Box sx={{ bgcolor: '#7BF1A8', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', p: 4, borderRadius: '1rem' }}>
+                    <Grid container direction="column" spacing={2}>
+                        <Grid item>
+                            <Typography variant="h4">Delete job</Typography>
+                        </Grid>
+                        <Grid item>
+                            <Typography>Are you sure you want to delete the job {jobToDeleteId}?</Typography>
+                        </Grid>
+                        <Grid item>
+                            <Grid container direction="row" alignItems="center" justifyContent="center" spacing={2} mt={0.5}>
+                                <Grid item>
+                                    <Button variant="contained" color="secondary" onClick={() => { setDeleteConfOpen(false); setJobToDeleteId(''); }}>Cancel</Button>
+                                </Grid>
+                                <Grid item>
+                                    <Button variant="contained" color="error" onClick={() => deleteJob(jobToDeleteId)}>Yes, Delete</Button>
+                                </Grid>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                </Box>
+                </Fade>
+            </Modal>
             <Grid container direction="column" justifyContent="center" alignItems="center" mt={1} mb={3} spacing={3}>
                 <Grid item>
                     { device &&
@@ -218,7 +307,7 @@ const ThermoDashboard = () => {
                                         <Divider variant="middle"/>
                                         <ListItem>
                                             <ListItemText 
-                                            primary={`Target Temperature: ${Math.round(CtoF(device.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius))} F`}
+                                            primary={`Target Temperature: ${getSetPointTemp(device)} F`}
                                             primaryTypographyProps={{ fontSize: '2rem' }}
                                             />
                                         </ListItem>
@@ -235,6 +324,32 @@ const ThermoDashboard = () => {
                                 <Container>
                                     <Grid container direction="row" justifyContent="center" alignItems="center" spacing={2}>
                                         <Grid item>
+                                                  <Paper
+                        style= {{
+                        width: '100px', 
+                        height: '100px',
+                        borderRadius: '50%', // This creates a circular shape
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        }}>
+
+                        <Typography variant="h6">{valuetext(temp)}</Typography>
+
+                </Paper>
+                                        <Stack sx={{ height: 100 }} spacing={2} direction="row">
+                                        <Slider
+                                        sx={{color: '#000000'}}
+                                        aria-label="Temperature"
+                                        orientation="vertical"
+                                        defaultValue={getSetPointTemp(device)}
+                                        getAriaValueText={valuetext}
+                                        valueLabelDisplay="auto"
+                                        step={1}
+                                        onChangeCommitted={handleChangeCommitted}
+                                       min={50} 
+                                        max={90}
+                                                 /> </Stack>
                                             <TextField variant="outlined" color="secondary" label="Set temperature in F" onChange={(e) => setTemp(parseInt(e.target.value))} />
                                         </Grid> 
                                         <Grid item>
@@ -282,7 +397,7 @@ const ThermoDashboard = () => {
                                                                             </div>
                                                                         </Grid>
                                                                         <Grid item>
-                                                                            <div onClick={() => deleteJob(job.Id)} style={{ cursor: 'pointer' }}>
+                                                                            <div onClick={() => setJobToDeleteId(job.Id)} style={{ cursor: 'pointer' }}>
                                                                                 <ToolTip title="Delete Job">
                                                                                     <DeleteIcon />
                                                                                 </ToolTip>
@@ -306,7 +421,7 @@ const ThermoDashboard = () => {
                                             </Grid>
                                         </Grow>
                                     )
-                                })) : (<Typography variant="h6" color={ switched ? 'primary.main' : 'secondary.main' } sx={{ mt: '2rem', mb: '1rem', ml: '1.7rem' }}>You have no jobs set on this thermostat.</Typography>)}
+                                })) : (<Typography variant="h6" color={ switched ? 'primary.main' : 'secondary.main' } sx={{ mt: '3rem', mb: '1rem', ml: '1.7rem' }}>You have no jobs set on this thermostat.</Typography>)}
                             </Grid>
                         </Container>
                     }
