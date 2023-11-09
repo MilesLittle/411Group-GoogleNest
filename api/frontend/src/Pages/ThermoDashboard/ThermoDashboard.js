@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import Grow from "@mui/material/Grow";
 import Typography from '@mui/material/Typography';
@@ -26,6 +26,10 @@ import SnackbarContent from "@mui/material/SnackbarContent";
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import Modal from "@mui/material/Modal";
 import Fade from "@mui/material/Fade";
+import Slider from '@mui/material/Slider';
+import Stack from '@mui/material/Stack';
+import _debounce from 'lodash/debounce';
+import Paper from '@mui/material/Paper'; 
 
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
@@ -47,6 +51,19 @@ const ThermoDashboard = () => {
     const [jobToDeleteId, setJobToDeleteId] = useState('')
     const [responseMessage, setResponseMessage] = useState('')
 
+    const tempRef = useRef(temp);
+    const handleChangeCommitted = (event, newValue) => {
+        if (typeof newValue === 'number') {
+          setTemp(parseInt(newValue));
+          tempRef.current = parseInt(newValue); // Update the ref when the slider value changes
+          tempHandler();
+        }
+      };
+
+function valuetext(value) {
+    return `${value}°C`;
+  }
+  
     const CtoF = (cTemp) => {
         return (cTemp * 9/5) + 32
     }
@@ -116,11 +133,13 @@ const ThermoDashboard = () => {
     }, [jobRefresh])
 
     const tempHandler = async () => {
+        const currentTemp = tempRef.current;
         if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "COOL") {
+            console.log("hicool" + currentTemp)
             await axios.post(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}:executeCommand`, {
                 command: "sdm.devices.commands.ThermostatTemperatureSetpoint.SetCool",
                 params: {
-                    "coolCelsius": FtoC(temp)
+                    "coolCelsius": FtoC(currentTemp)
                 }
             }, {
                 headers: {
@@ -149,10 +168,11 @@ const ThermoDashboard = () => {
                 console.log(err)
             })
         } else if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "HEAT") {
+            console.log("hiheat" + currentTemp)
             await axios.post(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}:executeCommand`, {
                 command: "sdm.devices.commands.ThermostatTemperatureSetpoint.SetHeat",
                 params: {
-                    "heatCelsius": FtoC(temp)
+                    "heatCelsius": FtoC(currentTemp)
                 }
             }, {
                 headers: {
@@ -304,6 +324,32 @@ const ThermoDashboard = () => {
                                 <Container>
                                     <Grid container direction="row" justifyContent="center" alignItems="center" spacing={2}>
                                         <Grid item>
+                                                  <Paper
+                        style= {{
+                        width: '100px', 
+                        height: '100px',
+                        borderRadius: '50%', // This creates a circular shape
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        }}>
+
+                        <Typography variant="h6">{valuetext(temp)}</Typography>
+
+                </Paper>
+                                        <Stack sx={{ height: 100 }} spacing={2} direction="row">
+                                        <Slider
+                                        sx={{color: '#000000'}}
+                                        aria-label="Temperature"
+                                        orientation="vertical"
+                                        defaultValue={getSetPointTemp(device)}
+                                        getAriaValueText={valuetext}
+                                        valueLabelDisplay="auto"
+                                        step={1}
+                                        onChangeCommitted={handleChangeCommitted}
+                                       min={50} 
+                                        max={90}
+                                                 /> </Stack>
                                             <TextField variant="outlined" color="secondary" label="Set temperature in F" onChange={(e) => setTemp(parseInt(e.target.value))} />
                                         </Grid> 
                                         <Grid item>
