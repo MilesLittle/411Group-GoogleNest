@@ -143,8 +143,8 @@ const Home = () => {
               <center>
               <iframe 
                 src='https://www.youtube.com/embed/-tagcWAI_D0?si=VdInvAuabRpMKNjd' 
-                width='500' 
-                height='250'
+                width='500vw' 
+                height='250vh'
                 style={{ borderStyle: 'solid', borderRadius: '1rem', borderColor: '#7BF1A8', borderWidth: '0.1rem' }}/>
               </center>
               <div>

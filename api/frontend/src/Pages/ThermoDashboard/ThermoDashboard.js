@@ -137,16 +137,14 @@ const ThermoDashboard = () => {
                         setAlertOpen(false)
                         setResponseMessage('')
                     }, 5000)
-                } else {
-                    console.log(res)
-                    setResponseMessage('Something went wrong.')
-                    setTimeout(() => {
-                        setAlertOpen(false)
-                        setResponseMessage('')
-                    }, 5000)
                 }
             }).catch((err) => {
                 console.log(err)
+                setResponseMessage(err.response.data.error.message)
+                setTimeout(() => {
+                    setAlertOpen(false)
+                    setResponseMessage('')
+                }, 5000)
             })
         } else if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "HEAT") {
             await axios.post(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}:executeCommand`, {
@@ -169,16 +167,14 @@ const ThermoDashboard = () => {
                         setAlertOpen(false)
                         setResponseMessage('')
                     }, 5000)
-                } else {
-                    console.log(res)
-                    setResponseMessage('Something went wrong.')
-                    setTimeout(() => {
-                        setAlertOpen(false)
-                        setResponseMessage('')
-                    }, 5000)
                 }
             }).catch((err) => {
                 console.log(err)
+                setResponseMessage(err.response.data.error.message)
+                setTimeout(() => {
+                    setAlertOpen(false)
+                    setResponseMessage('')
+                }, 5000)
             })
         } else { //do cases for heatcool, eco, and off
             console.log('Thermostat is in heatcool mode or off')
@@ -188,7 +184,7 @@ const ThermoDashboard = () => {
     const deleteJob = async (id) => {
         await axios.delete(`/logjob/${id}/delete`)
         .then((res) => {
-            if (res.status === 200) { //needs confirmation window before deletion
+            if (res.status === 200) {
                 console.log('Successfully deleted the job')
                 console.log(res.data)
                 setResponseMessage(res.data.message)
@@ -211,7 +207,6 @@ const ThermoDashboard = () => {
         }).catch((err) => {
             console.log(err)
         })
-       //alert(`The id passed is ${id}`)
     }
 
     useEffect(() => {
