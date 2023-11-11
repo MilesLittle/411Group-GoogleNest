@@ -3,6 +3,12 @@ import AuthContext from "./AuthContext";
 import axios from 'axios';
 import { useNavigate } from "react-router-dom";
 import { googleLogout } from "@react-oauth/google";
+import Modal from "@mui/material/Modal";
+import Grid from "@mui/material/Grid";
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
+import Fade from "@mui/material/Fade";
+import Box from "@mui/material/Box";
 
 const AuthProvider = ({ children }) => {
   const [authTokenDetails, setAuthTokenDetails] = useState(null)
@@ -16,6 +22,8 @@ const AuthProvider = ({ children }) => {
   const client_secret = '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'
   const redirect_uri = 'http://localhost:3000'
   const [code, setCode] = useState(null)
+  const [sessionModalOpen, setSessionModalOpen] = useState(false)
+  const [startSessionTimer, setStartSessionTimer] = useState(false)
 
   const logOut = () => {
     try {
@@ -26,6 +34,7 @@ const AuthProvider = ({ children }) => {
         setHasAuth(false)
         setCode(null)
         localStorage.clear()
+        setStartSessionTimer(false)
         navigate("/")
     } catch(err) {
         console.log(err)
@@ -78,10 +87,46 @@ const AuthProvider = ({ children }) => {
       )
     }}, [hasAuth]) 
 
-  return (
-    <AuthContext.Provider value={{authTokenDetails, setAuthTokenDetails, googleAccountInfo, setGoogleAccountInfo, nestTokens, setNestTokens, project_id, client_id, client_secret, redirect_uri, code, setCode, getNestTokens, hasAuth, setHasAuth, logOut }}>
+    useEffect(() => {
+      if (startSessionTimer) {
+        console.log('In here')
+        setTimeout(() => {
+          setSessionModalOpen(true)
+          console.log('In here 2')
+        }, 60000)
+      }
+    }, [startSessionTimer])
+
+  return ( //AuthProvider is outside the theming context which is why some of the styling looks weird?
+    <> 
+      <Modal open={sessionModalOpen} onClose={() => setSessionModalOpen(false)}>
+        <Fade in={sessionModalOpen}>
+          <Box sx={{ bgcolor: '#7BF1A8', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', p: 4, borderRadius: '1rem' }}>
+            <Grid container direction="column" spacing={2}>
+              <Grid item>
+                <Typography variant="h4">Session About To Expire</Typography>
+              </Grid>
+              <Grid item>
+                <Typography>Your session is going to expire in 5 minutes. Would you like to stay signed in?</Typography>
+              </Grid>
+              <Grid item>
+                <Grid container direction="row" alignItems="center" justifyContent="center" spacing={2} mt={0.5}>
+                  <Grid item>
+                    <Button variant="contained" color="secondary" onClick={() => console.log('')}>Stay Signed In</Button>
+                  </Grid>
+                  <Grid item>
+                    <Button variant="contained" color="error" onClick={() => console.log('')}>Log Out</Button>
+                  </Grid>
+                </Grid>
+              </Grid>
+            </Grid>
+          </Box>
+        </Fade>
+      </Modal>
+      <AuthContext.Provider value={{authTokenDetails, setAuthTokenDetails, googleAccountInfo, setGoogleAccountInfo, nestTokens, setNestTokens, project_id, client_id, client_secret, redirect_uri, code, setCode, getNestTokens, hasAuth, setHasAuth, logOut, setStartSessionTimer }}>
         {children}
-    </AuthContext.Provider>
+      </AuthContext.Provider>
+    </>
   )
 }
 

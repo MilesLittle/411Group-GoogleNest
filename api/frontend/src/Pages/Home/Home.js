@@ -16,7 +16,7 @@ import { useLocation, useSearchParams, useNavigate } from "react-router-dom";
 const Home = () => {
     document.title = 'Welcome to TempWise Assistant'
     const [thermostats, setThermostats] = useState(null)
-    const { setAuthTokenDetails, googleAccountInfo, setGoogleAccountInfo, nestTokens, code, setCode, getNestTokens, setHasAuth, project_id } = useContext(AuthContext)
+    const { setAuthTokenDetails, googleAccountInfo, setGoogleAccountInfo, nestTokens, code, setCode, getNestTokens, setHasAuth, project_id, setStartSessionTimer } = useContext(AuthContext)
     const { switched } = useContext(DarkModeSwitchContext)
     const location = useLocation()
     const navigate = useNavigate()
@@ -69,6 +69,7 @@ const Home = () => {
         setAuthTokenDetails(JSON.parse(localStorage.getItem("authTokenDetails")))
         setCode(searchParams.get('code'))
         navigate("/")
+        setStartSessionTimer(true) //new
       } else {
         console.log('The URL does not have the code')
       }
