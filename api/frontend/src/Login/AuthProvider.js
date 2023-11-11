@@ -89,10 +89,9 @@ const AuthProvider = ({ children }) => {
 
     useEffect(() => {
       if (startSessionTimer) {
-        console.log('In here')
+        console.log('Timer started')
         setTimeout(() => {
           setSessionModalOpen(true)
-          console.log('In here 2')
         }, 60000)
       }
     }, [startSessionTimer])
@@ -104,18 +103,18 @@ const AuthProvider = ({ children }) => {
           <Box sx={{ bgcolor: '#7BF1A8', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', p: 4, borderRadius: '1rem' }}>
             <Grid container direction="column" spacing={2}>
               <Grid item>
-                <Typography variant="h4">Session About To Expire</Typography>
+                <Typography variant="h4" sx={{ fontFamily: 'Google Sans' }}>Session About To Expire</Typography>
               </Grid>
               <Grid item>
-                <Typography>Your session is going to expire in 5 minutes. Would you like to stay signed in?</Typography>
+                <Typography sx={{ fontFamily: 'Google Sans' }}>Your session is going to expire in 5 minutes. Would you like to stay signed in?</Typography>
               </Grid>
               <Grid item>
                 <Grid container direction="row" alignItems="center" justifyContent="center" spacing={2} mt={0.5}>
                   <Grid item>
-                    <Button variant="contained" color="secondary" onClick={() => console.log('')}>Stay Signed In</Button>
+                    <Button variant="contained" color="success" sx={{ fontFamily: 'Google Sans' }} onClick={() => console.log('')}>Stay Signed In</Button>
                   </Grid>
                   <Grid item>
-                    <Button variant="contained" color="error" onClick={() => console.log('')}>Log Out</Button>
+                    <Button variant="contained" color="error" sx={{ fontFamily: 'Google Sans' }} onClick={() => { logOut(); setSessionModalOpen(false); }}>Log Out</Button>
                   </Grid>
                 </Grid>
               </Grid>
