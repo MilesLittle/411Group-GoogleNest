@@ -8,7 +8,7 @@ import TuneIcon from '@mui/icons-material/Tune';
 import { useNavigate } from "react-router-dom";
 import blanknestthermostat from './blanknestthermo.jpg'
 import blanknestthermostatdark from './blanknestthermodark.jpg'
-import DarkModeSwitchContext from "../NavBar/Dark Mode/DarkModeSwitchContext";
+import DarkModeSwitchContext from "../../Theming/DarkModeSwitchContext";
 import './thermocard.css'
 
 const ThermoCard = ({ deviceId, deviceName, mode, actualTempF, actualTempC, setPointTempF, humidity }) => {    

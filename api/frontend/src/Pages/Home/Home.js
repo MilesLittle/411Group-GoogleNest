@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState, useRef } from "react";
-import AuthContext from '../Login/AuthContext';
-import DarkModeSwitchContext from '../components/NavBar/Dark Mode/DarkModeSwitchContext'
+import AuthContext from '../../Login/AuthContext';
+import DarkModeSwitchContext from '../../Theming/DarkModeSwitchContext'
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
@@ -9,7 +9,7 @@ import GoogleIcon from '@mui/icons-material/Google'
 import Grow from "@mui/material/Grow";
 import Grid from '@mui/material/Grid';
 import Container from '@mui/material/Container';
-import ThermoCard from "../components/ThermoCard/ThermoCard";
+import ThermoCard from "../../components/ThermoCard/ThermoCard";
 import axios from 'axios';
 import { useLocation, useSearchParams, useNavigate } from "react-router-dom";
 

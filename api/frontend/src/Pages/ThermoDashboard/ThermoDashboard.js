@@ -17,7 +17,7 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import ToolTip from '@mui/material/Tooltip'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Label } from 'recharts'
-import DarkModeSwitchContext from "../../components/NavBar/Dark Mode/DarkModeSwitchContext";
+import DarkModeSwitchContext from "../../Theming/DarkModeSwitchContext";
 import moment from 'moment'
 import DeleteIcon from '@mui/icons-material/Delete';
 import PauseCircleIcon from '@mui/icons-material/PauseCircle';

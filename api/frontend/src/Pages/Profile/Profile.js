@@ -1,10 +1,10 @@
 import React, { useContext } from "react";
-import AuthContext from '../Login/AuthContext';
+import AuthContext from '../../Login/AuthContext';
 import Typography from '@mui/material/Typography';
 import Avatar from '@mui/material/Avatar';
 import Button from "@mui/material/Button";
 import Grid from "@mui/material/Grid";
-import DarkModeSwitchContext from "../components/NavBar/Dark Mode/DarkModeSwitchContext";
+import DarkModeSwitchContext from "../../Theming/DarkModeSwitchContext";
 
 const Profile = () => {
     document.title = 'Your Google Profile'
