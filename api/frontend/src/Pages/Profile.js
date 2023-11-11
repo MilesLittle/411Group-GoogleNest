@@ -1,33 +1,15 @@
 import React, { useContext } from "react";
-import { googleLogout } from "@react-oauth/google";
 import AuthContext from '../Login/AuthContext';
 import Typography from '@mui/material/Typography';
 import Avatar from '@mui/material/Avatar';
 import Button from "@mui/material/Button";
-import { useNavigate } from 'react-router-dom';
 import Grid from "@mui/material/Grid";
 import DarkModeSwitchContext from "../components/NavBar/Dark Mode/DarkModeSwitchContext";
 
 const Profile = () => {
     document.title = 'Your Google Profile'
-    const navigate = useNavigate()
-    const { googleAccountInfo, setGoogleAccountInfo, setHasAuth, setAuthTokenDetails, setNestTokens, setCode } = useContext(AuthContext)
+    const { googleAccountInfo, logOut } = useContext(AuthContext)
     const { switched } = useContext(DarkModeSwitchContext)
-
-    const logOut = () => {
-        try {
-            googleLogout()
-            setAuthTokenDetails(null)
-            setGoogleAccountInfo(null)
-            setNestTokens(null)
-            setHasAuth(false)
-            setCode(null)
-            localStorage.clear()
-            navigate("/")
-        } catch(err) {
-            console.log(err)
-        }
-    } 
 
     return (
         <Grid container direction="column" justifyContent="center" alignItems="center" mt={4} spacing={0.5}>

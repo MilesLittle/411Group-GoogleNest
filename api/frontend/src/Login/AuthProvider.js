@@ -1,18 +1,36 @@
 import React, { useState, useEffect } from "react";
 import AuthContext from "./AuthContext";
 import axios from 'axios';
+import { useNavigate } from "react-router-dom";
+import { googleLogout } from "@react-oauth/google";
 
 const AuthProvider = ({ children }) => {
   const [authTokenDetails, setAuthTokenDetails] = useState(null)
   const [googleAccountInfo, setGoogleAccountInfo] = useState(null)
   const [nestTokens, setNestTokens] = useState(null)
   const [hasAuth, setHasAuth] = useState(false) //using this just to stop an endless loop
+  const navigate = useNavigate()
 
   const project_id = 'f4f5bdc3-964c-466b-bf80-9508f2709ad5'
   const client_id = '589825515650-ej6sq8icgc3itevo7b731oes8q1tqk4u.apps.googleusercontent.com'
   const client_secret = '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'
   const redirect_uri = 'http://localhost:3000'
   const [code, setCode] = useState(null)
+
+  const logOut = () => {
+    try {
+        googleLogout()
+        setAuthTokenDetails(null)
+        setGoogleAccountInfo(null)
+        setNestTokens(null)
+        setHasAuth(false)
+        setCode(null)
+        localStorage.clear()
+        navigate("/")
+    } catch(err) {
+        console.log(err)
+    }
+  } 
 
   const getNestTokens = async () => {
     try {
@@ -61,7 +79,7 @@ const AuthProvider = ({ children }) => {
     }}, [hasAuth]) 
 
   return (
-    <AuthContext.Provider value={{authTokenDetails, setAuthTokenDetails, googleAccountInfo, setGoogleAccountInfo, nestTokens, setNestTokens, project_id, client_id, client_secret, redirect_uri, code, setCode, getNestTokens, hasAuth, setHasAuth }}>
+    <AuthContext.Provider value={{authTokenDetails, setAuthTokenDetails, googleAccountInfo, setGoogleAccountInfo, nestTokens, setNestTokens, project_id, client_id, client_secret, redirect_uri, code, setCode, getNestTokens, hasAuth, setHasAuth, logOut }}>
         {children}
     </AuthContext.Provider>
   )
