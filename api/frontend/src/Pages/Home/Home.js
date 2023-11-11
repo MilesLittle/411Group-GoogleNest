@@ -52,16 +52,14 @@ const Home = () => {
     }, [thermostats])
 
     function getDeviceId(id) { //grab the actual device-id out the name property
-      console.log(id)
+      //console.log(id)
       const regex = new RegExp('(?<=\/devices\/).*$');
       const found = id.match(regex);
-      console.log('String to send back')
-      console.log(found)
+      //console.log(found)
       let returnFound = found[0].replace('/', '')
       return returnFound;
     }
 
-    //somewhere in this useEffect things are being called more than they need to? Fix sometime
     useEffect(() => { //#2
       if (location.search.includes('?code=')) {
         console.log(location.search)
@@ -69,14 +67,14 @@ const Home = () => {
         setAuthTokenDetails(JSON.parse(localStorage.getItem("authTokenDetails")))
         setCode(searchParams.get('code'))
         navigate("/")
-        setStartSessionTimer(true) //new
+        setStartSessionTimer(true)
       } else {
         console.log('The URL does not have the code')
       }
-    }, []) //need to make sure user can't go back to the url with the query string (location/history.replace instead of navigate?)
+    }, []) //Make sure user can't go back to the url with the query string (location/history.replace instead of navigate?)
 
     useEffect(() => { //#3
-      if (code) { //make sure getNestTokens doesn't run when logging out and setting code to null
+      if (code) {
         console.log(code)
         getNestTokens()
       }
@@ -84,7 +82,7 @@ const Home = () => {
 
     useEffect(() => { //#4
       if (nestTokens) {
-        axios.get(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices`, { //await it?
+        axios.get(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices`, {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${nestTokens.access_token}`

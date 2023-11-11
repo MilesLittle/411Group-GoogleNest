@@ -90,13 +90,14 @@ const AuthProvider = ({ children }) => {
     useEffect(() => {
       if (startSessionTimer) {
         console.log('Timer started')
+        localStorage.clear()
         setTimeout(() => {
           setSessionModalOpen(true)
         }, 60000)
       }
     }, [startSessionTimer])
 
-  return ( //AuthProvider is outside the theming context which is why some of the styling looks weird?
+  return (
     <> 
       <Modal open={sessionModalOpen} onClose={() => setSessionModalOpen(false)}>
         <Fade in={sessionModalOpen}>
