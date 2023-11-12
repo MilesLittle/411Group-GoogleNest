@@ -22,8 +22,6 @@ const AuthProvider = ({ children }) => {
   const client_secret = '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'
   const redirect_uri = 'http://localhost:3000'
   const [code, setCode] = useState(null)
-  const [sessionModalOpen, setSessionModalOpen] = useState(false)
-  const [startSessionTimer, setStartSessionTimer] = useState(false)
 
   const logOut = () => {
     try {
@@ -34,7 +32,6 @@ const AuthProvider = ({ children }) => {
         setHasAuth(false)
         setCode(null)
         localStorage.clear()
-        setStartSessionTimer(false)
         navigate("/")
     } catch(err) {
         console.log(err)
@@ -87,53 +84,11 @@ const AuthProvider = ({ children }) => {
       )
     }}, [hasAuth]) 
 
-    var popup
-    const setPopupTimer = () => {
-      popup = setTimeout(() => {
-        setSessionModalOpen(true)
-      }, 30000)
-    }
-
-    // need function to log out after timeout reached
-    const resetPopupTimer = () => { //some token refresh stuff can go here
-      clearTimeout(popup)
-      setPopupTimer()
-    }
-    useEffect(() => {
-      if (startSessionTimer) {
-        console.log('Timer started')
-        localStorage.clear() //for security after pushing to localStorage to persist state past redirects
-        setPopupTimer()
-      }
-    }, [startSessionTimer])
-
+  //just do behind scenes token refresh
+  
   return (
     <> 
-      <Modal open={sessionModalOpen} onClose={() => setSessionModalOpen(false)}>
-        <Fade in={sessionModalOpen}>
-          <Box sx={{ bgcolor: '#7BF1A8', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', p: 4, borderRadius: '1rem' }}>
-            <Grid container direction="column" spacing={2}>
-              <Grid item>
-                <Typography variant="h4" sx={{ fontFamily: 'Google Sans' }}>Session About To Expire</Typography>
-              </Grid>
-              <Grid item>
-                <Typography sx={{ fontFamily: 'Google Sans' }}>Your session is going to expire in 5 minutes. Would you like to stay signed in?</Typography>
-              </Grid>
-              <Grid item>
-                <Grid container direction="row" alignItems="center" justifyContent="center" spacing={2} mt={0.5}>
-                  <Grid item>
-                    <Button variant="contained" color="success" sx={{ fontFamily: 'Google Sans' }} onClick={() => { resetPopupTimer(); setSessionModalOpen(false); }}>Stay Signed In</Button>
-                  </Grid>
-                  <Grid item>
-                    <Button variant="contained" color="error" sx={{ fontFamily: 'Google Sans' }} onClick={() => { logOut(); setSessionModalOpen(false); }}>Log Out</Button>
-                  </Grid>
-                </Grid>
-              </Grid>
-            </Grid>
-          </Box>
-        </Fade>
-      </Modal>
-      <AuthContext.Provider value={{authTokenDetails, setAuthTokenDetails, googleAccountInfo, setGoogleAccountInfo, nestTokens, setNestTokens, project_id, client_id, client_secret, redirect_uri, code, setCode, getNestTokens, hasAuth, setHasAuth, logOut, setStartSessionTimer }}>
+      <AuthContext.Provider value={{authTokenDetails, setAuthTokenDetails, googleAccountInfo, setGoogleAccountInfo, nestTokens, setNestTokens, project_id, client_id, client_secret, redirect_uri, code, setCode, getNestTokens, hasAuth, setHasAuth, logOut }}>
         {children}
       </AuthContext.Provider>
     </>
