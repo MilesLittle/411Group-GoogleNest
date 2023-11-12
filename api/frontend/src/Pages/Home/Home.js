@@ -12,6 +12,7 @@ import Container from '@mui/material/Container';
 import ThermoCard from "../../components/ThermoCard/ThermoCard";
 import axios from 'axios';
 import { useLocation, useSearchParams, useNavigate } from "react-router-dom";
+import CircularProgress from "@mui/material/CircularProgress";
 
 const Home = () => {
     document.title = 'Welcome to TempWise Assistant'
@@ -132,7 +133,7 @@ const Home = () => {
                       </Grid>
                       </Grow>
                     )
-                  })) : (<Typography variant="h6" color={ switched ? 'primary.main' : 'secondary.main' }>You have no Nest thermostats associated with your account.</Typography>) }
+                  })) : (<CircularProgress color={switched ? 'primary' : 'secondary'} />) }
                 </Grid>
               </Container>
             </>

@@ -3,12 +3,6 @@ import AuthContext from "./AuthContext";
 import axios from 'axios';
 import { useNavigate } from "react-router-dom";
 import { googleLogout } from "@react-oauth/google";
-import Modal from "@mui/material/Modal";
-import Grid from "@mui/material/Grid";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import Fade from "@mui/material/Fade";
-import Box from "@mui/material/Box";
 
 const AuthProvider = ({ children }) => {
   const [authTokenDetails, setAuthTokenDetails] = useState(null)

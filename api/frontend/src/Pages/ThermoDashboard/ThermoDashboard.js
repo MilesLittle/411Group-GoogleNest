@@ -26,6 +26,7 @@ import SnackbarContent from "@mui/material/SnackbarContent";
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import Modal from "@mui/material/Modal";
 import Fade from "@mui/material/Fade";
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
@@ -312,9 +313,14 @@ const ThermoDashboard = () => {
                 </Grid>
                 <Grid item>
                     { device && 
-                        <Grow in={true}>
-                            <Typography variant="h3">Your Jobs</Typography>
-                        </Grow>
+                            <>
+                                <Typography variant="h3">Your Jobs</Typography>
+                                <ToolTip title="Refresh Jobs" placement="right-start" onClick={() => { console.log('Refreshing jobs'); setJobRefresh(!jobRefresh); }}>
+                                    <div style={{ position: 'absolute', right: '30.5rem', bottom: '-4.1rem', cursor: 'pointer' }}>
+                                        <RefreshIcon style={{ color: (switched ? '#7BF1A8' : '#1a1a1a')}} />
+                                    </div>
+                                </ToolTip>
+                            </>
                     }
                 </Grid>
                 <Grid item>
