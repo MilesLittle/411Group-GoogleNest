@@ -87,13 +87,23 @@ const AuthProvider = ({ children }) => {
       )
     }}, [hasAuth]) 
 
+    var popup
+    const setPopupTimer = () => {
+      popup = setTimeout(() => {
+        setSessionModalOpen(true)
+      }, 30000)
+    }
+
+    // need function to log out after timeout reached
+    const resetPopupTimer = () => { //some token refresh stuff can go here
+      clearTimeout(popup)
+      setPopupTimer()
+    }
     useEffect(() => {
       if (startSessionTimer) {
         console.log('Timer started')
-        localStorage.clear()
-        setTimeout(() => {
-          setSessionModalOpen(true)
-        }, 60000)
+        localStorage.clear() //for security after pushing to localStorage to persist state past redirects
+        setPopupTimer()
       }
     }, [startSessionTimer])
 
@@ -112,7 +122,7 @@ const AuthProvider = ({ children }) => {
               <Grid item>
                 <Grid container direction="row" alignItems="center" justifyContent="center" spacing={2} mt={0.5}>
                   <Grid item>
-                    <Button variant="contained" color="success" sx={{ fontFamily: 'Google Sans' }} onClick={() => console.log('')}>Stay Signed In</Button>
+                    <Button variant="contained" color="success" sx={{ fontFamily: 'Google Sans' }} onClick={() => { resetPopupTimer(); setSessionModalOpen(false); }}>Stay Signed In</Button>
                   </Grid>
                   <Grid item>
                     <Button variant="contained" color="error" sx={{ fontFamily: 'Google Sans' }} onClick={() => { logOut(); setSessionModalOpen(false); }}>Log Out</Button>

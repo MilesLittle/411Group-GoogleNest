@@ -67,7 +67,7 @@ const Home = () => {
         setAuthTokenDetails(JSON.parse(localStorage.getItem("authTokenDetails")))
         setCode(searchParams.get('code'))
         navigate("/")
-        setStartSessionTimer(true)
+        setStartSessionTimer(true) //they are logged in, start timer for 1 hour when tokens expire
       } else {
         console.log('The URL does not have the code')
       }
