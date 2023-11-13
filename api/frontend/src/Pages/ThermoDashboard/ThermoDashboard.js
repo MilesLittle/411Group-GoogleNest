@@ -24,9 +24,16 @@ import PauseCircleIcon from '@mui/icons-material/PauseCircle';
 import Snackbar from "@mui/material/Snackbar";
 import SnackbarContent from "@mui/material/SnackbarContent";
 import AddCircleIcon from '@mui/icons-material/AddCircle';
+import Dialog from '@mui/material/Dialog'
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import MenuItem from '@mui/material/MenuItem';
 import Modal from "@mui/material/Modal";
 import Fade from "@mui/material/Fade";
 import RefreshIcon from '@mui/icons-material/Refresh';
+
 
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
@@ -276,10 +283,103 @@ const ThermoDashboard = () => {
     }, [responseMessage])
 
     useEffect(() => {
-        if (jobToDeleteId.length > 0) {
+        if (jobToDeleteId != 0 && jobToDeleteId != null) {
             setDeleteConfOpen(true)
         }
     }, [jobToDeleteId])
+
+    // ChangeLog stuff
+    // Open and close the buttons for the modal 
+    const [open, setOpen] = React.useState(false);
+
+    // states for modal form submission
+    const [modalInput, setModalInput] = React.useState(60);
+    const [timeType, setTimeType] = React.useState(null);
+
+
+    useEffect(() => {
+        console.log("modalInput = " + modalInput);
+        console.log("timeType = " + timeType);
+    },[modalInput, timeType])
+
+
+    useEffect(() => {
+        console.log("jobs");
+        console.log(jobs);
+    }, [jobs])
+
+
+    const OpenModal = () => {
+        setOpen(true); 
+    }
+
+    const CloseModal = () => {
+        setOpen(false); 
+    }
+
+    // restrict modal input
+    const handleInput = (input) => {
+        // find way to forbid ., e, +, - characters? input is a string, and TextField with type="number" allows those chars
+        input = Number(input) | 0   // cast so the number actually shows up in modal form. Bitwise OR to force integer
+
+        // limit input. Somehow disallow user to submit log every 1 minute? That would be an excessive amount of logs
+        if (input < 1) {
+            input = null    // make sure null is not submitted in post request, or maybe make the modalInput state's purpose only for display, submit actual form value?
+        } else if (input > 60) {
+            input = 60
+        }
+
+        setModalInput(input)
+    }
+
+    const submitAddJob = async (data) => {
+
+        const reqbody = {
+            name: data.target.name.value,
+            description: data.target.description.value,
+            number: data.target.number.value,
+            timeType: data.target.timeType.value,
+            refresh_token: nestTokens.refresh_token,
+            deviceId: deviceId,
+            googleId: googleAccountInfo.id,
+        }
+
+        console.log(reqbody.name);
+        //console.log(reqbody.number);
+        //onsole.log(reqbody.timeType);
+
+        await axios.post(`http://localhost:8000/logjob`, reqbody, {
+            
+        })
+        .then((res) => {
+            console.log(res);
+            setJobRefresh(!jobRefresh)
+        })
+        .catch((err) => {
+            console.log("job create error " + err);
+        })
+
+    }
+
+
+    // Time options 
+    const timeValues = [
+    {
+        value: "minutes", 
+        label: "minutes", 
+    }, 
+    {
+        value: "hours",  
+        label: "hours"
+    }, 
+    
+    {
+        value: "days", 
+        label: "days",
+    }
+    ]
+
+
 
     return (
         <>
@@ -390,21 +490,21 @@ const ThermoDashboard = () => {
                                     return (
                                         <Grow in={true}>
                                             <Grid item>
-                                                <ToolTip title={<>Job Name: {job.Id}<br/>Job Description: {job.Description}</>} arrow>
+                                                <ToolTip title={<>Job Name: {job.name}<br/>Job Description: {job.Description}</>} arrow>
                                                     <Card sx={{ borderRadius: '2rem', bgcolor: (job.JobLogs === chartData ? 'primary.dark' : 'primary.main'), width: '15rem' }} elevation={(job.JobLogs === chartData ? 8 : 0)} key={job.Id}>
                                                         <CardContent>
                                                             <Grid container direction="row" justifyContent="space-between">
                                                                 <Grid item>
                                                                     <Typography gutterBottom variant="h6" color='#000' component="div">
                                                                         <div onClick={() => setChartData(job.JobLogs)} style={{ cursor: 'pointer' }}>
-                                                                            {(job.Id.length > 17 ? `${job.Id.substr(0, 13)}...` : job.Id)}
+                                                                            {(job.Id.length > 17 ? `${job.Id.substr(0, 13)}...` : job.name)}
                                                                         </div>
                                                                     </Typography>
                                                                 </Grid>
                                                                 <Grid item>
                                                                     <Grid container justifyContent="flex-end">
                                                                         <Grid item>
-                                                                            <div onClick={() => alert(`Pause job ${job.Id}`)} style={{ cursor: 'pointer' }}>
+                                                                            <div onClick={() => alert(`Pause job ${job.name}`)} style={{ cursor: 'pointer' }}>
                                                                                 <ToolTip title="Pause Job">
                                                                                     <PauseCircleIcon />
                                                                                 </ToolTip>
@@ -478,11 +578,88 @@ const ThermoDashboard = () => {
                             }
                         </>
                     }
+
+                    {/* changeLog dialogue*/}
+                    <div style={{textAlign: 'center'}}>
+
+                        <Dialog open={open} onClose={CloseModal}>
+                            <DialogTitle> Thermostat 1 Log Setting </DialogTitle>
+                            <form onSubmit={(e) => {e.preventDefault(); submitAddJob(e);}}>
+                                <DialogContent>  
+                                    <DialogContentText> Set the Log: </DialogContentText>
+
+                                    <TextField
+                                        id="job-name"
+                                        name="name"
+                                        label="Job Name"
+                                        type="text"
+                                        margin="dense"
+                                        fullWidth
+                                        defaultValue={"Job name"}
+                                        InputLabelProps={{shrink: true}}
+                                        inputProps={{ max:200 }}
+                                    />
+
+                                    <TextField
+                                        id="job-description"
+                                        name="description"
+                                        label="Description"
+                                        type="text"
+                                        margin="dense"
+                                        fullWidth
+                                        InputLabelProps={{shirnk: true}}
+                                        inputProps={{ max:200 }}
+                                    />
+
+                                    <TextField
+                                        id="outlined-number"
+                                        name="number"
+                                        label="Number"
+                                        type="number"
+                                        margin="dense"
+                                        fullWidth
+                                        value={modalInput}
+                                        onChange={(e) => handleInput(e.target.value)}
+                                        InputLabelProps={{shrink: true,}}
+                                        inputProps={{
+                                            min: 1,
+                                            max: 60,
+                                        }}
+                                    >
+                                        
+                                    </TextField>
+
+                                    <TextField
+                                        id="select-time"
+                                        name="timeType"
+                                        select
+                                        label = "Select"
+                                        defaultValue="days"
+                                        helperText="Please Select a time"
+                                        margin="dense"
+                                        onChange={(e) => setTimeType(e.target.value)}
+                                    >
+                                        {timeValues.map((option) => (
+                                            <MenuItem key={option.value} value={option.value}>
+                                            {option.label}
+                                            </MenuItem>
+                                        ))}
+                                    </TextField>
+                                </DialogContent>
+
+                                <DialogActions> 
+                                <Button onClick={CloseModal} color="secondary"> Cancel </Button>
+                                <Button type="submit" onClick={CloseModal} color="primary"> Save </Button>
+                                </DialogActions>
+                            </form>
+                        </Dialog>
+                    </div>
+
                     <Grid item>
                         { device &&
                             <Container>
                                 <Grid container direction="row" justifyContent="space-around" alignItems="center" spacing={2}>
-                                    <Grid item>
+                                    <Grid onClick={() => OpenModal()} item>
                                         { switched ?
                                             <Button variant="outlined" color="primary" size="large" startIcon={<AddCircleIcon/>}>Add Logging Job</Button>
                                             :
