@@ -42,11 +42,70 @@ const ThermoDashboard = () => {
     const [deviceRefresh, setDeviceRefresh] = useState(false)
     const [jobRefresh, setJobRefresh] = useState(false)
     const [jobs, setJobs] = useState(null)
-    const [chartData, setChartData] = useState(null)
+    //const [chartData, setChartData] = useState(testarray)
     const [alertOpen, setAlertOpen] = useState(false)
     const [deleteConfOpen, setDeleteConfOpen] = useState(false)
     const [jobToDeleteId, setJobToDeleteId] = useState('')
     const [responseMessage, setResponseMessage] = useState('')
+
+    const testarray = [
+        {
+            "Id": "3b9b1f7d-f23a-4800-9e63-45c961f5cd1c",
+            "JobId": "Job logs test",
+            "ActualTemp": "18.330000",
+            "SetPointTemp": null,
+            "Heat": "25",
+            "Cool": "20",
+            "TimeLogged": "2023-10-19T14:32:31.054552Z"
+        },
+        {
+            "Id": "277baaca-95c4-4eee-a3e7-8d4903c3f814",
+            "JobId": "Job logs test",
+            "ActualTemp": "19.440000",
+            "SetPointTemp": null,
+            "Heat": "26",
+            "Cool": "21",
+            "TimeLogged": "2023-10-19T14:35:45.115786Z"
+        },
+        {
+            "Id": "fcc83e4b-ddf6-4312-81c6-2d12ae0ea296",
+            "JobId": "Job logs test",
+            "ActualTemp": "18.899000",
+            "SetPointTemp": "23.000000",
+            "Heat": null,
+            "Cool": null,
+            "TimeLogged": "2023-10-19T14:37:44.708436Z"
+        },
+        {
+            "Id": "6da7c3e8-6822-4640-872f-46bbca1e7f27",
+            "JobId": "Job logs test",
+            "ActualTemp": "18.330000",
+            "SetPointTemp": "21.000000",
+            "Heat": null,
+            "Cool": null,
+            "TimeLogged": "2023-10-19T14:42:08.017393Z"
+        },
+        {
+            "Id": "66a4768e-1610-4230-b3c8-33d70a1dc736",
+            "JobId": "Job logs test",
+            "ActualTemp": "21.000000",
+            "SetPointTemp": null,
+            "Heat": "26.333",
+            "Cool": "18.5",
+            "TimeLogged": "2023-10-19T14:44:39.621889Z"
+        },
+        {
+            "Id": "5f23a0a7-382d-4b87-a9fa-a552235155f7",
+            "JobId": "Job logs test",
+            "ActualTemp": "20.000000",
+            "SetPointTemp": null,
+            "Heat": "25",
+            "Cool": "20.13",
+            "TimeLogged": "2023-10-19T14:46:46.304463Z"
+        }
+    ]
+
+    const [chartData, setChartData] = useState(testarray)
 
     const CtoF = (cTemp) => {
         return (cTemp * 9/5) + 32
@@ -395,8 +454,10 @@ const ThermoDashboard = () => {
                                         </YAxis>
                                         <Tooltip contentStyle={{ backgroundColor: (switched ? '#000' : '#fff'), borderColor: (switched ? '#000' : '#fff'), borderRadius: '1rem' }} labelStyle={{ color: (switched ? '#7BF1A8' : '#000')}}/>
                                         <Legend wrapperStyle={{ right: 75 }} verticalAlign="top" height={40}/>
-                                        <Line type="monotone" dataKey="ActualTemp" stroke="#ff3333" activeDot={{ r: 8 }} name="Actual Temp"/>
-                                        <Line type="monotone" dataKey="SetPointTemp" stroke="#3385ff" activeDot={{ r: 8 }} name="Set Point Temp"/>
+                                        <Line type="monotone" dataKey="ActualTemp" stroke="#9900ff" activeDot={{ r: 8 }} name="Actual Temp"/>
+                                        <Line type="monotone" dataKey="SetPointTemp" stroke="#ff8000" activeDot={{ r: 8 }} name="Set Point Temp"/>
+                                        <Line type="monotone" dataKey="Heat" stroke="#ff3333" activeDot={{ r: 8 }} name="Heat"/>
+                                        <Line type="monotone" dataKey="Cool" stroke="#3385ff" activeDot={{ r: 8 }} name="Cool"/>
                                     </LineChart>
                                 </ResponsiveContainer>)
                                 : 

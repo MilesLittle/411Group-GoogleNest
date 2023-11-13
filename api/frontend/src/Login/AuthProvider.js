@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import AuthContext from "./AuthContext";
 import axios from 'axios';
 import { useNavigate } from "react-router-dom";
-import { googleLogout } from "@react-oauth/google";
+import { useGoogleLogin, googleLogout } from "@react-oauth/google";
 
 const AuthProvider = ({ children }) => {
   const [authTokenDetails, setAuthTokenDetails] = useState(null)
@@ -17,12 +17,15 @@ const AuthProvider = ({ children }) => {
   const redirect_uri = 'http://localhost:3000'
   const [code, setCode] = useState(null)
 
+  var refresh
+
   const logOut = () => {
     try {
         googleLogout()
         setAuthTokenDetails(null)
         setGoogleAccountInfo(null)
         setNestTokens(null)
+        clearInterval(refresh)
         setHasAuth(false)
         setCode(null)
         localStorage.clear()
@@ -31,6 +34,11 @@ const AuthProvider = ({ children }) => {
         console.log(err)
     }
   } 
+
+  const login = useGoogleLogin({
+    onSuccess: (codeResponse) => { console.log('Got Login Auth token'); console.log(codeResponse); setAuthTokenDetails(codeResponse); setHasAuth(false); setHasAuth(true); }, //true from initial login, set to false so subsequent setHasAuth(true) sets off the chain again
+    onError: (error) => console.log('Login Failed:', error)
+  });
 
   const getNestTokens = async () => {
     try {
@@ -78,7 +86,17 @@ const AuthProvider = ({ children }) => {
       )
     }}, [hasAuth]) 
 
-  //just do behind scenes token refresh
+  useEffect(() => { //loop until they log out.
+    if (nestTokens) {
+      refresh = setInterval(() => {
+        console.log('Getting new Nest tokens')
+        //just redoing login process, dont wanna use refresh tokens if theyre limited to 100 and theyre needed for making APS jobs (https://developers.google.com/identity/protocols/oauth2#expiration)
+        //also need code, can't submit old code for Nest tokens
+        login() //popups need to be allowed
+      }, 3600000) 
+      console.log('Nest tokens timer set')
+    }
+  }, [nestTokens])
   
   return (
     <> 
