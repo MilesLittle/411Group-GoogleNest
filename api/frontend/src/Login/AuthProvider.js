@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import AuthContext from "./AuthContext";
 import axios from 'axios';
 import { useNavigate } from "react-router-dom";
-import { useGoogleLogin, googleLogout } from "@react-oauth/google";
+import { googleLogout } from "@react-oauth/google";
 
 const AuthProvider = ({ children }) => {
   const [authTokenDetails, setAuthTokenDetails] = useState(null)
@@ -34,11 +34,6 @@ const AuthProvider = ({ children }) => {
         console.log(err)
     }
   } 
-
-  const login = useGoogleLogin({
-    onSuccess: (codeResponse) => { console.log('Got Login Auth token'); console.log(codeResponse); setAuthTokenDetails(codeResponse); setHasAuth(false); setHasAuth(true); }, //true from initial login, set to false so subsequent setHasAuth(true) sets off the chain again
-    onError: (error) => console.log('Login Failed:', error)
-  });
 
   const getNestTokens = async () => {
     try {
@@ -92,7 +87,9 @@ const AuthProvider = ({ children }) => {
         console.log('Getting new Nest tokens')
         //just redoing login process, dont wanna use refresh tokens if theyre limited to 100 and theyre needed for making APS jobs (https://developers.google.com/identity/protocols/oauth2#expiration)
         //also need code, can't submit old code for Nest tokens
-        login() //popups need to be allowed
+        localStorage.setItem("googleAccountInfo", JSON.stringify(googleAccountInfo)) //so theres no errors accessing localStorage in useEffect #2
+        localStorage.setItem("authTokenDetails", JSON.stringify(authTokenDetails))
+        window.location.href = `https://nestservices.google.com/u/${authTokenDetails.authuser}/partnerconnections/f4f5bdc3-964c-466b-bf80-9508f2709ad5/auth?redirect_uri=http://localhost:3000&access_type=offline&prompt=consent&client_id=589825515650-ej6sq8icgc3itevo7b731oes8q1tqk4u.apps.googleusercontent.com&response_type=code&scope=https://www.googleapis.com/auth/sdm.service`;
       }, 3600000) 
       console.log('Nest tokens timer set')
     }
