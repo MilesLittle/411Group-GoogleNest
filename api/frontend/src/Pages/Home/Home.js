@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState, useRef } from "react";
-import AuthContext from '../Login/AuthContext';
-import DarkModeSwitchContext from '../components/NavBar/Dark Mode/DarkModeSwitchContext'
+import AuthContext from '../../Login/AuthContext';
+import DarkModeSwitchContext from '../../Theming/DarkModeSwitchContext'
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
@@ -9,9 +9,10 @@ import GoogleIcon from '@mui/icons-material/Google'
 import Grow from "@mui/material/Grow";
 import Grid from '@mui/material/Grid';
 import Container from '@mui/material/Container';
-import ThermoCard from "../components/ThermoCard/ThermoCard";
+import ThermoCard from "../../components/ThermoCard/ThermoCard";
 import axios from 'axios';
 import { useLocation, useSearchParams, useNavigate } from "react-router-dom";
+import CircularProgress from "@mui/material/CircularProgress";
 
 const Home = () => {
     document.title = 'Welcome to TempWise Assistant'
@@ -34,9 +35,9 @@ const Home = () => {
       } else if (thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'COOL') {
         setPointTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius))
       } else if (thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEATCOOL') {
-        setPointTemp = 'Range - H: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].heatCelsius)) + ', C: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius))
+        setPointTemp = 'H: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].heatCelsius)) + ', C: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius))
       } else if (thermostat.traits["sdm.devices.traits.ThermostatEco"].mode === 'MANUAL_ECO') {
-        setPointTemp = 'Range - H: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatEco"].heatCelsius)) + ', C: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatEco"].coolCelsius))
+        setPointTemp = 'H: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatEco"].heatCelsius)) + ', C: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatEco"].coolCelsius))
       } else { //OFF
         setPointTemp = 'Thermostat is off.'
       }
@@ -52,16 +53,14 @@ const Home = () => {
     }, [thermostats])
 
     function getDeviceId(id) { //grab the actual device-id out the name property
-      console.log(id)
+      //console.log(id)
       const regex = new RegExp('(?<=\/devices\/).*$');
       const found = id.match(regex);
-      console.log('String to send back')
-      console.log(found)
+      //console.log(found)
       let returnFound = found[0].replace('/', '')
       return returnFound;
     }
 
-    //somewhere in this useEffect things are being called more than they need to? Fix sometime
     useEffect(() => { //#2
       if (location.search.includes('?code=')) {
         console.log(location.search)
@@ -72,18 +71,19 @@ const Home = () => {
       } else {
         console.log('The URL does not have the code')
       }
-    }, []) //need to make sure user can't go back to the url with the query string (location/history.replace instead of navigate?)
+    }, []) //Make sure user can't go back to the url with the query string (location/history.replace instead of navigate?)
 
     useEffect(() => { //#3
-      if (code) { //make sure getNestTokens doesn't run when logging out and setting code to null
+      if (code) {
         console.log(code)
+        localStorage.clear()
         getNestTokens()
       }
     }, [code])
 
     useEffect(() => { //#4
       if (nestTokens) {
-        axios.get(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices`, { //await it?
+        axios.get(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices`, {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${nestTokens.access_token}`
@@ -133,7 +133,7 @@ const Home = () => {
                       </Grid>
                       </Grow>
                     )
-                  })) : (<Typography variant="h6" color={ switched ? 'primary.main' : 'secondary.main' }>You have no Nest thermostats associated with your account.</Typography>) }
+                  })) : (<CircularProgress color={switched ? 'primary' : 'secondary'} />) }
                 </Grid>
               </Container>
             </>
@@ -143,8 +143,8 @@ const Home = () => {
               <center>
               <iframe 
                 src='https://www.youtube.com/embed/-tagcWAI_D0?si=VdInvAuabRpMKNjd' 
-                width='500' 
-                height='250'
+                width='500vw' 
+                height='250vh'
                 style={{ borderStyle: 'solid', borderRadius: '1rem', borderColor: '#7BF1A8', borderWidth: '0.1rem' }}/>
               </center>
               <div>

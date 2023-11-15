@@ -17,7 +17,7 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import ToolTip from '@mui/material/Tooltip'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Label } from 'recharts'
-import DarkModeSwitchContext from "../../components/NavBar/Dark Mode/DarkModeSwitchContext";
+import DarkModeSwitchContext from "../../Theming/DarkModeSwitchContext";
 import moment from 'moment'
 import DeleteIcon from '@mui/icons-material/Delete';
 import PauseCircleIcon from '@mui/icons-material/PauseCircle';
@@ -32,6 +32,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import MenuItem from '@mui/material/MenuItem';
 import Modal from "@mui/material/Modal";
 import Fade from "@mui/material/Fade";
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 
 axios.defaults.xsrfCookieName = 'csrftoken'
@@ -48,12 +49,70 @@ const ThermoDashboard = () => {
     const [deviceRefresh, setDeviceRefresh] = useState(false)
     const [jobRefresh, setJobRefresh] = useState(false)
     const [jobs, setJobs] = useState(null)
-    const [chartData, setChartData] = useState(null)
+    //const [chartData, setChartData] = useState(testarray)
     const [alertOpen, setAlertOpen] = useState(false)
     const [deleteConfOpen, setDeleteConfOpen] = useState(false)
     const [jobToDeleteId, setJobToDeleteId] = useState('')
     const [responseMessage, setResponseMessage] = useState('')
 
+    const testarray = [
+        {
+            "Id": "3b9b1f7d-f23a-4800-9e63-45c961f5cd1c",
+            "JobId": "Job logs test",
+            "ActualTemp": "18.330000",
+            "SetPointTemp": null,
+            "Heat": "25",
+            "Cool": "20",
+            "TimeLogged": "2023-10-19T14:32:31.054552Z"
+        },
+        {
+            "Id": "277baaca-95c4-4eee-a3e7-8d4903c3f814",
+            "JobId": "Job logs test",
+            "ActualTemp": "19.440000",
+            "SetPointTemp": null,
+            "Heat": "26",
+            "Cool": "21",
+            "TimeLogged": "2023-10-19T14:35:45.115786Z"
+        },
+        {
+            "Id": "fcc83e4b-ddf6-4312-81c6-2d12ae0ea296",
+            "JobId": "Job logs test",
+            "ActualTemp": "18.899000",
+            "SetPointTemp": "23.000000",
+            "Heat": null,
+            "Cool": null,
+            "TimeLogged": "2023-10-19T14:37:44.708436Z"
+        },
+        {
+            "Id": "6da7c3e8-6822-4640-872f-46bbca1e7f27",
+            "JobId": "Job logs test",
+            "ActualTemp": "18.330000",
+            "SetPointTemp": "21.000000",
+            "Heat": null,
+            "Cool": null,
+            "TimeLogged": "2023-10-19T14:42:08.017393Z"
+        },
+        {
+            "Id": "66a4768e-1610-4230-b3c8-33d70a1dc736",
+            "JobId": "Job logs test",
+            "ActualTemp": "21.000000",
+            "SetPointTemp": null,
+            "Heat": "26.333",
+            "Cool": "18.5",
+            "TimeLogged": "2023-10-19T14:44:39.621889Z"
+        },
+        {
+            "Id": "5f23a0a7-382d-4b87-a9fa-a552235155f7",
+            "JobId": "Job logs test",
+            "ActualTemp": "20.000000",
+            "SetPointTemp": null,
+            "Heat": "25",
+            "Cool": "20.13",
+            "TimeLogged": "2023-10-19T14:46:46.304463Z"
+        }
+    ]
+
+    const [chartData, setChartData] = useState(testarray)
 
     const CtoF = (cTemp) => {
         return (cTemp * 9/5) + 32
@@ -145,16 +204,14 @@ const ThermoDashboard = () => {
                         setAlertOpen(false)
                         setResponseMessage('')
                     }, 5000)
-                } else {
-                    console.log(res)
-                    setResponseMessage('Something went wrong.')
-                    setTimeout(() => {
-                        setAlertOpen(false)
-                        setResponseMessage('')
-                    }, 5000)
                 }
             }).catch((err) => {
                 console.log(err)
+                setResponseMessage(err.response.data.error.message)
+                setTimeout(() => {
+                    setAlertOpen(false)
+                    setResponseMessage('')
+                }, 5000)
             })
         } else if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "HEAT") {
             await axios.post(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}:executeCommand`, {
@@ -177,16 +234,14 @@ const ThermoDashboard = () => {
                         setAlertOpen(false)
                         setResponseMessage('')
                     }, 5000)
-                } else {
-                    console.log(res)
-                    setResponseMessage('Something went wrong.')
-                    setTimeout(() => {
-                        setAlertOpen(false)
-                        setResponseMessage('')
-                    }, 5000)
                 }
             }).catch((err) => {
                 console.log(err)
+                setResponseMessage(err.response.data.error.message)
+                setTimeout(() => {
+                    setAlertOpen(false)
+                    setResponseMessage('')
+                }, 5000)
             })
         } else { //do cases for heatcool, eco, and off
             console.log('Thermostat is in heatcool mode or off')
@@ -196,7 +251,7 @@ const ThermoDashboard = () => {
     const deleteJob = async (id) => {
         await axios.delete(`/logjob/${id}/delete`)
         .then((res) => {
-            if (res.status === 200) { //needs confirmation window before deletion
+            if (res.status === 200) {
                 console.log('Successfully deleted the job')
                 console.log(res.data)
                 setResponseMessage(res.data.message)
@@ -219,7 +274,6 @@ const ThermoDashboard = () => {
         }).catch((err) => {
             console.log(err)
         })
-       //alert(`The id passed is ${id}`)
     }
 
     useEffect(() => {
@@ -418,9 +472,14 @@ const ThermoDashboard = () => {
                 </Grid>
                 <Grid item>
                     { device && 
-                        <Grow in={true}>
-                            <Typography variant="h3">Your Jobs</Typography>
-                        </Grow>
+                            <>
+                                <Typography variant="h3">Your Jobs</Typography>
+                                <ToolTip title="Refresh Jobs" placement="right-start" onClick={() => { console.log('Refreshing jobs'); setJobRefresh(!jobRefresh); }}>
+                                    <div style={{ position: 'absolute', right: '30.5rem', bottom: '-4.1rem', cursor: 'pointer' }}>
+                                        <RefreshIcon style={{ color: (switched ? '#7BF1A8' : '#1a1a1a')}} />
+                                    </div>
+                                </ToolTip>
+                            </>
                     }
                 </Grid>
                 <Grid item>
@@ -495,8 +554,10 @@ const ThermoDashboard = () => {
                                         </YAxis>
                                         <Tooltip contentStyle={{ backgroundColor: (switched ? '#000' : '#fff'), borderColor: (switched ? '#000' : '#fff'), borderRadius: '1rem' }} labelStyle={{ color: (switched ? '#7BF1A8' : '#000')}}/>
                                         <Legend wrapperStyle={{ right: 75 }} verticalAlign="top" height={40}/>
-                                        <Line type="monotone" dataKey="ActualTemp" stroke="#ff3333" activeDot={{ r: 8 }} name="Actual Temp"/>
-                                        <Line type="monotone" dataKey="SetPointTemp" stroke="#3385ff" activeDot={{ r: 8 }} name="Set Point Temp"/>
+                                        <Line type="monotone" dataKey="ActualTemp" stroke="#9900ff" activeDot={{ r: 8 }} name="Actual Temp"/>
+                                        <Line type="monotone" dataKey="SetPointTemp" stroke="#ff8000" activeDot={{ r: 8 }} name="Set Point Temp"/>
+                                        <Line type="monotone" dataKey="Heat" stroke="#ff3333" activeDot={{ r: 8 }} name="Heat"/>
+                                        <Line type="monotone" dataKey="Cool" stroke="#3385ff" activeDot={{ r: 8 }} name="Cool"/>
                                     </LineChart>
                                 </ResponsiveContainer>)
                                 : 
