@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import { createTheme, ThemeProvider } from '@mui/material/styles'
-import DarkModeSwitchContext from "../components/NavBar/Dark Mode/DarkModeSwitchContext";
+import DarkModeSwitchContext from "./DarkModeSwitchContext";
 
 const CustomTheme = ({children}) => {
     const { switched } = useContext(DarkModeSwitchContext) 

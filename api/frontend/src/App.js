@@ -1,8 +1,8 @@
 import React from "react";
-import Home from "./Pages/Home";
+import Home from "./Pages/Home/Home";
 import NotFound from "./Pages/Not Found/NotFound";
 import NavBar from "./components/NavBar/NavBar";
-import Profile from "./Pages/Profile";
+import Profile from "./Pages/Profile/Profile";
 import ThermoDashboard from "./Pages/ThermoDashboard/ThermoDashboard";
 import { Routes, Route } from "react-router-dom";
 
