@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState, useRef } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Grow from "@mui/material/Grow";
 import Typography from '@mui/material/Typography';
@@ -96,6 +96,21 @@ const ThermoDashboard = () => {
         }
         return [coolTemp, heatTemp]
     }
+
+    const getMode = (thermostat) => {
+        var mode
+        if (thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEAT' || 
+            thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'COOL' ||
+            thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEATCOOL') {
+            mode = thermostat.traits["sdm.devices.traits.ThermostatMode"].mode
+        } else if (thermostat.traits["sdm.devices.traits.ThermostatEco"].mode === 'MANUAL_ECO') {
+            mode = thermostat.traits["sdm.devices.traits.ThermostatEco"].mode
+        } else { //off
+            mode = 'OFF'
+        }
+        return mode
+    }
+
     useEffect(() => {
         axios.get(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}`, {
             headers: {
@@ -113,8 +128,8 @@ const ThermoDashboard = () => {
         })
     }, [deviceRefresh])
 
-    useEffect(() => {
-        if (device != null) {
+    useEffect(() => { 
+        if (device != null) { //if state temps != device temps?
             if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "COOL" || device.traits["sdm.devices.traits.ThermostatMode"].mode === "HEAT") {
                 console.log('Setting setpoint temp')
                 setSetPointTemp(getSetPointTemp(device))
@@ -173,9 +188,9 @@ const ThermoDashboard = () => {
             }
             ).then((res) => {
                 if (res.status === 200) {
-                    console.log(res)
-                    setDeviceRefresh(!deviceRefresh) //something stupid to call the single device endpoint again and let the user see the new temp that they set
-                    setResponseMessage('Temperature successfully set.')
+                    console.log('Cool setpoint temp changed')
+                    console.log(res) 
+                    setResponseMessage('Temperature successfully set.') //setDeviceRefresh(!deviceRefresh) not really needed since the slider position and actual thermostat temp should be the same if its 200
                     setTimeout(() => { //abstract this logic into a func since its repeated so much?
                         setAlertOpen(false)
                         setResponseMessage('')
@@ -203,9 +218,9 @@ const ThermoDashboard = () => {
             }
             ).then((res) => {
                 if (res.status === 200) {
+                    console.log('Heat setpoint temp changed')
                     console.log(res)
-                    setDeviceRefresh(!deviceRefresh)
-                    setResponseMessage('Temperature successfully set.')
+                    setResponseMessage('Temperature successfully set.') //setDeviceRefresh(!deviceRefresh) not really needed since the slider position and actual thermostat temp should be the same if its 200
                     setTimeout(() => {
                         setAlertOpen(false)
                         setResponseMessage('')
@@ -226,14 +241,10 @@ const ThermoDashboard = () => {
 
     useEffect(() => {
         const delay = setTimeout(() => {
-            sliderTempHandler()
-        }, 3000)
+            sliderTempHandler() //Need to stop this from running from the initial device get. if (loadedcount != 0)? If device temp isnt same as temp being set?
+        }, 2000)
         return () => clearTimeout(delay)
-    }, [setPointTemp]) //this will run when setPointTemp is intitially set when page loads, how to stop that?
-    
-    //*** 
-    //Endless loop when setDevice calls setSetPointTemp calls sliderTempHandler calls setDeviceRefresh calls setDevices
-    //***
+    }, [setPointTemp])
 
     const rangeTempHandler = () => {
         alert(`Cool: ${Math.round(cool)}, Heat: ${Math.round(heat)}`) //convert to C
@@ -294,7 +305,7 @@ const ThermoDashboard = () => {
         setModalInput(input)
     }
 
-    const submitAddJob = async (data) => { //if blah blah blah wrong stuff, return; make sure nothing is empty. Render error text in modal?
+    const submitAddJob = async (data) => { //if blah blah blah wrong stuff, return; make sure nothing is empty. Render error text in modal? Trim whitespace
         const reqbody = {
             name: data.target.name.value,
             description: data.target.description.value,
@@ -460,52 +471,28 @@ const ThermoDashboard = () => {
                 </Grid>
                 <Grid item>
                     { device && ( //device in cool mode or heat mode
-                    device.traits["sdm.devices.traits.ThermostatMode"].mode === 'COOL' || device.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEAT' ? ( /*
-                        <Grow in={true}>
-                            <Box component="form" sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', padding: '1rem', marginBottom: '2rem', marginLeft: '20rem', marginRight: '20rem' }}>
-                                <Container>
-                                    <Grid container direction="row" justifyContent="center" alignItems="center" spacing={2}>
-                                        <Grid item>
-                                            <Paper style={{ width: '100px', height: '100px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                <Typography variant="h6">{valuetext(temp)}</Typography>
-                                            </Paper>
-                                            <Stack sx={{ height: 100 }} spacing={2} direction="row">
-                                                <Slider
-                                                    sx={{color: '#000000'}}
-                                                    aria-label="Temperature"
-                                                    orientation="vertical"
-                                                    defaultValue={getSetPointTemp(device)}
-                                                    getAriaValueText={valuetext}
-                                                    valueLabelDisplay="auto"
-                                                    step={1}
-                                                    onChangeCommitted={handleChangeCommitted}
-                                                    min={50}
-                                                    max={90} 
-                                                /> 
-                                            </Stack>
-                                        </Grid> 
-                                    </Grid>   
-                                </Container>
-                            </Box>
-                        </Grow>*/
+                    device.traits["sdm.devices.traits.ThermostatMode"].mode === 'COOL' || device.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEAT' ? ( 
                         <Grow in={true}>
                             <Grid container direction="row" justifyContent="center" alignItems="center" spacing={5} mb={5}>
                                 <Grid item>
                                     <Stack sx={{ height: '20rem' }}>
-                                        <Slider sx={{ color: (switched ? "#7BF1A8" : "#000")}} orientation="vertical" defaultValue={getSetPointTemp(device)} step={1} min={50} max={90} valueLabelDisplay="auto" onChange={(e) => setSetPointTemp(parseInt(e.target.value))}/> {/*apparently the lowest it can be set is 50 F, highest is...idk, can't find it*/}
+                                        <Slider sx={{ color: (switched ? "#7BF1A8" : "#000")}} orientation="vertical" defaultValue={getSetPointTemp(device)} step={1} min={50} max={90} valueLabelDisplay="auto" onChange={(e) => setSetPointTemp(parseInt(e.target.value))}/> {/*set a useRef instead? default value = setPointtemp? */}
                                     </Stack>
                                 </Grid>
                                 <Grid item>
                                     <ToolTip title={
                                         <>
                                             <Typography>
-                                                Set Point Temperature: {setPointTemp}°F
+                                                Set Point Temperature: {getSetPointTemp(device)}°F
                                             </Typography><br/>
                                             <Typography>
                                                 Actual Temperature: {Math.round(CtoF(device.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius))}°F
                                             </Typography><br/>
                                             <Typography>
-                                                Humidity: ${device.traits["sdm.devices.traits.Humidity"].ambientHumidityPercent}%
+                                                Humidity: {device.traits["sdm.devices.traits.Humidity"].ambientHumidityPercent}%
+                                            </Typography><br/>
+                                            <Typography>
+                                                Mode: {getMode(device)}
                                             </Typography>
                                         </>
                                     } placement="right-start">
@@ -516,7 +503,7 @@ const ThermoDashboard = () => {
                                 </Grid>
                             </Grid>
                         </Grow>
-                    ) : ( //heatcool or eco mode (Show eco mode leaf somewhere)
+                    ) : ( //heatcool or eco mode
                         <>
                             <Grow in={true}>
                                 <Box sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', width: '40rem' }}>
@@ -534,6 +521,13 @@ const ThermoDashboard = () => {
                                             primaryTypographyProps={{ fontSize: '2rem'}}
                                             />
                                         </ListItem>
+                                        <Divider variant="middle" />
+                                        <ListItem>
+                                            <ListItemText 
+                                            primary={`Mode: ${getMode(device)}`}
+                                            primaryTypographyProps={{ fontSize: '2rem' }}
+                                            />
+                                        </ListItem> {/*Add list items for heat and cool, show eco mode leaf somewhere */}
                                     </List>
                                 </Box>
                             </Grow>
@@ -664,8 +658,10 @@ const ThermoDashboard = () => {
                                             <Label value='Temperature in Fahrenheit' angle={-90} position='left' dy={-90} dx={10}/>
                                         </YAxis>
                                         <Legend wrapperStyle={{ right: 75 }} verticalAlign="top" height={40}/>
-                                        <Line stroke="#ff3333" name="Actual Temp"/>
-                                        <Line stroke="#3385ff" name="Set Point Temp"/>
+                                        <Line stroke="#9900ff" name="Actual Temp"/>
+                                        <Line stroke="#ff8000" name="Set Point Temp"/>
+                                        <Line stroke="#ff3333" name="Heat"/>
+                                        <Line stroke="#3385ff" name="Cool"/>
                                     </LineChart>
                                 </ResponsiveContainer>)
                             }
