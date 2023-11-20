@@ -287,6 +287,17 @@ const ThermoDashboard = () => {
         }
     }
 
+    useEffect(() => {
+        const delay = setTimeout(() => {
+            setResponseMessage(`Set temp to ${setPointTemp}.`)
+            setTimeout(() => {
+                setAlertOpen(false)
+                setResponseMessage('')
+            }, 5000)
+        }, 3000)
+        return () => clearTimeout(delay)
+    }, [setPointTemp])
+
     const rangeTempHandler = () => {
         alert(`Cool: ${Math.round(cool)}, Heat: ${Math.round(heat)}`) //convert to C
     }
