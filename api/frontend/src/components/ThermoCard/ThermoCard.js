@@ -37,7 +37,7 @@ const ThermoCard = ({ deviceId, deviceName, mode, actualTempF, actualTempC, setP
                 <Grid container direction="column" justifyContent="flex-start">
                     <Grid item>
                         <Typography mb={1}> 
-                            Current Temperature: {actualTempC} C
+                            Current Temperature: {actualTempC}°C
                         </Typography>
                         <Typography mb={1}>
                             Humidity: {humidity}%

@@ -44,62 +44,6 @@ axios.defaults.xsrfHeaderName = 'X-CSRFToken'
 
 const ThermoDashboard = () => {
     document.title = 'Nest Thermostat Dashboard'
-    const testarray = [
-        {
-            "Id": "3b9b1f7d-f23a-4800-9e63-45c961f5cd1c",
-            "JobId": "Job logs test",
-            "ActualTemp": "18.330000",
-            "SetPointTemp": null,
-            "Heat": "25",
-            "Cool": "20",
-            "TimeLogged": "2023-10-19T14:32:31.054552Z"
-        },
-        {
-            "Id": "277baaca-95c4-4eee-a3e7-8d4903c3f814",
-            "JobId": "Job logs test",
-            "ActualTemp": "19.440000",
-            "SetPointTemp": null,
-            "Heat": "26",
-            "Cool": "21",
-            "TimeLogged": "2023-10-19T14:35:45.115786Z"
-        },
-        {
-            "Id": "fcc83e4b-ddf6-4312-81c6-2d12ae0ea296",
-            "JobId": "Job logs test",
-            "ActualTemp": "18.899000",
-            "SetPointTemp": "23.000000",
-            "Heat": null,
-            "Cool": null,
-            "TimeLogged": "2023-10-19T14:37:44.708436Z"
-        },
-        {
-            "Id": "6da7c3e8-6822-4640-872f-46bbca1e7f27",
-            "JobId": "Job logs test",
-            "ActualTemp": "18.330000",
-            "SetPointTemp": "21.000000",
-            "Heat": null,
-            "Cool": null,
-            "TimeLogged": "2023-10-19T14:42:08.017393Z"
-        },
-        {
-            "Id": "66a4768e-1610-4230-b3c8-33d70a1dc736",
-            "JobId": "Job logs test",
-            "ActualTemp": "21.000000",
-            "SetPointTemp": null,
-            "Heat": "26.333",
-            "Cool": "18.5",
-            "TimeLogged": "2023-10-19T14:44:39.621889Z"
-        },
-        {
-            "Id": "5f23a0a7-382d-4b87-a9fa-a552235155f7",
-            "JobId": "Job logs test",
-            "ActualTemp": "20.000000",
-            "SetPointTemp": null,
-            "Heat": "25",
-            "Cool": "20.13",
-            "TimeLogged": "2023-10-19T14:46:46.304463Z"
-        }
-    ]
     const { nestTokens, project_id, googleAccountInfo } = useContext(AuthContext)
     const { switched } = useContext(DarkModeSwitchContext)
     const { deviceId } = useParams() 
@@ -110,16 +54,12 @@ const ThermoDashboard = () => {
     const [deviceRefresh, setDeviceRefresh] = useState(false)
     const [jobRefresh, setJobRefresh] = useState(false)
     const [jobs, setJobs] = useState(null)
-    const [chartData, setChartData] = useState(testarray) //test stuff, do useState(null) later
+    const [chartData, setChartData] = useState(null) 
     const [alertOpen, setAlertOpen] = useState(false)
     const [deleteConfOpen, setDeleteConfOpen] = useState(false)
     const [addLogJobOpen, setAddLogJobOpen] = useState(false)
     const [jobToDeleteId, setJobToDeleteId] = useState(null)
     const [responseMessage, setResponseMessage] = useState('')
-
-    function valuetext(value) {
-        return `${value}°C`;
-    }
 
     const CtoF = (cTemp) => {
         return (cTemp * 9/5) + 32
@@ -197,7 +137,7 @@ const ThermoDashboard = () => {
                 var convertedData = []
                 convertedData = res.data.data
                 convertedData.forEach((jobanditslogs) => { //but when I comment out this block it somehow changes the res.data log even though its before this even runs
-                    jobanditslogs.JobLogs.forEach((joblog) => {
+                    jobanditslogs.JobLogs.forEach((joblog) => { //change this when the schema changes
                         var formattedDate = moment(`${joblog.TimeLogged}`).format('llll') 
                         joblog.ActualTemp = Math.round(CtoF(joblog.ActualTemp))
                         joblog.SetPointTemp = Math.round(CtoF(joblog.SetPointTemp))
@@ -219,13 +159,11 @@ const ThermoDashboard = () => {
     }, [jobRefresh])
 
     const sliderTempHandler = async () => {
-        const currentTemp = tempRef.current;
         if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "COOL") {
-            console.log("hicool" + currentTemp)
             await axios.post(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}:executeCommand`, {
                 command: "sdm.devices.commands.ThermostatTemperatureSetpoint.SetCool",
                 params: {
-                    "coolCelsius": FtoC(currentTemp)
+                    "coolCelsius": FtoC(setPointTemp)
                 }
             }, {
                 headers: {
@@ -238,7 +176,7 @@ const ThermoDashboard = () => {
                     console.log(res)
                     setDeviceRefresh(!deviceRefresh) //something stupid to call the single device endpoint again and let the user see the new temp that they set
                     setResponseMessage('Temperature successfully set.')
-                    setTimeout(() => {
+                    setTimeout(() => { //abstract this logic into a func since its repeated so much?
                         setAlertOpen(false)
                         setResponseMessage('')
                     }, 5000)
@@ -252,11 +190,10 @@ const ThermoDashboard = () => {
                 }, 5000)
             })
         } else if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "HEAT") {
-            console.log("hiheat" + currentTemp)
             await axios.post(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}:executeCommand`, {
                 command: "sdm.devices.commands.ThermostatTemperatureSetpoint.SetHeat",
                 params: {
-                    "heatCelsius": FtoC(currentTemp)
+                    "heatCelsius": FtoC(setPointTemp)
                 }
             }, {
                 headers: {
@@ -289,26 +226,17 @@ const ThermoDashboard = () => {
 
     useEffect(() => {
         const delay = setTimeout(() => {
-            setResponseMessage(`Set temp to ${setPointTemp}.`)
-            setTimeout(() => {
-                setAlertOpen(false)
-                setResponseMessage('')
-            }, 5000)
+            sliderTempHandler()
         }, 3000)
         return () => clearTimeout(delay)
-    }, [setPointTemp])
+    }, [setPointTemp]) //this will run when setPointTemp is intitially set when page loads, how to stop that?
+    
+    //*** 
+    //Endless loop when setDevice calls setSetPointTemp calls sliderTempHandler calls setDeviceRefresh calls setDevices
+    //***
 
     const rangeTempHandler = () => {
         alert(`Cool: ${Math.round(cool)}, Heat: ${Math.round(heat)}`) //convert to C
-    }
-
-    const tempRef = useRef(setPointTemp);
-    const handleChangeCommitted = (event, newValue) => {
-        if (typeof newValue === 'number') {
-        setSetPointTemp(parseInt(newValue));
-          tempRef.current = parseInt(newValue); // Update the ref when the slider value changes
-          sliderTempHandler();
-        }
     }
 
     const deleteJob = async (id) => {
@@ -366,7 +294,7 @@ const ThermoDashboard = () => {
         setModalInput(input)
     }
 
-    const submitAddJob = async (data) => { //if blah blah blah wrong stuff, return;
+    const submitAddJob = async (data) => { //if blah blah blah wrong stuff, return; make sure nothing is empty. Render error text in modal?
         const reqbody = {
             name: data.target.name.value,
             description: data.target.description.value,
@@ -551,7 +479,7 @@ const ThermoDashboard = () => {
                                                     valueLabelDisplay="auto"
                                                     step={1}
                                                     onChangeCommitted={handleChangeCommitted}
-                                                    min={50} //does the API define a min and max
+                                                    min={50}
                                                     max={90} 
                                                 /> 
                                             </Stack>
@@ -564,11 +492,23 @@ const ThermoDashboard = () => {
                             <Grid container direction="row" justifyContent="center" alignItems="center" spacing={5} mb={5}>
                                 <Grid item>
                                     <Stack sx={{ height: '20rem' }}>
-                                        <Slider sx={{ color: (switched ? "#7BF1A8" : "#000")}} orientation="vertical" defaultValue={getSetPointTemp(device)} step={1} min={50} max={90} valueLabelDisplay="auto" onChange={(e) => setSetPointTemp(parseInt(e.target.value))}/>   
+                                        <Slider sx={{ color: (switched ? "#7BF1A8" : "#000")}} orientation="vertical" defaultValue={getSetPointTemp(device)} step={1} min={50} max={90} valueLabelDisplay="auto" onChange={(e) => setSetPointTemp(parseInt(e.target.value))}/> {/*apparently the lowest it can be set is 50 F, highest is...idk, can't find it*/}
                                     </Stack>
                                 </Grid>
                                 <Grid item>
-                                    <ToolTip title={<><Typography>Set Point Temperature: {setPointTemp}°F</Typography><br/><Typography>Actual Temperature: {Math.round(CtoF(device.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius))}°F</Typography></>} placement="right-start">
+                                    <ToolTip title={
+                                        <>
+                                            <Typography>
+                                                Set Point Temperature: {setPointTemp}°F
+                                            </Typography><br/>
+                                            <Typography>
+                                                Actual Temperature: {Math.round(CtoF(device.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius))}°F
+                                            </Typography><br/>
+                                            <Typography>
+                                                Humidity: ${device.traits["sdm.devices.traits.Humidity"].ambientHumidityPercent}%
+                                            </Typography>
+                                        </>
+                                    } placement="right-start">
                                         <Paper sx={{ width: '20rem', height: '20rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: (switched ? "#7BF1A8" : "#000")}}>
                                             <Typography variant="h1" color={switched ? "#000" : "#fff"}>{`${setPointTemp}°`}</Typography>
                                         </Paper>
@@ -576,7 +516,7 @@ const ThermoDashboard = () => {
                                 </Grid>
                             </Grid>
                         </Grow>
-                    ) : ( //heatcool or eco mode
+                    ) : ( //heatcool or eco mode (Show eco mode leaf somewhere)
                         <>
                             <Grow in={true}>
                                 <Box sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', width: '40rem' }}>
@@ -590,7 +530,7 @@ const ThermoDashboard = () => {
                                         <Divider variant="middle" />
                                         <ListItem>
                                             <ListItemText 
-                                            primary={`Current Temperature: ${Math.round(CtoF(device.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius))} F`}
+                                            primary={`Current Temperature: ${Math.round(CtoF(device.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius))}°F`}
                                             primaryTypographyProps={{ fontSize: '2rem'}}
                                             />
                                         </ListItem>
