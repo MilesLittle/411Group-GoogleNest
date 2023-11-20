@@ -36,10 +36,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import MenuItem from '@mui/material/MenuItem';
-import Modal from "@mui/material/Modal";
-import Fade from "@mui/material/Fade";
 import RefreshIcon from '@mui/icons-material/Refresh';
-
 
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
@@ -47,33 +44,6 @@ axios.defaults.xsrfHeaderName = 'X-CSRFToken'
 
 const ThermoDashboard = () => {
     document.title = 'Nest Thermostat Dashboard'
-    const { nestTokens, project_id, googleAccountInfo } = useContext(AuthContext)
-    const { switched } = useContext(DarkModeSwitchContext)
-    const { deviceId } = useParams() 
-    const [device, setDevice] = useState(null)
-    const [temp, setTemp] = useState(0)
-    const [deviceRefresh, setDeviceRefresh] = useState(false)
-    const [jobRefresh, setJobRefresh] = useState(false)
-    const [jobs, setJobs] = useState(null)
-    //const [chartData, setChartData] = useState(testarray)
-    const [alertOpen, setAlertOpen] = useState(false)
-    const [deleteConfOpen, setDeleteConfOpen] = useState(false)
-    const [jobToDeleteId, setJobToDeleteId] = useState('')
-    const [responseMessage, setResponseMessage] = useState('')
-
-    const tempRef = useRef(temp);
-    const handleChangeCommitted = (event, newValue) => {
-        if (typeof newValue === 'number') {
-          setTemp(parseInt(newValue));
-          tempRef.current = parseInt(newValue); // Update the ref when the slider value changes
-          tempHandler();
-        }
-      };
-
-function valuetext(value) {
-    return `${value}°C`;
-  }
-  
     const testarray = [
         {
             "Id": "3b9b1f7d-f23a-4800-9e63-45c961f5cd1c",
@@ -130,8 +100,26 @@ function valuetext(value) {
             "TimeLogged": "2023-10-19T14:46:46.304463Z"
         }
     ]
+    const { nestTokens, project_id, googleAccountInfo } = useContext(AuthContext)
+    const { switched } = useContext(DarkModeSwitchContext)
+    const { deviceId } = useParams() 
+    const [device, setDevice] = useState(null)
+    const [setPointTemp, setSetPointTemp] = useState(0)
+    const [cool, setCool] = useState(0)
+    const [heat, setHeat] = useState(0)
+    const [deviceRefresh, setDeviceRefresh] = useState(false)
+    const [jobRefresh, setJobRefresh] = useState(false)
+    const [jobs, setJobs] = useState(null)
+    const [chartData, setChartData] = useState(testarray) //test stuff, do useState(null) later
+    const [alertOpen, setAlertOpen] = useState(false)
+    const [deleteConfOpen, setDeleteConfOpen] = useState(false)
+    const [addLogJobOpen, setAddLogJobOpen] = useState(false)
+    const [jobToDeleteId, setJobToDeleteId] = useState(null)
+    const [responseMessage, setResponseMessage] = useState('')
 
-    const [chartData, setChartData] = useState(testarray)
+    function valuetext(value) {
+        return `${value}°C`;
+    }
 
     const CtoF = (cTemp) => {
         return (cTemp * 9/5) + 32
@@ -147,16 +135,27 @@ function valuetext(value) {
           setPointTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].heatCelsius))
         } else if (thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'COOL') {
           setPointTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius))
-        } else if (thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEATCOOL') {
-          setPointTemp = 'Range - H: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].heatCelsius)) + ', C: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius))
-        } else if (thermostat.traits["sdm.devices.traits.ThermostatEco"].mode === 'MANUAL_ECO') {
-          setPointTemp = 'Range - H: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatEco"].heatCelsius)) + ', C: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatEco"].coolCelsius))
         } else { //OFF
-          setPointTemp = 'Thermostat is off.'
+          setPointTemp = 0
         }
         return setPointTemp
-      }
+    }
 
+    const getRangeTemps = (thermostat) => {
+        var coolTemp
+        var heatTemp
+        if (thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEATCOOL') {
+            coolTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius))
+            heatTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].heatCelsius))
+        } else if (thermostat.traits["sdm.devices.traits.ThermostatEco"].mode === 'MANUAL_ECO') {
+           coolTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatEco"].coolCelsius))
+           heatTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatEco"].heatCelsius))
+        } else { //OFF
+           coolTemp = 0
+           heatTemp = 0
+        }
+        return [coolTemp, heatTemp]
+    }
     useEffect(() => {
         axios.get(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}`, {
             headers: {
@@ -168,13 +167,27 @@ function valuetext(value) {
                 console.log('Got the device')
                 console.log(res.data)
                 setDevice(res.data)
-            } else {
-                console.log('Not OK')
             }
         }).catch((err) => {
             console.log(err)
         })
     }, [deviceRefresh])
+
+    useEffect(() => {
+        if (device != null) {
+            if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "COOL" || device.traits["sdm.devices.traits.ThermostatMode"].mode === "HEAT") {
+                console.log('Setting setpoint temp')
+                setSetPointTemp(getSetPointTemp(device))
+            } else if (device.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEATCOOL' || device.traits["sdm.devices.traits.ThermostatEco"].mode === 'MANUAL_ECO') {
+                console.log('Setting temp range')
+                var temps = getRangeTemps()
+                setCool(temps[0])
+                setHeat(temps[1])
+            } else { //OFF
+                console.log('Thermostat is probably off.')
+            }
+        }
+    }, [device])
 
     useEffect(() => {
         axios.get(`/logjobs?googleId=${googleAccountInfo.id}&thermostatId=${deviceId}`)
@@ -197,11 +210,15 @@ function valuetext(value) {
                 console.log(res)
             }
         }).catch((err) => {
-            console.log(err)
+            if (err.status === 404) {
+                console.log(err.data)
+            } else {
+                console.log(err)
+            }
         })
     }, [jobRefresh])
 
-    const tempHandler = async () => {
+    const sliderTempHandler = async () => {
         const currentTemp = tempRef.current;
         if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "COOL") {
             console.log("hicool" + currentTemp)
@@ -221,13 +238,6 @@ function valuetext(value) {
                     console.log(res)
                     setDeviceRefresh(!deviceRefresh) //something stupid to call the single device endpoint again and let the user see the new temp that they set
                     setResponseMessage('Temperature successfully set.')
-                    setTimeout(() => {
-                        setAlertOpen(false)
-                        setResponseMessage('')
-                    }, 5000)
-                } else {
-                    console.log(res)
-                    setResponseMessage('Something went wrong.')
                     setTimeout(() => {
                         setAlertOpen(false)
                         setResponseMessage('')
@@ -263,13 +273,6 @@ function valuetext(value) {
                         setAlertOpen(false)
                         setResponseMessage('')
                     }, 5000)
-                } else {
-                    console.log(res)
-                    setResponseMessage('Something went wrong.')
-                    setTimeout(() => {
-                        setAlertOpen(false)
-                        setResponseMessage('')
-                    }, 5000)
                 }
             }).catch((err) => {
                 console.log(err)
@@ -279,8 +282,21 @@ function valuetext(value) {
                     setResponseMessage('')
                 }, 5000)
             })
-        } else { //do cases for heatcool, eco, and off
-            console.log('Thermostat is in heatcool mode or off')
+        } else {
+            console.log('Thermostat is off')
+        }
+    }
+
+    const rangeTempHandler = () => {
+        alert(`Cool: ${Math.round(cool)}, Heat: ${Math.round(heat)}`) //convert to C
+    }
+
+    const tempRef = useRef(setPointTemp);
+    const handleChangeCommitted = (event, newValue) => {
+        if (typeof newValue === 'number') {
+        setSetPointTemp(parseInt(newValue));
+          tempRef.current = parseInt(newValue); // Update the ref when the slider value changes
+          sliderTempHandler();
         }
     }
 
@@ -293,24 +309,23 @@ function valuetext(value) {
                 setResponseMessage(res.data.message)
                 setJobRefresh(!jobRefresh)
                 setDeleteConfOpen(false)
-                setJobToDeleteId('')
-                setTimeout(() => {
-                    setAlertOpen(false)
-                    setResponseMessage('')
-                }, 5000)
-            } else if (res.status === 404) {
-                console.log('The job was not found')
-                console.log(res.data)
-                setResponseMessage(res.data.message)
+                setJobToDeleteId(null)
                 setTimeout(() => {
                     setAlertOpen(false)
                     setResponseMessage('')
                 }, 5000)
             }
         }).catch((err) => {
-            console.log(err)
+           if (err.status === 404) {
+                console.log('The job was not found')
+                console.log(err.data)
+                setResponseMessage(err.data.message)
+                setTimeout(() => {
+                    setAlertOpen(false)
+                    setResponseMessage('')
+                }, 5000)
+           }
         })
-       //alert(`The id passed is ${id}`)
     }
 
     useEffect(() => {
@@ -320,58 +335,27 @@ function valuetext(value) {
     }, [responseMessage])
 
     useEffect(() => {
-        if (jobToDeleteId.length > 0) {
-        if (jobToDeleteId != 0 && jobToDeleteId != null) {
+        if (jobToDeleteId != null) {
             setDeleteConfOpen(true)
         }
     }, [jobToDeleteId])
 
-    // ChangeLog stuff
-    // Open and close the buttons for the modal 
-    const [open, setOpen] = React.useState(false);
-
     // states for modal form submission
-    const [modalInput, setModalInput] = React.useState(60);
-    const [timeType, setTimeType] = React.useState(null);
-
-
-    useEffect(() => {
-        console.log("modalInput = " + modalInput);
-        console.log("timeType = " + timeType);
-    },[modalInput, timeType])
-
-
-    useEffect(() => {
-        console.log("jobs");
-        console.log(jobs);
-    }, [jobs])
-
-
-    const OpenModal = () => {
-        setOpen(true); 
-    }
-
-    const CloseModal = () => {
-        setOpen(false); 
-    }
-
+    const [modalInput, setModalInput] = useState(60);
     // restrict modal input
     const handleInput = (input) => {
         // find way to forbid ., e, +, - characters? input is a string, and TextField with type="number" allows those chars
         input = Number(input) | 0   // cast so the number actually shows up in modal form. Bitwise OR to force integer
-
         // limit input. Somehow disallow user to submit log every 1 minute? That would be an excessive amount of logs
         if (input < 1) {
             input = null    // make sure null is not submitted in post request, or maybe make the modalInput state's purpose only for display, submit actual form value?
         } else if (input > 60) {
             input = 60
         }
-
         setModalInput(input)
     }
 
-    const submitAddJob = async (data) => {
-
+    const submitAddJob = async (data) => { //if blah blah blah wrong stuff, return;
         const reqbody = {
             name: data.target.name.value,
             description: data.target.description.value,
@@ -381,43 +365,57 @@ function valuetext(value) {
             deviceId: deviceId,
             googleId: googleAccountInfo.id,
         }
-
-        console.log(reqbody.name);
-        //console.log(reqbody.number);
-        //onsole.log(reqbody.timeType);
-
-        await axios.post(`http://localhost:8000/logjob`, reqbody, {
-            
-        })
+        await axios.post(`/logjob`, reqbody)
         .then((res) => {
-            console.log(res);
-            setJobRefresh(!jobRefresh)
+            if (res.status === 201) {
+                console.log('Successfully added the job')
+                console.log(res.data)
+                setResponseMessage(res.data.message)
+                setJobRefresh(!jobRefresh)
+                setAddLogJobOpen(false)
+                setTimeout(() => {
+                    setAlertOpen(false)
+                    setResponseMessage('')
+                }, 5000)
+            }
         })
         .catch((err) => {
-            console.log("job create error " + err);
+            if (err.status === 400) {
+                console.log('Bad request')
+                console.log(err.data)
+                setResponseMessage(err.data.message)
+                setTimeout(() => {
+                    setAlertOpen(false)
+                    setResponseMessage('')
+                }, 5000)
+            } else if (err.status === 500) {
+                console.log('Internal Server Error')
+                console.log(err.data)
+                setResponseMessage(err.data.message)
+                setTimeout(() => {
+                    setAlertOpen(false)
+                    setResponseMessage('')
+                }, 5000)
+            } else {
+                console.log(err)
+            }
         })
-
     }
-
-
-    // Time options 
-    const timeValues = [
-    {
-        value: "minutes", 
-        label: "minutes", 
-    }, 
-    {
-        value: "hours",  
-        label: "hours"
-    }, 
-    
-    {
-        value: "days", 
-        label: "days",
-    }
+     
+    const timeValues = [ // Time options 
+        {
+            value: "minutes", 
+            label: "minutes", 
+        }, 
+        {
+            value: "hours",  
+            label: "hours"
+        }, 
+        {
+            value: "days", 
+            label: "days",
+        }
     ]
-
-
 
     return (
         <>
@@ -437,7 +435,7 @@ function valuetext(value) {
                         <Grid item>
                             <Grid container direction="row" alignItems="center" justifyContent="center" spacing={2} mt={0.5}>
                                 <Grid item>
-                                    <Button variant="contained" color="secondary" onClick={() => { setDeleteConfOpen(false); setJobToDeleteId(''); }}>Cancel</Button>
+                                    <Button variant="contained" color="secondary" onClick={() => { setDeleteConfOpen(false); setJobToDeleteId(null); }}>Cancel</Button>
                                 </Grid>
                                 <Grid item>
                                     <Button variant="contained" color="error" onClick={() => deleteJob(jobToDeleteId)}>Yes, Delete</Button>
@@ -448,6 +446,69 @@ function valuetext(value) {
                 </Box>
                 </Fade>
             </Modal>
+            {/* changeLog dialogue*/}
+            <div style={{textAlign: 'center'}}>
+                <Dialog open={addLogJobOpen} onClose={() => setAddLogJobOpen(false)}>
+                    <DialogTitle> Thermostat 1 Log Setting </DialogTitle>
+                        <form onSubmit={(e) => {e.preventDefault(); submitAddJob(e);}}>
+                            <DialogContent>  
+                                <DialogContentText> Set the Log: </DialogContentText>
+                                <TextField
+                                    id="job-name"
+                                    name="name"
+                                    label="Job Name"
+                                    type="text"
+                                    margin="dense"
+                                    fullWidth
+                                    defaultValue={"Job name"}
+                                    InputLabelProps={{shrink: true}}
+                                    inputProps={{ max:200 }}
+                                />
+                                <TextField
+                                    id="job-description"
+                                    name="description"
+                                    label="Description"
+                                    type="text"
+                                    margin="dense"
+                                    fullWidth
+                                    InputLabelProps={{shrink: true}}
+                                    inputProps={{ max:200 }}
+                                />
+                                <TextField
+                                    id="outlined-number"
+                                    name="number"
+                                    label="Number"
+                                    type="number"
+                                    margin="dense"
+                                    fullWidth
+                                    value={modalInput}
+                                    onChange={(e) => handleInput(e.target.value)}
+                                    InputLabelProps={{shrink: true,}}
+                                    inputProps={{ min: 1, max: 60 }}
+                                />
+                                <TextField
+                                    id="select-time"
+                                    name="timeType"
+                                    select
+                                    label = "Select"
+                                    defaultValue="days"
+                                    helperText="Please Select a time"
+                                    margin="dense"
+                                >
+                                    {timeValues.map((option) => (
+                                        <MenuItem key={option.value} value={option.value}>
+                                            {option.label}
+                                        </MenuItem>
+                                    ))}
+                                </TextField>
+                            </DialogContent>
+                            <DialogActions> 
+                                <Button onClick={() => setAddLogJobOpen(false)} color="secondary"> Cancel </Button>
+                                <Button type="submit" onClick={() => setAddLogJobOpen(false)} color="primary"> Save </Button>
+                            </DialogActions>
+                        </form>
+                </Dialog>
+            </div>
             <Grid container direction="column" justifyContent="center" alignItems="center" mt={1} mb={3} spacing={3}>
                 <Grid item>
                     { device &&
@@ -459,7 +520,52 @@ function valuetext(value) {
                     }
                 </Grid>
                 <Grid item>
-                    { device && 
+                    { device && ( //device in cool mode or heat mode
+                    device.traits["sdm.devices.traits.ThermostatMode"].mode === 'COOL' || device.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEAT' ? ( /*
+                        <Grow in={true}>
+                            <Box component="form" sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', padding: '1rem', marginBottom: '2rem', marginLeft: '20rem', marginRight: '20rem' }}>
+                                <Container>
+                                    <Grid container direction="row" justifyContent="center" alignItems="center" spacing={2}>
+                                        <Grid item>
+                                            <Paper style={{ width: '100px', height: '100px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <Typography variant="h6">{valuetext(temp)}</Typography>
+                                            </Paper>
+                                            <Stack sx={{ height: 100 }} spacing={2} direction="row">
+                                                <Slider
+                                                    sx={{color: '#000000'}}
+                                                    aria-label="Temperature"
+                                                    orientation="vertical"
+                                                    defaultValue={getSetPointTemp(device)}
+                                                    getAriaValueText={valuetext}
+                                                    valueLabelDisplay="auto"
+                                                    step={1}
+                                                    onChangeCommitted={handleChangeCommitted}
+                                                    min={50} //does the API define a min and max
+                                                    max={90} 
+                                                /> 
+                                            </Stack>
+                                        </Grid> 
+                                    </Grid>   
+                                </Container>
+                            </Box>
+                        </Grow>*/
+                        <Grow in={true}>
+                            <Grid container direction="row" justifyContent="center" alignItems="center" spacing={5} mb={5}>
+                                <Grid item>
+                                    <Stack sx={{ height: '20rem' }}>
+                                        <Slider sx={{ color: (switched ? "#7BF1A8" : "#000")}} orientation="vertical" defaultValue={getSetPointTemp(device)} step={1} min={50} max={90} valueLabelDisplay="auto" onChange={(e) => setSetPointTemp(parseInt(e.target.value))}/>   
+                                    </Stack>
+                                </Grid>
+                                <Grid item>
+                                    <ToolTip title={<><Typography>Set Point Temperature: {setPointTemp}°F</Typography><br/><Typography>Actual Temperature: {Math.round(CtoF(device.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius))}°F</Typography></>} placement="right-start">
+                                        <Paper sx={{ width: '20rem', height: '20rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: (switched ? "#7BF1A8" : "#000")}}>
+                                            <Typography variant="h1" color={switched ? "#000" : "#fff"}>{`${setPointTemp}°`}</Typography>
+                                        </Paper>
+                                    </ToolTip>
+                                </Grid>
+                            </Grid>
+                        </Grow>
+                    ) : ( //heatcool or eco mode
                         <>
                             <Grow in={true}>
                                 <Box sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', width: '40rem' }}>
@@ -477,73 +583,45 @@ function valuetext(value) {
                                             primaryTypographyProps={{ fontSize: '2rem'}}
                                             />
                                         </ListItem>
-                                        <Divider variant="middle"/>
-                                        <ListItem>
-                                            <ListItemText 
-                                            primary={`Target Temperature: ${getSetPointTemp(device)} F`}
-                                            primaryTypographyProps={{ fontSize: '2rem' }}
-                                            />
-                                        </ListItem>
                                     </List>
                                 </Box>
                             </Grow>
+                            <Grow in={true}>
+                                <Box component="form" sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', padding: '1rem', marginBottom: '2rem', marginLeft: '20rem', marginRight: '20rem' }}>
+                                    <Container>
+                                        <Grid container direction="column" justifyContent="center" alignItems="center" spacing={2}>
+                                            <Grid item>
+                                                <Grid container direction="row" justifyContent="center" alignItems="center" spacing={2}>
+                                                    <Grid item>
+                                                        <TextField type="number" variant="outlined" color="secondary" label="Set cool in F" onChange={(e) => setCool(parseInt(e.target.value))}/>
+                                                    </Grid>
+                                                    <Grid item>
+                                                        <TextField type="number" variant="outlined" color="secondary" label="Set heat in F" onChange={(e) => setHeat(parseInt(e.target.value))}/>
+                                                    </Grid>
+                                                </Grid>
+                                            </Grid> 
+                                            <Grid item>
+                                                <Button variant="contained" color="secondary" onClick={() => rangeTempHandler()}>Set Temperature</Button>
+                                            </Grid>
+                                        </Grid>   
+                                    </Container>
+                                </Box>
+                            </Grow>
                         </>
-                    }
-                </Grid>
-                <Grid item>
-                    { device &&
-                        <Grow in={true}>
-                            <Box component="form" sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', padding: '1rem', marginBottom: '2rem', marginLeft: '20rem', marginRight: '20rem' }}>
-                                <Container>
-                                    <Grid container direction="row" justifyContent="center" alignItems="center" spacing={2}>
-                                        <Grid item>
-                                                  <Paper
-                        style= {{
-                        width: '100px', 
-                        height: '100px',
-                        borderRadius: '50%', // This creates a circular shape
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        }}>
-
-                        <Typography variant="h6">{valuetext(temp)}</Typography>
-
-                </Paper>
-                                        <Stack sx={{ height: 100 }} spacing={2} direction="row">
-                                        <Slider
-                                        sx={{color: '#000000'}}
-                                        aria-label="Temperature"
-                                        orientation="vertical"
-                                        defaultValue={getSetPointTemp(device)}
-                                        getAriaValueText={valuetext}
-                                        valueLabelDisplay="auto"
-                                        step={1}
-                                        onChangeCommitted={handleChangeCommitted}
-                                       min={50} 
-                                        max={90}
-                                                 /> </Stack>
-                                 
-                                        </Grid> 
-                                        <Grid item>
-                                           
-                                        </Grid>
-                                    </Grid>   
-                                </Container>
-                            </Box>
-                        </Grow>
+                        )
+                    )
                     }
                 </Grid>
                 <Grid item>
                     { device && 
-                            <>
-                                <Typography variant="h3">Your Jobs</Typography>
+                        <>
+                            <Typography variant="h3">Your Jobs</Typography>
                                 <ToolTip title="Refresh Jobs" placement="right-start" onClick={() => { console.log('Refreshing jobs'); setJobRefresh(!jobRefresh); }}>
                                     <div style={{ position: 'absolute', right: '30.5rem', bottom: '-4.1rem', cursor: 'pointer' }}>
                                         <RefreshIcon style={{ color: (switched ? '#7BF1A8' : '#1a1a1a')}} />
                                     </div>
                                 </ToolTip>
-                            </>
+                        </>
                     }
                 </Grid>
                 <Grid item>
@@ -561,7 +639,7 @@ function valuetext(value) {
                                                                 <Grid item>
                                                                     <Typography gutterBottom variant="h6" color='#000' component="div">
                                                                         <div onClick={() => setChartData(job.JobLogs)} style={{ cursor: 'pointer' }}>
-                                                                            {(job.Id.length > 17 ? `${job.Id.substr(0, 13)}...` : job.name)}
+                                                                            {(job.name.length > 17 ? `${job.name.substr(0, 13)}...` : job.name)}
                                                                         </div>
                                                                     </Typography>
                                                                 </Grid>
@@ -642,100 +720,15 @@ function valuetext(value) {
                             }
                         </>
                     }
-
-                    {/* changeLog dialogue*/}
-                    <div style={{textAlign: 'center'}}>
-
-                        <Dialog open={open} onClose={CloseModal}>
-                            <DialogTitle> Thermostat 1 Log Setting </DialogTitle>
-                            <form onSubmit={(e) => {e.preventDefault(); submitAddJob(e);}}>
-                                <DialogContent>  
-                                    <DialogContentText> Set the Log: </DialogContentText>
-
-                                    <TextField
-                                        id="job-name"
-                                        name="name"
-                                        label="Job Name"
-                                        type="text"
-                                        margin="dense"
-                                        fullWidth
-                                        defaultValue={"Job name"}
-                                        InputLabelProps={{shrink: true}}
-                                        inputProps={{ max:200 }}
-                                    />
-
-                                    <TextField
-                                        id="job-description"
-                                        name="description"
-                                        label="Description"
-                                        type="text"
-                                        margin="dense"
-                                        fullWidth
-                                        InputLabelProps={{shirnk: true}}
-                                        inputProps={{ max:200 }}
-                                    />
-
-                                    <TextField
-                                        id="outlined-number"
-                                        name="number"
-                                        label="Number"
-                                        type="number"
-                                        margin="dense"
-                                        fullWidth
-                                        value={modalInput}
-                                        onChange={(e) => handleInput(e.target.value)}
-                                        InputLabelProps={{shrink: true,}}
-                                        inputProps={{
-                                            min: 1,
-                                            max: 60,
-                                        }}
-                                    >
-                                        
-                                    </TextField>
-
-                                    <TextField
-                                        id="select-time"
-                                        name="timeType"
-                                        select
-                                        label = "Select"
-                                        defaultValue="days"
-                                        helperText="Please Select a time"
-                                        margin="dense"
-                                        onChange={(e) => setTimeType(e.target.value)}
-                                    >
-                                        {timeValues.map((option) => (
-                                            <MenuItem key={option.value} value={option.value}>
-                                            {option.label}
-                                            </MenuItem>
-                                        ))}
-                                    </TextField>
-                                </DialogContent>
-
-                                <DialogActions> 
-                                <Button onClick={CloseModal} color="secondary"> Cancel </Button>
-                                <Button type="submit" onClick={CloseModal} color="primary"> Save </Button>
-                                </DialogActions>
-                            </form>
-                        </Dialog>
-                    </div>
-
                     <Grid item>
                         { device &&
                             <Container>
                                 <Grid container direction="row" justifyContent="space-around" alignItems="center" spacing={2}>
-                                    <Grid onClick={() => OpenModal()} item>
-                                        { switched ?
-                                            <Button variant="outlined" color="primary" size="large" startIcon={<AddCircleIcon/>}>Add Logging Job</Button>
-                                            :
-                                            <Button variant="contained" color="secondary" size="large" startIcon={<AddCircleIcon/>}>Add Logging Job</Button>
-                                        }
+                                    <Grid item>
+                                        <Button variant={switched ? "outlined" : "contained"} color={switched ? "primary" : "secondary"} size="large" startIcon={<AddCircleIcon/>} onClick={() => setAddLogJobOpen(true)}>Add Logging Job</Button>
                                     </Grid>
                                     <Grid item>
-                                        { switched ?
-                                            <Button variant="outlined" color="primary" size="large" startIcon={<AddCircleIcon/>}>Add Setting Job</Button>
-                                            :
-                                            <Button variant="contained" color="secondary" size="large" startIcon={<AddCircleIcon/>}>Add Setting Job</Button>
-                                        }
+                                        <Button variant={switched ? "outlined" : "contained"} color={switched ? "primary" : "secondary"} size="large" startIcon={<AddCircleIcon/>}>Add Setting Job</Button>
                                     </Grid>
                                 </Grid> 
                             </Container>
