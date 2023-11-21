@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import Grow from "@mui/material/Grow";
 import Typography from '@mui/material/Typography';
@@ -60,6 +60,7 @@ const ThermoDashboard = () => {
     const [addLogJobOpen, setAddLogJobOpen] = useState(false)
     const [jobToDeleteId, setJobToDeleteId] = useState(null)
     const [responseMessage, setResponseMessage] = useState('')
+    const sliderValue = useRef(0)
 
     const CtoF = (cTemp) => {
         return (cTemp * 9/5) + 32
@@ -121,7 +122,7 @@ const ThermoDashboard = () => {
             if (res.status === 200) {
                 console.log('Got the device')
                 console.log(res.data)
-                setDevice(res.data)
+                setDevice(res.data) //#1 loop #5 loop back here
             }
         }).catch((err) => {
             console.log(err)
@@ -131,8 +132,10 @@ const ThermoDashboard = () => {
     useEffect(() => { 
         if (device != null) {
             if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "COOL" || device.traits["sdm.devices.traits.ThermostatMode"].mode === "HEAT") {
-                console.log('Setting setpoint temp')
-                setSetPointTemp(getSetPointTemp(device))
+                //console.log('Setting setpoint temp')
+                //setSetPointTemp(getSetPointTemp(device)) //#2 loop
+                console.log('Setting slider useRef')
+                sliderValue.current = getSetPointTemp(device)
             } else if (device.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEATCOOL' || device.traits["sdm.devices.traits.ThermostatEco"].mode === 'MANUAL_ECO') {
                 console.log('Setting temp range')
                 var temps = getRangeTemps()
@@ -191,6 +194,7 @@ const ThermoDashboard = () => {
                     console.log('Cool setpoint temp changed')
                     console.log(res) 
                     setResponseMessage('Temperature successfully set.') //setDeviceRefresh(!deviceRefresh) not really needed since the slider position and actual thermostat temp should be the same if its 200
+                    //#4 loop if setDeviceRefresh(!deviceRefresh) was here
                     setTimeout(() => { //abstract this logic into a func since its repeated so much?
                         setAlertOpen(false)
                         setResponseMessage('')
@@ -221,6 +225,7 @@ const ThermoDashboard = () => {
                     console.log('Heat setpoint temp changed')
                     console.log(res)
                     setResponseMessage('Temperature successfully set.') //setDeviceRefresh(!deviceRefresh) not really needed since the slider position and actual thermostat temp should be the same if its 200
+                     //#4 loop if setDeviceRefresh(!deviceRefresh) was here
                     setTimeout(() => {
                         setAlertOpen(false)
                         setResponseMessage('')
@@ -240,20 +245,11 @@ const ThermoDashboard = () => {
     }
 
     useEffect(() => {
-        if (device) { //stop error from initial render trying to read device
-            if (setPointTemp != getSetPointTemp(device)) { 
-                //Stop sliderTempHandler from running when device is initially loaded, also stop API calls 
-                //if the user slides to the same temp the thermostat is already in (but the device state isn't actually changing
-                //because setDeviceRefresh(!refresh) has been removed (At 70, set to 75, then back to 70 won't be allowed 
-                //cuz it thinks the thermo is still at 70? Make same device call somewhere else outside the useEffect chain?))
-                console.log('Temps of setPointTemp and device set in state are different')
-                const delay = setTimeout(() => {
-                    sliderTempHandler() 
-                }, 2000)
-                return () => clearTimeout(delay)
-            } else {
-                console.log('Temps of setPointTemp and device set in state are the same')
-            }
+        if (device) {
+            const delay = setTimeout(() => {
+                sliderTempHandler() //#3 loop
+            }, 2000)
+            return () => clearTimeout(delay)
         }
     }, [setPointTemp])
 
@@ -487,14 +483,22 @@ const ThermoDashboard = () => {
                             <Grid container direction="row" justifyContent="center" alignItems="center" spacing={5} mb={5}>
                                 <Grid item>
                                     <Stack sx={{ height: '20rem' }}>
-                                        <Slider sx={{ color: (switched ? "#7BF1A8" : "#000")}} orientation="vertical" defaultValue={getSetPointTemp(device)} step={1} min={50} max={90} valueLabelDisplay="auto" onChange={(e) => setSetPointTemp(parseInt(e.target.value))}/> {/*set a useRef instead? default value = setPointtemp? */}
+                                        <Slider sx={{ color: (switched ? "#7BF1A8" : "#000")}} 
+                                        orientation="vertical" 
+                                        defaultValue={getSetPointTemp(device)} 
+                                        step={1} 
+                                        min={50} 
+                                        max={90} 
+                                        valueLabelDisplay="auto" 
+                                        onChange={(e) => { setSetPointTemp(parseInt(e.target.value)); sliderValue.current = parseInt(e.target.value); }}
+                                        /> {/*set a useRef instead? default value = setPointtemp? */}
                                     </Stack>
                                 </Grid>
                                 <Grid item>
                                     <ToolTip title={
                                         <>
                                             <Typography>
-                                                Set Point Temperature: {setPointTemp}°F
+                                                Set Point Temperature: {sliderValue.current}°F
                                             </Typography><br/>
                                             <Typography>
                                                 Actual Temperature: {Math.round(CtoF(device.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius))}°F
@@ -508,7 +512,7 @@ const ThermoDashboard = () => {
                                         </>
                                     } placement="right-start">
                                         <Paper sx={{ width: '20rem', height: '20rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: (switched ? "#7BF1A8" : "#000")}}>
-                                            <Typography variant="h1" color={switched ? "#000" : "#fff"}>{`${setPointTemp}°`}</Typography>
+                                            <Typography variant="h1" color={switched ? "#000" : "#fff"}>{`${sliderValue.current}°`}</Typography>
                                         </Paper>
                                     </ToolTip>
                                 </Grid>
