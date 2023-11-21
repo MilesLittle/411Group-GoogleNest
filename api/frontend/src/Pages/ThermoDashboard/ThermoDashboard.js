@@ -129,7 +129,7 @@ const ThermoDashboard = () => {
     }, [deviceRefresh])
 
     useEffect(() => { 
-        if (device != null) { //if state temps != device temps?
+        if (device != null) {
             if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "COOL" || device.traits["sdm.devices.traits.ThermostatMode"].mode === "HEAT") {
                 console.log('Setting setpoint temp')
                 setSetPointTemp(getSetPointTemp(device))
@@ -240,10 +240,21 @@ const ThermoDashboard = () => {
     }
 
     useEffect(() => {
-        const delay = setTimeout(() => {
-            sliderTempHandler() //Need to stop this from running from the initial device get. if (loadedcount != 0)? If device temp isnt same as temp being set?
-        }, 2000)
-        return () => clearTimeout(delay)
+        if (device) { //stop error from initial render trying to read device
+            if (setPointTemp != getSetPointTemp(device)) { 
+                //Stop sliderTempHandler from running when device is initially loaded, also stop API calls 
+                //if the user slides to the same temp the thermostat is already in (but the device state isn't actually changing
+                //because setDeviceRefresh(!refresh) has been removed (At 70, set to 75, then back to 70 won't be allowed 
+                //cuz it thinks the thermo is still at 70? Make same device call somewhere else outside the useEffect chain?))
+                console.log('Temps of setPointTemp and device set in state are different')
+                const delay = setTimeout(() => {
+                    sliderTempHandler() 
+                }, 2000)
+                return () => clearTimeout(delay)
+            } else {
+                console.log('Temps of setPointTemp and device set in state are the same')
+            }
+        }
     }, [setPointTemp])
 
     const rangeTempHandler = () => {
@@ -483,7 +494,7 @@ const ThermoDashboard = () => {
                                     <ToolTip title={
                                         <>
                                             <Typography>
-                                                Set Point Temperature: {getSetPointTemp(device)}°F
+                                                Set Point Temperature: {setPointTemp}°F
                                             </Typography><br/>
                                             <Typography>
                                                 Actual Temperature: {Math.round(CtoF(device.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius))}°F
