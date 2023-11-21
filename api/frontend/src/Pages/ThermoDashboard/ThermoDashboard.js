@@ -122,7 +122,7 @@ const ThermoDashboard = () => {
             if (res.status === 200) {
                 console.log('Got the device')
                 console.log(res.data)
-                setDevice(res.data) //#1 loop #5 loop back here
+                setDevice(res.data) //#1 would be loop, #5 would be loop back here
             }
         }).catch((err) => {
             console.log(err)
@@ -132,8 +132,7 @@ const ThermoDashboard = () => {
     useEffect(() => { 
         if (device != null) {
             if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "COOL" || device.traits["sdm.devices.traits.ThermostatMode"].mode === "HEAT") {
-                //console.log('Setting setpoint temp')
-                //setSetPointTemp(getSetPointTemp(device)) //#2 loop
+                //setSetPointTemp(getSetPointTemp(device)) //#2 would be loop
                 console.log('Setting slider useRef')
                 sliderValue.current = getSetPointTemp(device)
             } else if (device.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEATCOOL' || device.traits["sdm.devices.traits.ThermostatEco"].mode === 'MANUAL_ECO') {
@@ -169,6 +168,10 @@ const ThermoDashboard = () => {
             }
         }).catch((err) => {
             if (err.status === 404) {
+                console.log('No jobs exist, Not Found')
+                console.log(err.data)
+            } else if (err.status === 500) {
+                console.log("Server probably isn't started, Internal Server Error")
                 console.log(err.data)
             } else {
                 console.log(err)
@@ -193,8 +196,8 @@ const ThermoDashboard = () => {
                 if (res.status === 200) {
                     console.log('Cool setpoint temp changed')
                     console.log(res) 
-                    setResponseMessage('Temperature successfully set.') //setDeviceRefresh(!deviceRefresh) not really needed since the slider position and actual thermostat temp should be the same if its 200
-                    //#4 loop if setDeviceRefresh(!deviceRefresh) was here
+                    setResponseMessage('Temperature successfully set.') 
+                    setDeviceRefresh(!deviceRefresh) //#4 would be loop
                     setTimeout(() => { //abstract this logic into a func since its repeated so much?
                         setAlertOpen(false)
                         setResponseMessage('')
@@ -224,8 +227,8 @@ const ThermoDashboard = () => {
                 if (res.status === 200) {
                     console.log('Heat setpoint temp changed')
                     console.log(res)
-                    setResponseMessage('Temperature successfully set.') //setDeviceRefresh(!deviceRefresh) not really needed since the slider position and actual thermostat temp should be the same if its 200
-                     //#4 loop if setDeviceRefresh(!deviceRefresh) was here
+                    setResponseMessage('Temperature successfully set.') 
+                    setDeviceRefresh(!deviceRefresh) //#4 would be loop
                     setTimeout(() => {
                         setAlertOpen(false)
                         setResponseMessage('')
@@ -247,7 +250,7 @@ const ThermoDashboard = () => {
     useEffect(() => {
         if (device) {
             const delay = setTimeout(() => {
-                sliderTempHandler() //#3 loop
+                sliderTempHandler() //#3 would be loop
             }, 2000)
             return () => clearTimeout(delay)
         }
@@ -470,7 +473,7 @@ const ThermoDashboard = () => {
                 <Grid item>
                     { device &&
                         <Grow in={true}>
-                            <Typography fontSize={'3rem'} variant="h3" textAlign="center">
+                            <Typography fontSize={'3rem'} variant="h3" textAlign="center" mb={2}>
                                 {device.parentRelations[0].displayName.length === 0 ? 'No custom name set.' : device.parentRelations[0].displayName}
                             </Typography>
                         </Grow>
@@ -491,7 +494,7 @@ const ThermoDashboard = () => {
                                         max={90} 
                                         valueLabelDisplay="auto" 
                                         onChange={(e) => { setSetPointTemp(parseInt(e.target.value)); sliderValue.current = parseInt(e.target.value); }}
-                                        /> {/*set a useRef instead? default value = setPointtemp? */}
+                                        /> 
                                     </Stack>
                                 </Grid>
                                 <Grid item>
@@ -577,7 +580,7 @@ const ThermoDashboard = () => {
                         <>
                             <Typography variant="h3">Your Jobs</Typography>
                                 <ToolTip title="Refresh Jobs" placement="right-start" onClick={() => { console.log('Refreshing jobs'); setJobRefresh(!jobRefresh); }}>
-                                    <div style={{ position: 'absolute', right: '30.5rem', bottom: '-4.1rem', cursor: 'pointer' }}>
+                                    <div style={{ position: 'absolute', right: '30.5rem', bottom: '-3.9rem', cursor: 'pointer' }}> {/*Absolute styling is kinda jank but works well enough*/}
                                         <RefreshIcon style={{ color: (switched ? '#7BF1A8' : '#1a1a1a')}} />
                                     </div>
                                 </ToolTip>
