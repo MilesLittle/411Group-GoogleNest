@@ -49,7 +49,7 @@ const ThermoDashboard = () => {
     const { deviceId } = useParams() 
     const [device, setDevice] = useState(null)
     const [setPointTemp, setSetPointTemp] = useState(0)
-    const [cool, setCool] = useState(0)
+    const [cool, setCool] = useState(0) //put cool and heat into one piece of state?
     const [heat, setHeat] = useState(0)
     const [deviceRefresh, setDeviceRefresh] = useState(false)
     const [jobRefresh, setJobRefresh] = useState(false)
@@ -110,6 +110,14 @@ const ThermoDashboard = () => {
             mode = 'OFF'
         }
         return mode
+    }
+
+    const raiseResponseToast = (message) => {
+        setResponseMessage(message)
+        setTimeout(() => { 
+            setAlertOpen(false)
+            setResponseMessage('')
+        }, 5000)
     }
 
     useEffect(() => {
@@ -196,20 +204,12 @@ const ThermoDashboard = () => {
                 if (res.status === 200) {
                     console.log('Cool setpoint temp changed')
                     console.log(res) 
-                    setResponseMessage('Temperature successfully set.') 
+                    raiseResponseToast('Temperature successfully set.')
                     setDeviceRefresh(!deviceRefresh) //#4 would be loop
-                    setTimeout(() => { //abstract this logic into a func since its repeated so much?
-                        setAlertOpen(false)
-                        setResponseMessage('')
-                    }, 5000)
                 }
             }).catch((err) => {
                 console.log(err)
-                setResponseMessage(err.response.data.error.message)
-                setTimeout(() => {
-                    setAlertOpen(false)
-                    setResponseMessage('')
-                }, 5000)
+                raiseResponseToast(err.response.data.error.message)
             })
         } else if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "HEAT") {
             await axios.post(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}:executeCommand`, {
@@ -227,23 +227,15 @@ const ThermoDashboard = () => {
                 if (res.status === 200) {
                     console.log('Heat setpoint temp changed')
                     console.log(res)
-                    setResponseMessage('Temperature successfully set.') 
+                    raiseResponseToast('Temperature successfully set.')
                     setDeviceRefresh(!deviceRefresh) //#4 would be loop
-                    setTimeout(() => {
-                        setAlertOpen(false)
-                        setResponseMessage('')
-                    }, 5000)
                 }
             }).catch((err) => {
                 console.log(err)
-                setResponseMessage(err.response.data.error.message)
-                setTimeout(() => {
-                    setAlertOpen(false)
-                    setResponseMessage('')
-                }, 5000)
+                raiseResponseToast(err.response.data.error.message)
             })
         } else {
-            console.log('Thermostat is off')
+            console.log('Thermostat is probably off.')
         }
     }
 
@@ -266,24 +258,19 @@ const ThermoDashboard = () => {
             if (res.status === 200) {
                 console.log('Successfully deleted the job')
                 console.log(res.data)
-                setResponseMessage(res.data.message)
                 setJobRefresh(!jobRefresh)
                 setDeleteConfOpen(false)
                 setJobToDeleteId(null)
-                setTimeout(() => {
-                    setAlertOpen(false)
-                    setResponseMessage('')
-                }, 5000)
+                raiseResponseToast(res.data.message)
             }
         }).catch((err) => {
            if (err.status === 404) {
                 console.log('The job was not found')
                 console.log(err.data)
-                setResponseMessage(err.data.message)
-                setTimeout(() => {
-                    setAlertOpen(false)
-                    setResponseMessage('')
-                }, 5000)
+                raiseResponseToast(err.data.message) //modal still up, will toast be seen?
+                //catch 500?
+           } else {
+                console.log(err)
            }
         })
     }
@@ -330,32 +317,20 @@ const ThermoDashboard = () => {
             if (res.status === 201) {
                 console.log('Successfully added the job')
                 console.log(res.data)
-                setResponseMessage(res.data.message)
                 setJobRefresh(!jobRefresh)
                 setAddLogJobOpen(false)
-                setTimeout(() => {
-                    setAlertOpen(false)
-                    setResponseMessage('')
-                }, 5000)
+                raiseResponseToast(res.data.message)
             }
         })
         .catch((err) => {
             if (err.status === 400) {
                 console.log('Bad request')
                 console.log(err.data)
-                setResponseMessage(err.data.message)
-                setTimeout(() => {
-                    setAlertOpen(false)
-                    setResponseMessage('')
-                }, 5000)
+                raiseResponseToast(err.data.message) //modal still up, will toast be seen?
             } else if (err.status === 500) {
                 console.log('Internal Server Error')
                 console.log(err.data)
-                setResponseMessage(err.data.message)
-                setTimeout(() => {
-                    setAlertOpen(false)
-                    setResponseMessage('')
-                }, 5000)
+                raiseResponseToast(err.data.message) //modal still up, will toast be seen?
             } else {
                 console.log(err)
             }
