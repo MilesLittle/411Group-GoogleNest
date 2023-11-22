@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import Grow from "@mui/material/Grow";
 import Typography from '@mui/material/Typography';
@@ -24,16 +24,19 @@ import PauseCircleIcon from '@mui/icons-material/PauseCircle';
 import Snackbar from "@mui/material/Snackbar";
 import SnackbarContent from "@mui/material/SnackbarContent";
 import AddCircleIcon from '@mui/icons-material/AddCircle';
+import Modal from "@mui/material/Modal";
+import Fade from "@mui/material/Fade";
+import Slider from '@mui/material/Slider';
+import Stack from '@mui/material/Stack';
+import _debounce from 'lodash/debounce';
+import Paper from '@mui/material/Paper'; 
 import Dialog from '@mui/material/Dialog'
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import MenuItem from '@mui/material/MenuItem';
-import Modal from "@mui/material/Modal";
-import Fade from "@mui/material/Fade";
 import RefreshIcon from '@mui/icons-material/Refresh';
-
 
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
@@ -45,74 +48,19 @@ const ThermoDashboard = () => {
     const { switched } = useContext(DarkModeSwitchContext)
     const { deviceId } = useParams() 
     const [device, setDevice] = useState(null)
-    const [temp, setTemp] = useState(0)
+    const [setPointTemp, setSetPointTemp] = useState(0)
+    const [cool, setCool] = useState(0) //put cool and heat into one piece of state?
+    const [heat, setHeat] = useState(0)
     const [deviceRefresh, setDeviceRefresh] = useState(false)
     const [jobRefresh, setJobRefresh] = useState(false)
     const [jobs, setJobs] = useState(null)
-    //const [chartData, setChartData] = useState(testarray)
+    const [chartData, setChartData] = useState(null) 
     const [alertOpen, setAlertOpen] = useState(false)
     const [deleteConfOpen, setDeleteConfOpen] = useState(false)
-    const [jobToDeleteId, setJobToDeleteId] = useState('')
+    const [addLogJobOpen, setAddLogJobOpen] = useState(false)
+    const [jobToDeleteId, setJobToDeleteId] = useState(null)
     const [responseMessage, setResponseMessage] = useState('')
-
-    const testarray = [
-        {
-            "Id": "3b9b1f7d-f23a-4800-9e63-45c961f5cd1c",
-            "JobId": "Job logs test",
-            "ActualTemp": "18.330000",
-            "SetPointTemp": null,
-            "Heat": "25",
-            "Cool": "20",
-            "TimeLogged": "2023-10-19T14:32:31.054552Z"
-        },
-        {
-            "Id": "277baaca-95c4-4eee-a3e7-8d4903c3f814",
-            "JobId": "Job logs test",
-            "ActualTemp": "19.440000",
-            "SetPointTemp": null,
-            "Heat": "26",
-            "Cool": "21",
-            "TimeLogged": "2023-10-19T14:35:45.115786Z"
-        },
-        {
-            "Id": "fcc83e4b-ddf6-4312-81c6-2d12ae0ea296",
-            "JobId": "Job logs test",
-            "ActualTemp": "18.899000",
-            "SetPointTemp": "23.000000",
-            "Heat": null,
-            "Cool": null,
-            "TimeLogged": "2023-10-19T14:37:44.708436Z"
-        },
-        {
-            "Id": "6da7c3e8-6822-4640-872f-46bbca1e7f27",
-            "JobId": "Job logs test",
-            "ActualTemp": "18.330000",
-            "SetPointTemp": "21.000000",
-            "Heat": null,
-            "Cool": null,
-            "TimeLogged": "2023-10-19T14:42:08.017393Z"
-        },
-        {
-            "Id": "66a4768e-1610-4230-b3c8-33d70a1dc736",
-            "JobId": "Job logs test",
-            "ActualTemp": "21.000000",
-            "SetPointTemp": null,
-            "Heat": "26.333",
-            "Cool": "18.5",
-            "TimeLogged": "2023-10-19T14:44:39.621889Z"
-        },
-        {
-            "Id": "5f23a0a7-382d-4b87-a9fa-a552235155f7",
-            "JobId": "Job logs test",
-            "ActualTemp": "20.000000",
-            "SetPointTemp": null,
-            "Heat": "25",
-            "Cool": "20.13",
-            "TimeLogged": "2023-10-19T14:46:46.304463Z"
-        }
-    ]
-
-    const [chartData, setChartData] = useState(testarray)
+    const sliderValue = useRef(0)
 
     const CtoF = (cTemp) => {
         return (cTemp * 9/5) + 32
@@ -128,15 +76,49 @@ const ThermoDashboard = () => {
           setPointTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].heatCelsius))
         } else if (thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'COOL') {
           setPointTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius))
-        } else if (thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEATCOOL') {
-          setPointTemp = 'Range - H: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].heatCelsius)) + ', C: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius))
-        } else if (thermostat.traits["sdm.devices.traits.ThermostatEco"].mode === 'MANUAL_ECO') {
-          setPointTemp = 'Range - H: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatEco"].heatCelsius)) + ', C: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatEco"].coolCelsius))
         } else { //OFF
-          setPointTemp = 'Thermostat is off.'
+          setPointTemp = 0
         }
         return setPointTemp
-      }
+    }
+
+    const getRangeTemps = (thermostat) => {
+        var coolTemp
+        var heatTemp
+        if (thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEATCOOL') {
+            coolTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius))
+            heatTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].heatCelsius))
+        } else if (thermostat.traits["sdm.devices.traits.ThermostatEco"].mode === 'MANUAL_ECO') {
+           coolTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatEco"].coolCelsius))
+           heatTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatEco"].heatCelsius))
+        } else { //OFF
+           coolTemp = 0
+           heatTemp = 0
+        }
+        return [coolTemp, heatTemp]
+    }
+
+    const getMode = (thermostat) => {
+        var mode
+        if (thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEAT' || 
+            thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'COOL' ||
+            thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEATCOOL') {
+            mode = thermostat.traits["sdm.devices.traits.ThermostatMode"].mode
+        } else if (thermostat.traits["sdm.devices.traits.ThermostatEco"].mode === 'MANUAL_ECO') {
+            mode = thermostat.traits["sdm.devices.traits.ThermostatEco"].mode
+        } else { //off
+            mode = 'OFF'
+        }
+        return mode
+    }
+
+    const raiseResponseToast = (message) => {
+        setResponseMessage(message)
+        setTimeout(() => { 
+            setAlertOpen(false)
+            setResponseMessage('')
+        }, 5000)
+    }
 
     useEffect(() => {
         axios.get(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}`, {
@@ -148,14 +130,29 @@ const ThermoDashboard = () => {
             if (res.status === 200) {
                 console.log('Got the device')
                 console.log(res.data)
-                setDevice(res.data)
-            } else {
-                console.log('Not OK')
+                setDevice(res.data) //#1 would be loop, #5 would be loop back here
             }
         }).catch((err) => {
             console.log(err)
         })
     }, [deviceRefresh])
+
+    useEffect(() => { 
+        if (device != null) {
+            if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "COOL" || device.traits["sdm.devices.traits.ThermostatMode"].mode === "HEAT") {
+                //setSetPointTemp(getSetPointTemp(device)) //#2 would be loop
+                console.log('Setting slider useRef')
+                sliderValue.current = getSetPointTemp(device)
+            } else if (device.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEATCOOL' || device.traits["sdm.devices.traits.ThermostatEco"].mode === 'MANUAL_ECO') {
+                console.log('Setting temp range')
+                var temps = getRangeTemps()
+                setCool(temps[0])
+                setHeat(temps[1])
+            } else { //OFF
+                console.log('Thermostat is probably off.')
+            }
+        }
+    }, [device])
 
     useEffect(() => {
         axios.get(`/logjobs?googleId=${googleAccountInfo.id}&thermostatId=${deviceId}`)
@@ -165,7 +162,7 @@ const ThermoDashboard = () => {
                 var convertedData = []
                 convertedData = res.data.data
                 convertedData.forEach((jobanditslogs) => { //but when I comment out this block it somehow changes the res.data log even though its before this even runs
-                    jobanditslogs.JobLogs.forEach((joblog) => {
+                    jobanditslogs.JobLogs.forEach((joblog) => { //change this when the schema changes
                         var formattedDate = moment(`${joblog.TimeLogged}`).format('llll') 
                         joblog.ActualTemp = Math.round(CtoF(joblog.ActualTemp))
                         joblog.SetPointTemp = Math.round(CtoF(joblog.SetPointTemp))
@@ -178,16 +175,24 @@ const ThermoDashboard = () => {
                 console.log(res)
             }
         }).catch((err) => {
-            console.log(err)
+            if (err.status === 404) {
+                console.log('No jobs exist, Not Found')
+                console.log(err.data)
+            } else if (err.status === 500) {
+                console.log("Server probably isn't started, Internal Server Error")
+                console.log(err.data)
+            } else {
+                console.log(err)
+            }
         })
     }, [jobRefresh])
 
-    const tempHandler = async () => {
+    const sliderTempHandler = async () => {
         if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "COOL") {
             await axios.post(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}:executeCommand`, {
                 command: "sdm.devices.commands.ThermostatTemperatureSetpoint.SetCool",
                 params: {
-                    "coolCelsius": FtoC(temp)
+                    "coolCelsius": FtoC(setPointTemp)
                 }
             }, {
                 headers: {
@@ -197,27 +202,20 @@ const ThermoDashboard = () => {
             }
             ).then((res) => {
                 if (res.status === 200) {
-                    console.log(res)
-                    setDeviceRefresh(!deviceRefresh) //something stupid to call the single device endpoint again and let the user see the new temp that they set
-                    setResponseMessage('Temperature successfully set.')
-                    setTimeout(() => {
-                        setAlertOpen(false)
-                        setResponseMessage('')
-                    }, 5000)
+                    console.log('Cool setpoint temp changed')
+                    console.log(res) 
+                    raiseResponseToast('Temperature successfully set.')
+                    setDeviceRefresh(!deviceRefresh) //#4 would be loop
                 }
             }).catch((err) => {
                 console.log(err)
-                setResponseMessage(err.response.data.error.message)
-                setTimeout(() => {
-                    setAlertOpen(false)
-                    setResponseMessage('')
-                }, 5000)
+                raiseResponseToast(err.response.data.error.message)
             })
         } else if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "HEAT") {
             await axios.post(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}:executeCommand`, {
                 command: "sdm.devices.commands.ThermostatTemperatureSetpoint.SetHeat",
                 params: {
-                    "heatCelsius": FtoC(temp)
+                    "heatCelsius": FtoC(setPointTemp)
                 }
             }, {
                 headers: {
@@ -227,25 +225,31 @@ const ThermoDashboard = () => {
             }
             ).then((res) => {
                 if (res.status === 200) {
+                    console.log('Heat setpoint temp changed')
                     console.log(res)
-                    setDeviceRefresh(!deviceRefresh)
-                    setResponseMessage('Temperature successfully set.')
-                    setTimeout(() => {
-                        setAlertOpen(false)
-                        setResponseMessage('')
-                    }, 5000)
+                    raiseResponseToast('Temperature successfully set.')
+                    setDeviceRefresh(!deviceRefresh) //#4 would be loop
                 }
             }).catch((err) => {
                 console.log(err)
-                setResponseMessage(err.response.data.error.message)
-                setTimeout(() => {
-                    setAlertOpen(false)
-                    setResponseMessage('')
-                }, 5000)
+                raiseResponseToast(err.response.data.error.message)
             })
-        } else { //do cases for heatcool, eco, and off
-            console.log('Thermostat is in heatcool mode or off')
+        } else {
+            console.log('Thermostat is probably off.')
         }
+    }
+
+    useEffect(() => {
+        if (device) {
+            const delay = setTimeout(() => {
+                sliderTempHandler() //#3 would be loop
+            }, 2000)
+            return () => clearTimeout(delay)
+        }
+    }, [setPointTemp])
+
+    const rangeTempHandler = () => {
+        alert(`Cool: ${Math.round(cool)}, Heat: ${Math.round(heat)}`) //convert to C
     }
 
     const deleteJob = async (id) => {
@@ -254,25 +258,20 @@ const ThermoDashboard = () => {
             if (res.status === 200) {
                 console.log('Successfully deleted the job')
                 console.log(res.data)
-                setResponseMessage(res.data.message)
                 setJobRefresh(!jobRefresh)
                 setDeleteConfOpen(false)
-                setJobToDeleteId('')
-                setTimeout(() => {
-                    setAlertOpen(false)
-                    setResponseMessage('')
-                }, 5000)
-            } else if (res.status === 404) {
-                console.log('The job was not found')
-                console.log(res.data)
-                setResponseMessage(res.data.message)
-                setTimeout(() => {
-                    setAlertOpen(false)
-                    setResponseMessage('')
-                }, 5000)
+                setJobToDeleteId(null)
+                raiseResponseToast(res.data.message)
             }
         }).catch((err) => {
-            console.log(err)
+           if (err.status === 404) {
+                console.log('The job was not found')
+                console.log(err.data)
+                raiseResponseToast(err.data.message) //modal still up, will toast be seen?
+                //catch 500?
+           } else {
+                console.log(err)
+           }
         })
     }
 
@@ -283,57 +282,27 @@ const ThermoDashboard = () => {
     }, [responseMessage])
 
     useEffect(() => {
-        if (jobToDeleteId != 0 && jobToDeleteId != null) {
+        if (jobToDeleteId != null) {
             setDeleteConfOpen(true)
         }
     }, [jobToDeleteId])
 
-    // ChangeLog stuff
-    // Open and close the buttons for the modal 
-    const [open, setOpen] = React.useState(false);
-
     // states for modal form submission
-    const [modalInput, setModalInput] = React.useState(60);
-    const [timeType, setTimeType] = React.useState(null);
-
-
-    useEffect(() => {
-        console.log("modalInput = " + modalInput);
-        console.log("timeType = " + timeType);
-    },[modalInput, timeType])
-
-
-    useEffect(() => {
-        console.log("jobs");
-        console.log(jobs);
-    }, [jobs])
-
-
-    const OpenModal = () => {
-        setOpen(true); 
-    }
-
-    const CloseModal = () => {
-        setOpen(false); 
-    }
-
+    const [modalInput, setModalInput] = useState(60);
     // restrict modal input
     const handleInput = (input) => {
         // find way to forbid ., e, +, - characters? input is a string, and TextField with type="number" allows those chars
         input = Number(input) | 0   // cast so the number actually shows up in modal form. Bitwise OR to force integer
-
         // limit input. Somehow disallow user to submit log every 1 minute? That would be an excessive amount of logs
         if (input < 1) {
             input = null    // make sure null is not submitted in post request, or maybe make the modalInput state's purpose only for display, submit actual form value?
         } else if (input > 60) {
             input = 60
         }
-
         setModalInput(input)
     }
 
-    const submitAddJob = async (data) => {
-
+    const submitAddJob = async (data) => { //if blah blah blah wrong stuff, return; make sure nothing is empty. Render error text in modal? Trim whitespace
         const reqbody = {
             name: data.target.name.value,
             description: data.target.description.value,
@@ -343,43 +312,45 @@ const ThermoDashboard = () => {
             deviceId: deviceId,
             googleId: googleAccountInfo.id,
         }
-
-        console.log(reqbody.name);
-        //console.log(reqbody.number);
-        //onsole.log(reqbody.timeType);
-
-        await axios.post(`http://localhost:8000/logjob`, reqbody, {
-            
-        })
+        await axios.post(`/logjob`, reqbody)
         .then((res) => {
-            console.log(res);
-            setJobRefresh(!jobRefresh)
+            if (res.status === 201) {
+                console.log('Successfully added the job')
+                console.log(res.data)
+                setJobRefresh(!jobRefresh)
+                setAddLogJobOpen(false)
+                raiseResponseToast(res.data.message)
+            }
         })
         .catch((err) => {
-            console.log("job create error " + err);
+            if (err.status === 400) {
+                console.log('Bad request')
+                console.log(err.data)
+                raiseResponseToast(err.data.message) //modal still up, will toast be seen?
+            } else if (err.status === 500) {
+                console.log('Internal Server Error')
+                console.log(err.data)
+                raiseResponseToast(err.data.message) //modal still up, will toast be seen?
+            } else {
+                console.log(err)
+            }
         })
-
     }
-
-
-    // Time options 
-    const timeValues = [
-    {
-        value: "minutes", 
-        label: "minutes", 
-    }, 
-    {
-        value: "hours",  
-        label: "hours"
-    }, 
-    
-    {
-        value: "days", 
-        label: "days",
-    }
+     
+    const timeValues = [ // Time options 
+        {
+            value: "minutes", 
+            label: "minutes", 
+        }, 
+        {
+            value: "hours",  
+            label: "hours"
+        }, 
+        {
+            value: "days", 
+            label: "days",
+        }
     ]
-
-
 
     return (
         <>
@@ -399,7 +370,7 @@ const ThermoDashboard = () => {
                         <Grid item>
                             <Grid container direction="row" alignItems="center" justifyContent="center" spacing={2} mt={0.5}>
                                 <Grid item>
-                                    <Button variant="contained" color="secondary" onClick={() => { setDeleteConfOpen(false); setJobToDeleteId(''); }}>Cancel</Button>
+                                    <Button variant="contained" color="secondary" onClick={() => { setDeleteConfOpen(false); setJobToDeleteId(null); }}>Cancel</Button>
                                 </Grid>
                                 <Grid item>
                                     <Button variant="contained" color="error" onClick={() => deleteJob(jobToDeleteId)}>Yes, Delete</Button>
@@ -410,21 +381,126 @@ const ThermoDashboard = () => {
                 </Box>
                 </Fade>
             </Modal>
+            {/* changeLog dialogue*/}
+            <div style={{textAlign: 'center'}}>
+                <Dialog open={addLogJobOpen} onClose={() => setAddLogJobOpen(false)}>
+                    <DialogTitle> Thermostat 1 Log Setting </DialogTitle>
+                        <form onSubmit={(e) => {e.preventDefault(); submitAddJob(e);}}>
+                            <DialogContent>  
+                                <DialogContentText> Set the Log: </DialogContentText>
+                                <TextField
+                                    id="job-name"
+                                    name="name"
+                                    label="Job Name"
+                                    type="text"
+                                    margin="dense"
+                                    fullWidth
+                                    defaultValue={"Job name"}
+                                    InputLabelProps={{shrink: true}}
+                                    inputProps={{ max:200 }}
+                                />
+                                <TextField
+                                    id="job-description"
+                                    name="description"
+                                    label="Description"
+                                    type="text"
+                                    margin="dense"
+                                    fullWidth
+                                    InputLabelProps={{shrink: true}}
+                                    inputProps={{ max:200 }}
+                                />
+                                <TextField
+                                    id="outlined-number"
+                                    name="number"
+                                    label="Number"
+                                    type="number"
+                                    margin="dense"
+                                    fullWidth
+                                    value={modalInput}
+                                    onChange={(e) => handleInput(e.target.value)}
+                                    InputLabelProps={{shrink: true,}}
+                                    inputProps={{ min: 1, max: 60 }}
+                                />
+                                <TextField
+                                    id="select-time"
+                                    name="timeType"
+                                    select
+                                    label = "Select"
+                                    defaultValue="days"
+                                    helperText="Please Select a time"
+                                    margin="dense"
+                                >
+                                    {timeValues.map((option) => (
+                                        <MenuItem key={option.value} value={option.value}>
+                                            {option.label}
+                                        </MenuItem>
+                                    ))}
+                                </TextField>
+                            </DialogContent>
+                            <DialogActions> 
+                                <Button onClick={() => setAddLogJobOpen(false)} color="secondary"> Cancel </Button>
+                                <Button type="submit" onClick={() => setAddLogJobOpen(false)} color="primary"> Save </Button>
+                            </DialogActions>
+                        </form>
+                </Dialog>
+            </div>
             <Grid container direction="column" justifyContent="center" alignItems="center" mt={1} mb={3} spacing={3}>
                 <Grid item>
                     { device &&
                         <Grow in={true}>
-                            <Typography fontSize={'3rem'} variant="h3" textAlign="center">
+                            <Typography fontSize={'3rem'} variant="h3" textAlign="center" mb={2}>
                                 {device.parentRelations[0].displayName.length === 0 ? 'No custom name set.' : device.parentRelations[0].displayName}
                             </Typography>
                         </Grow>
                     }
                 </Grid>
                 <Grid item>
-                    { device && 
+                    { device && ( //device in cool mode or heat mode
+                    device.traits["sdm.devices.traits.ThermostatMode"].mode === 'COOL' || device.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEAT' ? ( 
+                        <Grow in={true}>
+                            <Grid container direction="row" justifyContent="center" alignItems="center" spacing={5} mb={5}>
+                                <Grid item>
+                                    <Stack sx={{ height: '20rem' }}>
+                                        <Slider sx={{ color: (switched ? "#7BF1A8" : "#000")}} 
+                                        orientation="vertical" 
+                                        defaultValue={getSetPointTemp(device)} 
+                                        step={1} 
+                                        min={50} 
+                                        max={90} 
+                                        valueLabelDisplay="auto" 
+                                        onChange={(e) => { setSetPointTemp(parseInt(e.target.value)); sliderValue.current = parseInt(e.target.value); }}
+                                        /> 
+                                    </Stack>
+                                </Grid>
+                                <Grid item>
+                                    <ToolTip title={
+                                        <>
+                                            <Typography>
+                                                Set Point Temperature: {sliderValue.current}°F
+                                            </Typography><br/>
+                                            <Typography>
+                                                Actual Temperature: {Math.round(CtoF(device.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius))}°F
+                                            </Typography><br/>
+                                            <Typography>
+                                                Humidity: {device.traits["sdm.devices.traits.Humidity"].ambientHumidityPercent}%
+                                            </Typography><br/>
+                                            <Typography>
+                                                Mode: {getMode(device)}
+                                            </Typography>
+                                        </>
+                                    } placement="right-start">
+                                        <Paper sx={{ width: '20rem', height: '20rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: (switched ? "#7BF1A8" : "#000")}}>
+                                            <Typography variant="h1" color={switched ? "#000" : "#fff"}>{`${sliderValue.current}°`}</Typography>
+                                        </Paper>
+                                    </ToolTip>
+                                </Grid>
+                            </Grid>
+                        </Grow>
+                    ) : ( //heatcool or eco mode
                         <>
+                        <center> {/*lol, lmao even */}
                             <Grow in={true}>
-                                <Box sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', width: '40rem' }}>
+                                <Box sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', width: '40rem' }} mb={3}>
                                     <List>
                                         <ListItem>
                                             <ListItemText 
@@ -435,51 +511,54 @@ const ThermoDashboard = () => {
                                         <Divider variant="middle" />
                                         <ListItem>
                                             <ListItemText 
-                                            primary={`Current Temperature: ${Math.round(CtoF(device.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius))} F`}
+                                            primary={`Current Temperature: ${Math.round(CtoF(device.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius))}°F`}
                                             primaryTypographyProps={{ fontSize: '2rem'}}
                                             />
                                         </ListItem>
-                                        <Divider variant="middle"/>
+                                        <Divider variant="middle" />
                                         <ListItem>
                                             <ListItemText 
-                                            primary={`Target Temperature: ${getSetPointTemp(device)} F`}
+                                            primary={`Mode: ${getMode(device)}`}
                                             primaryTypographyProps={{ fontSize: '2rem' }}
                                             />
-                                        </ListItem>
+                                        </ListItem> {/*Add list items for heat and cool, show eco mode leaf somewhere */}
                                     </List>
                                 </Box>
                             </Grow>
+                            </center>
+                            <Grow in={true}>
+                                <Box component="form" sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', padding: '1rem', marginBottom: '2rem', marginLeft: '20rem', marginRight: '20rem' }}>
+                                    <Container>
+                                        <Grid container direction="column" justifyContent="center" alignItems="center" spacing={2}>
+                                            <Grid item>
+                                                <Grid container direction="row" justifyContent="center" alignItems="center" spacing={2}>
+                                                    <Grid item>
+                                                        <TextField type="number" variant="outlined" color="secondary" label="Set cool in F" onChange={(e) => setCool(parseInt(e.target.value))}/>
+                                                    </Grid>
+                                                    <Grid item>
+                                                        <TextField type="number" variant="outlined" color="secondary" label="Set heat in F" onChange={(e) => setHeat(parseInt(e.target.value))}/>
+                                                    </Grid>
+                                                </Grid>
+                                            </Grid> 
+                                            <Grid item>
+                                                <Button variant="contained" color="secondary" onClick={() => rangeTempHandler()}>Set Temperature</Button>
+                                            </Grid>
+                                        </Grid>   
+                                    </Container>
+                                </Box>
+                            </Grow>
                         </>
-                    }
-                </Grid>
-                <Grid item>
-                    { device &&
-                        <Grow in={true}>
-                            <Box component="form" sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', padding: '1rem', marginBottom: '2rem', marginLeft: '20rem', marginRight: '20rem' }}>
-                                <Container>
-                                    <Grid container direction="row" justifyContent="center" alignItems="center" spacing={2}>
-                                        <Grid item>
-                                            <TextField variant="outlined" color="secondary" label="Set temperature in F" onChange={(e) => setTemp(parseInt(e.target.value))} />
-                                        </Grid> 
-                                        <Grid item>
-                                            <Button variant="contained" color="secondary" onClick={() => tempHandler()}>Set Temperature</Button>
-                                        </Grid>
-                                    </Grid>   
-                                </Container>
-                            </Box>
-                        </Grow>
+                        )
+                    )
                     }
                 </Grid>
                 <Grid item>
                     { device && 
-                            <>
+                        <ToolTip title="Refresh jobs" placement="right">
+                            <div style={{ cursor: 'pointer' }} onClick={() => { console.log('Refreshing jobs'); setJobRefresh(!jobRefresh); }}>
                                 <Typography variant="h3">Your Jobs</Typography>
-                                <ToolTip title="Refresh Jobs" placement="right-start" onClick={() => { console.log('Refreshing jobs'); setJobRefresh(!jobRefresh); }}>
-                                    <div style={{ position: 'absolute', right: '30.5rem', bottom: '-4.1rem', cursor: 'pointer' }}>
-                                        <RefreshIcon style={{ color: (switched ? '#7BF1A8' : '#1a1a1a')}} />
-                                    </div>
-                                </ToolTip>
-                            </>
+                            </div>
+                        </ToolTip>
                     }
                 </Grid>
                 <Grid item>
@@ -497,7 +576,7 @@ const ThermoDashboard = () => {
                                                                 <Grid item>
                                                                     <Typography gutterBottom variant="h6" color='#000' component="div">
                                                                         <div onClick={() => setChartData(job.JobLogs)} style={{ cursor: 'pointer' }}>
-                                                                            {(job.Id.length > 17 ? `${job.Id.substr(0, 13)}...` : job.name)}
+                                                                            {(job.name.length > 17 ? `${job.name.substr(0, 13)}...` : job.name)}
                                                                         </div>
                                                                     </Typography>
                                                                 </Grid>
@@ -571,107 +650,24 @@ const ThermoDashboard = () => {
                                             <Label value='Temperature in Fahrenheit' angle={-90} position='left' dy={-90} dx={10}/>
                                         </YAxis>
                                         <Legend wrapperStyle={{ right: 75 }} verticalAlign="top" height={40}/>
-                                        <Line stroke="#ff3333" name="Actual Temp"/>
-                                        <Line stroke="#3385ff" name="Set Point Temp"/>
+                                        <Line stroke="#9900ff" name="Actual Temp"/>
+                                        <Line stroke="#ff8000" name="Set Point Temp"/>
+                                        <Line stroke="#ff3333" name="Heat"/>
+                                        <Line stroke="#3385ff" name="Cool"/>
                                     </LineChart>
                                 </ResponsiveContainer>)
                             }
                         </>
                     }
-
-                    {/* changeLog dialogue*/}
-                    <div style={{textAlign: 'center'}}>
-
-                        <Dialog open={open} onClose={CloseModal}>
-                            <DialogTitle> Thermostat 1 Log Setting </DialogTitle>
-                            <form onSubmit={(e) => {e.preventDefault(); submitAddJob(e);}}>
-                                <DialogContent>  
-                                    <DialogContentText> Set the Log: </DialogContentText>
-
-                                    <TextField
-                                        id="job-name"
-                                        name="name"
-                                        label="Job Name"
-                                        type="text"
-                                        margin="dense"
-                                        fullWidth
-                                        defaultValue={"Job name"}
-                                        InputLabelProps={{shrink: true}}
-                                        inputProps={{ max:200 }}
-                                    />
-
-                                    <TextField
-                                        id="job-description"
-                                        name="description"
-                                        label="Description"
-                                        type="text"
-                                        margin="dense"
-                                        fullWidth
-                                        InputLabelProps={{shirnk: true}}
-                                        inputProps={{ max:200 }}
-                                    />
-
-                                    <TextField
-                                        id="outlined-number"
-                                        name="number"
-                                        label="Number"
-                                        type="number"
-                                        margin="dense"
-                                        fullWidth
-                                        value={modalInput}
-                                        onChange={(e) => handleInput(e.target.value)}
-                                        InputLabelProps={{shrink: true,}}
-                                        inputProps={{
-                                            min: 1,
-                                            max: 60,
-                                        }}
-                                    >
-                                        
-                                    </TextField>
-
-                                    <TextField
-                                        id="select-time"
-                                        name="timeType"
-                                        select
-                                        label = "Select"
-                                        defaultValue="days"
-                                        helperText="Please Select a time"
-                                        margin="dense"
-                                        onChange={(e) => setTimeType(e.target.value)}
-                                    >
-                                        {timeValues.map((option) => (
-                                            <MenuItem key={option.value} value={option.value}>
-                                            {option.label}
-                                            </MenuItem>
-                                        ))}
-                                    </TextField>
-                                </DialogContent>
-
-                                <DialogActions> 
-                                <Button onClick={CloseModal} color="secondary"> Cancel </Button>
-                                <Button type="submit" onClick={CloseModal} color="primary"> Save </Button>
-                                </DialogActions>
-                            </form>
-                        </Dialog>
-                    </div>
-
                     <Grid item>
                         { device &&
                             <Container>
                                 <Grid container direction="row" justifyContent="space-around" alignItems="center" spacing={2}>
-                                    <Grid onClick={() => OpenModal()} item>
-                                        { switched ?
-                                            <Button variant="outlined" color="primary" size="large" startIcon={<AddCircleIcon/>}>Add Logging Job</Button>
-                                            :
-                                            <Button variant="contained" color="secondary" size="large" startIcon={<AddCircleIcon/>}>Add Logging Job</Button>
-                                        }
+                                    <Grid item>
+                                        <Button variant={switched ? "outlined" : "contained"} color={switched ? "primary" : "secondary"} size="large" startIcon={<AddCircleIcon/>} onClick={() => setAddLogJobOpen(true)}>Add Logging Job</Button>
                                     </Grid>
                                     <Grid item>
-                                        { switched ?
-                                            <Button variant="outlined" color="primary" size="large" startIcon={<AddCircleIcon/>}>Add Setting Job</Button>
-                                            :
-                                            <Button variant="contained" color="secondary" size="large" startIcon={<AddCircleIcon/>}>Add Setting Job</Button>
-                                        }
+                                        <Button variant={switched ? "outlined" : "contained"} color={switched ? "primary" : "secondary"} size="large" startIcon={<AddCircleIcon/>}>Add Setting Job</Button>
                                     </Grid>
                                 </Grid> 
                             </Container>

@@ -28,20 +28,20 @@ const Home = () => {
       return (cTemp * 9/5) + 32
     }
 
-    const getSetPointTemp = (thermostat) => {
-      var setPointTemp
+    const getDisplayTemp = (thermostat) => {
+      var displayTemp
       if (thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEAT') {
-        setPointTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].heatCelsius))
+        displayTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].heatCelsius))
       } else if (thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'COOL') {
-        setPointTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius))
+        displayTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius))
       } else if (thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEATCOOL') {
-        setPointTemp = 'H: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].heatCelsius)) + ', C: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius))
+        displayTemp = 'H: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].heatCelsius)) + ', C: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius))
       } else if (thermostat.traits["sdm.devices.traits.ThermostatEco"].mode === 'MANUAL_ECO') {
-        setPointTemp = 'H: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatEco"].heatCelsius)) + ', C: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatEco"].coolCelsius))
+        displayTemp = 'H: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatEco"].heatCelsius)) + ', C: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatEco"].coolCelsius))
       } else { //OFF
-        setPointTemp = 'Thermostat is off.'
+        displayTemp = 'Thermostat is off.'
       }
-      return setPointTemp
+      return displayTemp
     }
 
     const scrollToBottom = () => {
@@ -127,7 +127,7 @@ const Home = () => {
                           mode={thermostat.traits["sdm.devices.traits.ThermostatMode"].mode}
                           actualTempF={Math.round(CtoF(thermostat.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius))} 
                           actualTempC={Math.round(thermostat.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius)}
-                          setPointTempF={getSetPointTemp(thermostat)}
+                          setPointTempF={getDisplayTemp(thermostat)}
                           humidity={thermostat.traits["sdm.devices.traits.Humidity"].ambientHumidityPercent}
                          />
                       </Grid>
@@ -149,10 +149,7 @@ const Home = () => {
               </center>
               <div>
                 <Grow in={true}>
-                  { switched ? 
-                    <Button size="large" startIcon={<GoogleIcon />} color="primary" variant="outlined" onClick={() => login()}>Sign in to Google</Button> : 
-                    <Button size="large" startIcon={<GoogleIcon />} color="secondary" variant="contained" onClick={() => login()}>Sign in to Google</Button>
-                  }
+                    <Button size="large" startIcon={<GoogleIcon />} color={switched ? "primary" : "secondary"} variant={switched? "outlined" : "contained"} onClick={() => login()}>Sign in to Google</Button>
                 </Grow>
               </div>
             </Stack> 
