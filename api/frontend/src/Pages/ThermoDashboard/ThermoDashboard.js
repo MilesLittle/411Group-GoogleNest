@@ -498,8 +498,9 @@ const ThermoDashboard = () => {
                         </Grow>
                     ) : ( //heatcool or eco mode
                         <>
+                        <center> {/*lol, lmao even */}
                             <Grow in={true}>
-                                <Box sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', width: '40rem' }}>
+                                <Box sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', width: '40rem' }} mb={3}>
                                     <List>
                                         <ListItem>
                                             <ListItemText 
@@ -524,6 +525,7 @@ const ThermoDashboard = () => {
                                     </List>
                                 </Box>
                             </Grow>
+                            </center>
                             <Grow in={true}>
                                 <Box component="form" sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', padding: '1rem', marginBottom: '2rem', marginLeft: '20rem', marginRight: '20rem' }}>
                                     <Container>
@@ -552,14 +554,11 @@ const ThermoDashboard = () => {
                 </Grid>
                 <Grid item>
                     { device && 
-                        <>
-                            <Typography variant="h3">Your Jobs</Typography>
-                                <ToolTip title="Refresh Jobs" placement="right-start" onClick={() => { console.log('Refreshing jobs'); setJobRefresh(!jobRefresh); }}>
-                                    <div style={{ position: 'absolute', right: '30.5rem', bottom: '-3.9rem', cursor: 'pointer' }}> {/*Absolute styling is kinda jank but works well enough*/}
-                                        <RefreshIcon style={{ color: (switched ? '#7BF1A8' : '#1a1a1a')}} />
-                                    </div>
-                                </ToolTip>
-                        </>
+                        <ToolTip title="Refresh jobs" placement="right">
+                            <div style={{ cursor: 'pointer' }} onClick={() => { console.log('Refreshing jobs'); setJobRefresh(!jobRefresh); }}>
+                                <Typography variant="h3">Your Jobs</Typography>
+                            </div>
+                        </ToolTip>
                     }
                 </Grid>
                 <Grid item>
