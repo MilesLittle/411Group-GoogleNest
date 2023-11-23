@@ -278,13 +278,12 @@ def deleteLogJob(request, name): #keep request even if not used, fixes 500 got m
 def getLogJobs(request):
     googleId = request.GET['googleId']
     thermoId = request.GET['thermostatId']
-    try:
-        logsandjobs = Job.objects.prefetch_related('JobLogs').filter(GoogleId=googleId, ThermostatId=thermoId)
-        serializedlogsandjobs = JobSerializer(logsandjobs, many=True)
+    logsandjobs = Job.objects.prefetch_related('JobLogs').filter(GoogleId=googleId, ThermostatId=thermoId)
+    serializedlogsandjobs = JobSerializer(logsandjobs, many=True)
+    if logsandjobs.exists():
         return Response(data={'status': 200, 'message': 'Got the jobs and their logs', 'data': serializedlogsandjobs.data}, status=status.HTTP_200_OK)
-    except Job.DoesNotExist:
+    else:
         return Response(data={'status': 404, 'message': 'No jobs found for this thermostat created by the logged in user'}, status=status.HTTP_404_NOT_FOUND)
-    
 
 # won't need this. Just use refresh tokens within job logger to get access tokens
 """

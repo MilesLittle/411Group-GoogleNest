@@ -58,7 +58,7 @@ const ThermoDashboard = () => {
     const [alertOpen, setAlertOpen] = useState(false)
     const [deleteConfOpen, setDeleteConfOpen] = useState(false)
     const [addLogJobOpen, setAddLogJobOpen] = useState(false)
-    const [jobToDeleteId, setJobToDeleteId] = useState(null)
+    const [jobToDeleteId, setJobToDeleteId] = useState(null) //make state as jobToDeleteInfo useState({'Id': '', 'Name': ''})
     const [responseMessage, setResponseMessage] = useState('')
     const sliderValue = useRef(0)
 
@@ -130,7 +130,7 @@ const ThermoDashboard = () => {
             if (res.status === 200) {
                 console.log('Got the device')
                 console.log(res.data)
-                setDevice(res.data) //#1 would be loop, #5 would be loop back here
+                setDevice(res.data)
             }
         }).catch((err) => {
             console.log(err)
@@ -138,9 +138,8 @@ const ThermoDashboard = () => {
     }, [deviceRefresh])
 
     useEffect(() => { 
-        if (device != null) {
+        if (device) {
             if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "COOL" || device.traits["sdm.devices.traits.ThermostatMode"].mode === "HEAT") {
-                //setSetPointTemp(getSetPointTemp(device)) //#2 would be loop
                 console.log('Setting slider useRef')
                 sliderValue.current = getSetPointTemp(device)
             } else if (device.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEATCOOL' || device.traits["sdm.devices.traits.ThermostatEco"].mode === 'MANUAL_ECO') {
@@ -175,12 +174,12 @@ const ThermoDashboard = () => {
                 console.log(res)
             }
         }).catch((err) => {
-            if (err.status === 404) {
+            if (err.response.data.status === 404) {
                 console.log('No jobs exist, Not Found')
-                console.log(err.data)
-            } else if (err.status === 500) {
+                console.log(err.response.data)
+            } else if (err.response.data.status === 500) {
                 console.log("Server probably isn't started, Internal Server Error")
-                console.log(err.data)
+                console.log(err.response.data)
             } else {
                 console.log(err)
             }
@@ -205,7 +204,7 @@ const ThermoDashboard = () => {
                     console.log('Cool setpoint temp changed')
                     console.log(res) 
                     raiseResponseToast('Temperature successfully set.')
-                    setDeviceRefresh(!deviceRefresh) //#4 would be loop
+                    setDeviceRefresh(!deviceRefresh) 
                 }
             }).catch((err) => {
                 console.log(err)
@@ -228,7 +227,7 @@ const ThermoDashboard = () => {
                     console.log('Heat setpoint temp changed')
                     console.log(res)
                     raiseResponseToast('Temperature successfully set.')
-                    setDeviceRefresh(!deviceRefresh) //#4 would be loop
+                    setDeviceRefresh(!deviceRefresh)
                 }
             }).catch((err) => {
                 console.log(err)
@@ -242,14 +241,14 @@ const ThermoDashboard = () => {
     useEffect(() => {
         if (device) {
             const delay = setTimeout(() => {
-                sliderTempHandler() //#3 would be loop
+                sliderTempHandler() 
             }, 2000)
             return () => clearTimeout(delay)
         }
     }, [setPointTemp])
 
     const rangeTempHandler = () => {
-        alert(`Cool: ${Math.round(cool)}, Heat: ${Math.round(heat)}`) //convert to C
+        alert(`Cool: ${Math.round(cool)}, Heat: ${Math.round(heat)}`)
     }
 
     const deleteJob = async (id) => {
@@ -258,16 +257,18 @@ const ThermoDashboard = () => {
             if (res.status === 200) {
                 console.log('Successfully deleted the job')
                 console.log(res.data)
-                setJobRefresh(!jobRefresh)
+                setJobs(jobs.filter((job) => (job.Id !== id)))
                 setDeleteConfOpen(false)
                 setJobToDeleteId(null)
                 raiseResponseToast(res.data.message)
             }
         }).catch((err) => {
-           if (err.status === 404) {
+           if (err.response.data.status === 404) {
                 console.log('The job was not found')
-                console.log(err.data)
-                raiseResponseToast(err.data.message) //modal still up, will toast be seen?
+                console.log(err.response.data)
+                setDeleteConfOpen(false)
+                setJobToDeleteId(null)
+                raiseResponseToast(err.response.data.message)
                 //catch 500?
            } else {
                 console.log(err)
@@ -323,14 +324,16 @@ const ThermoDashboard = () => {
             }
         })
         .catch((err) => {
-            if (err.status === 400) {
+            if (err.response.data.status === 400) {
                 console.log('Bad request')
-                console.log(err.data)
-                raiseResponseToast(err.data.message) //modal still up, will toast be seen?
-            } else if (err.status === 500) {
+                console.log(err.response.data)
+                setAddLogJobOpen(false)
+                raiseResponseToast(err.response.data.message) 
+            } else if (err.response.data.status === 500) {
                 console.log('Internal Server Error')
-                console.log(err.data)
-                raiseResponseToast(err.data.message) //modal still up, will toast be seen?
+                console.log(err.response.data)
+                setAddLogJobOpen(false)
+                raiseResponseToast(err.response.data.message) 
             } else {
                 console.log(err)
             }
@@ -455,7 +458,7 @@ const ThermoDashboard = () => {
                     }
                 </Grid>
                 <Grid item>
-                    { device && ( //device in cool mode or heat mode
+                    { device && ( //device in cool mode or heat mode ((device && slider.current != 0) &&)
                     device.traits["sdm.devices.traits.ThermostatMode"].mode === 'COOL' || device.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEAT' ? ( 
                         <Grow in={true}>
                             <Grid container direction="row" justifyContent="center" alignItems="center" spacing={5} mb={5}>
@@ -498,7 +501,7 @@ const ThermoDashboard = () => {
                         </Grow>
                     ) : ( //heatcool or eco mode
                         <>
-                        <center> {/*lol, lmao even */}
+                            <center> {/*lol, lmao even */}
                             <Grow in={true}>
                                 <Box sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', width: '40rem' }} mb={3}>
                                     <List>
