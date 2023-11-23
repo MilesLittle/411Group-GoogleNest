@@ -158,6 +158,7 @@ const ThermoDashboard = () => {
     }, [deviceRefresh])
 
     useEffect(() => {
+
         axios.get(`/logjobs?googleId=${googleAccountInfo.id}&thermostatId=${deviceId}`)
         .then((res) => {
             if (res.status === 200) { 
@@ -166,7 +167,7 @@ const ThermoDashboard = () => {
                 convertedData = res.data.data
                 convertedData.forEach((jobanditslogs) => { //but when I comment out this block it somehow changes the res.data log even though its before this even runs
                     jobanditslogs.JobLogs.forEach((joblog) => {
-                        var formattedDate = moment(`${joblog.TimeLogged}`).format('llll') 
+                        var formattedDate = moment(`${joblog.TimeLogged}`).format('llll')
                         joblog.ActualTemp = Math.round(CtoF(joblog.ActualTemp))
                         joblog.SetPointTemp = Math.round(CtoF(joblog.SetPointTemp))
                         joblog.TimeLogged = formattedDate
@@ -180,6 +181,7 @@ const ThermoDashboard = () => {
         }).catch((err) => {
             console.log(err)
         })
+
     }, [jobRefresh])
 
     const tempHandler = async () => {
@@ -271,6 +273,10 @@ const ThermoDashboard = () => {
                     setResponseMessage('')
                 }, 5000)
             }
+
+            // reset chartData so chart isn't showing deleted logs
+            setChartData(null)
+
         }).catch((err) => {
             console.log(err)
         })
@@ -306,8 +312,42 @@ const ThermoDashboard = () => {
     useEffect(() => {
         console.log("jobs");
         console.log(jobs);
+
+        // for refresh
+        if (chartData != undefined && (jobs != undefined || jobs != null)) {
+            for (const job of jobs) {
+                if (chartData[0].JobId == job.Id) {
+                    setChartData(job.JobLogs)
+                }
+            }
+        }
+
     }, [jobs])
 
+    const getChartData = () => {
+        return chartData
+    }
+
+
+    // auto refresh collection of logs every minute for "real-time" graphs
+    useEffect(() => {
+
+        const jobRefreshInterval = setInterval(() => {
+
+            console.log("ping!")
+            setJobRefresh(refresh => !refresh)
+
+        }, 60000)
+
+        return () => {
+            clearInterval(jobRefreshInterval)
+        }
+
+    }, [])
+
+    useEffect(() => {
+        console.log(chartData)
+    }, [chartData])
 
     const OpenModal = () => {
         setOpen(true); 
@@ -320,6 +360,7 @@ const ThermoDashboard = () => {
     // restrict modal input
     const handleInput = (input) => {
         // find way to forbid ., e, +, - characters? input is a string, and TextField with type="number" allows those chars
+        // Should display error message if user tries to type those and non-integers
         input = Number(input) | 0   // cast so the number actually shows up in modal form. Bitwise OR to force integer
 
         // limit input. Somehow disallow user to submit log every 1 minute? That would be an excessive amount of logs
