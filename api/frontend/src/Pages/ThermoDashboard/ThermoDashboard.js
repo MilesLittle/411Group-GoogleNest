@@ -289,7 +289,7 @@ const ThermoDashboard = () => {
     }, [responseMessage])
 
     useEffect(() => {
-        if (jobToDeleteId != 0 && jobToDeleteId != null) {
+        if (jobToDeleteId !== 0 && jobToDeleteId != null) {
             setDeleteConfOpen(true)
         }
     }, [jobToDeleteId])
@@ -314,19 +314,15 @@ const ThermoDashboard = () => {
         console.log(jobs);
 
         // for refresh
-        if (chartData != undefined && (jobs != undefined || jobs != null)) {
+        if (chartData !== undefined && (jobs !== undefined || jobs != null)) {
             for (const job of jobs) {
-                if (chartData[0].JobId == job.Id) {
+                if (chartData[0].JobId === job.Id) {
                     setChartData(job.JobLogs)
                 }
             }
         }
 
     }, [jobs])
-
-    const getChartData = () => {
-        return chartData
-    }
 
 
     // auto refresh collection of logs every minute for "real-time" graphs
