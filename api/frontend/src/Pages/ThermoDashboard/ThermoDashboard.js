@@ -288,7 +288,7 @@ const ThermoDashboard = () => {
     }, [responseMessage])
 
     useEffect(() => {
-        if (jobToDeleteId !== 0 && jobToDeleteId != null) {
+        if (jobToDeleteId != null) {
             setDeleteConfOpen(true)
         }
     }, [jobToDeleteId])
@@ -309,7 +309,7 @@ const ThermoDashboard = () => {
         console.log(jobs);
 
         // for refresh
-        if (chartData !== undefined && (jobs !== undefined || jobs != null)) {
+        if (chartData !== undefined && chartData != null && jobs !== undefined && jobs != null) {
             for (const job of jobs) {
                 if (chartData[0].JobId === job.Id) {
                     setChartData(job.JobLogs)
@@ -339,14 +339,6 @@ const ThermoDashboard = () => {
     useEffect(() => {
         console.log(chartData)
     }, [chartData])
-
-    const OpenModal = () => {
-        setOpen(true); 
-    }
-
-    const CloseModal = () => {
-        setOpen(false); 
-    }
 
     // restrict modal input
     const handleInput = (input) => {
