@@ -62,6 +62,11 @@ const ThermoDashboard = () => {
     const [responseMessage, setResponseMessage] = useState('')
     const sliderValue = useRef(0)
 
+    // states for modal form submission
+    const [modalInput, setModalInput] = React.useState(60);
+    const [timeType, setTimeType] = React.useState(null);
+
+
     const CtoF = (cTemp) => {
         return (cTemp * 9/5) + 32
     }
@@ -293,10 +298,6 @@ const ThermoDashboard = () => {
         }
     }, [jobToDeleteId])
 
-    // states for modal form submission
-    const [modalInput, setModalInput] = React.useState(60);
-    const [timeType, setTimeType] = React.useState(null);
-
 
     useEffect(() => {
         console.log("modalInput = " + modalInput);
@@ -325,7 +326,6 @@ const ThermoDashboard = () => {
 
         const jobRefreshInterval = setInterval(() => {
 
-            console.log("ping!")
             setJobRefresh(refresh => !refresh)
 
         }, 60000)
@@ -342,15 +342,16 @@ const ThermoDashboard = () => {
 
     // restrict modal input
     const handleInput = (input) => {
-        // find way to forbid ., e, +, - characters? input is a string, and TextField with type="number" allows those chars
-        // Should display error message if user tries to type those and non-integers
+        
         input = Number(input) | 0   // cast so the number actually shows up in modal form. Bitwise OR to force integer
+
         // limit input. Somehow disallow user to submit log every 1 minute? That would be an excessive amount of logs
         if (input < 1) {
             input = null    // make sure null is not submitted in post request, or maybe make the modalInput state's purpose only for display, submit actual form value?
         } else if (input > 60) {
             input = 60
         }
+
         setModalInput(input)
     }
 
@@ -470,6 +471,7 @@ const ThermoDashboard = () => {
                                     fullWidth
                                     value={modalInput}
                                     onChange={(e) => handleInput(e.target.value)}
+                                    onKeyDown={(e) => { ['e','E','+','-','.',','].includes(e.key) && e.preventDefault()}}
                                     InputLabelProps={{shrink: true,}}
                                     inputProps={{ min: 1, max: 60 }}
                                 />
