@@ -155,12 +155,14 @@ def createLogJob(request):
     
     #print(request.data)
     jobname = request.data['name']
-    description = request.data['description']
     timeNum = int(request.data['number'])
     timeType = request.data['timeType']
     refresh_token = request.data['refresh_token']
     deviceId = request.data['deviceId']
     googleId = request.data['googleId']
+
+    timeTypeDesc = timeType if (timeNum > 1) else timeType.replace('s', "")    # just for neatness, prevents "1 days" or etc. for description
+    description = str(timeNum) + " " + timeTypeDesc
 
     print("access token in createLogJob: " + refresh_token)
 

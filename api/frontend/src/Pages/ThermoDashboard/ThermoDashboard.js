@@ -358,7 +358,6 @@ const ThermoDashboard = () => {
     const submitAddJob = async (data) => { //if blah blah blah wrong stuff, return; make sure nothing is empty. Render error text in modal? Trim whitespace
         const reqbody = {
             name: data.target.name.value,
-            description: data.target.description.value,
             number: data.target.number.value,
             timeType: data.target.timeType.value,
             refresh_token: nestTokens.refresh_token,
@@ -449,16 +448,6 @@ const ThermoDashboard = () => {
                                     margin="dense"
                                     fullWidth
                                     defaultValue={"Job name"}
-                                    InputLabelProps={{shrink: true}}
-                                    inputProps={{ max:200 }}
-                                />
-                                <TextField
-                                    id="job-description"
-                                    name="description"
-                                    label="Description"
-                                    type="text"
-                                    margin="dense"
-                                    fullWidth
                                     InputLabelProps={{shrink: true}}
                                     inputProps={{ max:200 }}
                                 />
