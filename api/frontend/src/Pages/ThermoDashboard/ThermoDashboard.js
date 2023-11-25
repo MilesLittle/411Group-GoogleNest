@@ -371,7 +371,7 @@ const ThermoDashboard = () => {
                 <Box sx={{ bgcolor: '#7BF1A8', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', p: 4, borderRadius: '1rem' }}>
                     <Grid container direction="column" spacing={2}>
                         <Grid item>
-                            <Typography variant="h4">Delete job</Typography>
+                            <Typography variant="h4">Delete Job</Typography>
                         </Grid>
                         <Grid item>
                             <Typography>Are you sure you want to delete the job {jobToDeleteInfo.Name}?</Typography>
@@ -391,6 +391,7 @@ const ThermoDashboard = () => {
                 </Fade>
             </Modal>
             {/* changeLog dialogue*/}
+            {/*
             <div style={{textAlign: 'center'}}>
                 <Dialog open={addLogJobOpen} onClose={() => setAddLogJobOpen(false)}>
                     <DialogTitle> Thermostat 1 Log Setting </DialogTitle>
@@ -443,6 +444,89 @@ const ThermoDashboard = () => {
                         </form>
                 </Dialog>
             </div>
+            */}
+            <Modal open={addLogJobOpen} onClose={() => setAddLogJobOpen(false)}>
+                <Fade in={addLogJobOpen}>
+                <Box sx={{ bgcolor: '#7BF1A8', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', p: 4, borderRadius: '1rem', width: '28rem' }}>
+                    <Grid container direction="column" spacing={2} pl={1}>
+                        <Grid item>
+                            <Typography variant="h4" mb={2}>Add Logging Job</Typography>
+                        </Grid>
+                        <form onSubmit={(e) => {e.preventDefault(); submitAddLogJob(e);}}>
+                            <Grid item>
+                                <Grid container direction="row" spacing={2} mb={1} alignItems="center">
+                                    <Grid item>
+                                        <Typography>Name:</Typography>
+                                    </Grid>
+                                    <Grid item>
+                                        <TextField
+                                        size="small"
+                                        color="secondary"
+                                        id="job-name"
+                                        name="name"
+                                        type="text"
+                                        margin="dense"
+                                        fullWidth
+                                        InputLabelProps={{shrink: true}}
+                                        inputProps={{ max:200 }}
+                                        />
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                            <Grid item>
+                                <Grid container direction="row" spacing={2} mb={2} alignItems="center">
+                                    <Grid item>
+                                        <Typography>Log the temperature every</Typography>
+                                    </Grid>
+                                    <Grid item>
+                                        <TextField
+                                        size="small"
+                                        color="secondary"
+                                        id="outlined-number"
+                                        name="number"
+                                        type="number"
+                                        margin="dense"
+                                        fullWidth
+                                        value={modalInput}
+                                        onChange={(e) => handleInput(e.target.value)}
+                                        InputLabelProps={{shrink: true,}}
+                                        inputProps={{ min: 1, max: 60 }}
+                                        />
+                                    </Grid>
+                                    <Grid item>
+                                        <TextField
+                                        size="small"
+                                        color="secondary"
+                                        id="select-time"
+                                        name="timeType"
+                                        select
+                                        defaultValue="days"
+                                        margin="dense"
+                                        >
+                                        {timeValues.map((option) => (
+                                            <MenuItem key={option.value} value={option.value}>
+                                                {option.label}
+                                            </MenuItem>
+                                        ))}
+                                        </TextField>
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                            <Grid item>
+                                <Grid container direction="row" alignItems="center" justifyContent="center" spacing={2} mt={0.5}>
+                                    <Grid item>
+                                        <Button variant="contained" color="error" onClick={() => setAddLogJobOpen(false)}>Cancel</Button>
+                                    </Grid>
+                                    <Grid item>
+                                        <Button variant="contained" color="success" type="submit" onClick={() => setAddLogJobOpen(false)}>Add Job</Button>
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                        </form>
+                    </Grid>
+                </Box>
+                </Fade>
+            </Modal>
             <Grid container direction="column" justifyContent="center" alignItems="center" mt={1} mb={3} spacing={3}>
                 <Grid item>
                     { device &&
@@ -497,9 +581,8 @@ const ThermoDashboard = () => {
                         </Grow>
                     ) : ( //heatcool or eco mode
                         <>
-                            <center> {/*lol, lmao even */}
                             <Grow in={true}>
-                                <Box sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', width: '40rem' }} mb={3}>
+                                <Box sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', marginLeft: '17rem', marginRight: '17rem' }} mb={3}>
                                     <List>
                                         <ListItem>
                                             <ListItemText 
@@ -524,7 +607,6 @@ const ThermoDashboard = () => {
                                     </List>
                                 </Box>
                             </Grow>
-                            </center>
                             <Grow in={true}>
                                 <Box component="form" sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', padding: '1rem', marginBottom: '2rem', marginLeft: '20rem', marginRight: '20rem' }}>
                                     <Container>
