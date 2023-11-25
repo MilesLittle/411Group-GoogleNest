@@ -29,12 +29,7 @@ import Fade from "@mui/material/Fade";
 import Slider from '@mui/material/Slider';
 import Stack from '@mui/material/Stack';
 import _debounce from 'lodash/debounce';
-import Paper from '@mui/material/Paper'; 
-import Dialog from '@mui/material/Dialog'
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
+import Paper from '@mui/material/Paper';
 import MenuItem from '@mui/material/MenuItem';
 
 axios.defaults.xsrfCookieName = 'csrftoken'
@@ -56,6 +51,7 @@ const ThermoDashboard = () => {
     const [alertOpen, setAlertOpen] = useState(false)
     const [deleteConfOpen, setDeleteConfOpen] = useState(false)
     const [addLogJobOpen, setAddLogJobOpen] = useState(false)
+    const [addSetJobOpen, setAddSetJobOpen] = useState(false)
     const [jobToDeleteInfo, setJobToDeleteInfo] = useState({ Id: null, Name: null })
     const [responseMessage, setResponseMessage] = useState('')
     const sliderValue = useRef(0)
@@ -345,6 +341,16 @@ const ThermoDashboard = () => {
             }
         })
     }
+
+    const submitAddSetJob = async (data) => {
+        const reqbody = {
+            name: data.target.name.value,
+            temperature: data.target.temperature.value,
+            number: data.target.number.value,
+            timeType: data.target.timeType.value
+        }
+        alert(`Name: ${reqbody.name}, Temperature: ${reqbody.temperature}, Number: ${reqbody.number}, Time Type: ${reqbody.timeType}`)
+    }
      
     const timeValues = [ // Time options 
         {
@@ -390,61 +396,6 @@ const ThermoDashboard = () => {
                 </Box>
                 </Fade>
             </Modal>
-            {/* changeLog dialogue*/}
-            {/*
-            <div style={{textAlign: 'center'}}>
-                <Dialog open={addLogJobOpen} onClose={() => setAddLogJobOpen(false)}>
-                    <DialogTitle> Thermostat 1 Log Setting </DialogTitle>
-                        <form onSubmit={(e) => {e.preventDefault(); submitAddLogJob(e);}}>
-                            <DialogContent>  
-                                <DialogContentText> Set the Log: </DialogContentText>
-                                <TextField
-                                    id="job-name"
-                                    name="name"
-                                    label="Job Name"
-                                    type="text"
-                                    margin="dense"
-                                    fullWidth
-                                    defaultValue={"Job name"}
-                                    InputLabelProps={{shrink: true}}
-                                    inputProps={{ max:200 }}
-                                />
-                                <TextField
-                                    id="outlined-number"
-                                    name="number"
-                                    label="Number"
-                                    type="number"
-                                    margin="dense"
-                                    fullWidth
-                                    value={modalInput}
-                                    onChange={(e) => handleInput(e.target.value)}
-                                    InputLabelProps={{shrink: true,}}
-                                    inputProps={{ min: 1, max: 60 }}
-                                />
-                                <TextField
-                                    id="select-time"
-                                    name="timeType"
-                                    select
-                                    label = "Select"
-                                    defaultValue="days"
-                                    helperText="Please Select a time"
-                                    margin="dense"
-                                >
-                                    {timeValues.map((option) => (
-                                        <MenuItem key={option.value} value={option.value}>
-                                            {option.label}
-                                        </MenuItem>
-                                    ))}
-                                </TextField>
-                            </DialogContent>
-                            <DialogActions> 
-                                <Button onClick={() => setAddLogJobOpen(false)} color="secondary"> Cancel </Button>
-                                <Button type="submit" onClick={() => setAddLogJobOpen(false)} color="primary"> Save </Button>
-                            </DialogActions>
-                        </form>
-                </Dialog>
-            </div>
-            */}
             <Modal open={addLogJobOpen} onClose={() => setAddLogJobOpen(false)}>
                 <Fade in={addLogJobOpen}>
                 <Box sx={{ bgcolor: '#7BF1A8', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', p: 4, borderRadius: '1rem', width: '28rem' }}>
@@ -519,6 +470,106 @@ const ThermoDashboard = () => {
                                     </Grid>
                                     <Grid item>
                                         <Button variant="contained" color="success" type="submit" onClick={() => setAddLogJobOpen(false)}>Add Job</Button>
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                        </form>
+                    </Grid>
+                </Box>
+                </Fade>
+            </Modal>
+            <Modal open={addSetJobOpen} onClose={() => setAddSetJobOpen(false)}>
+                <Fade in={addSetJobOpen}>
+                <Box sx={{ bgcolor: '#7BF1A8', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', p: 4, borderRadius: '1rem', width: '47rem' }}>
+                    <Grid container direction="column" spacing={2} pl={1}>
+                        <Grid item>
+                            <Typography variant="h4" mb={2}>Add Setting Job</Typography>
+                        </Grid>
+                        <form onSubmit={(e) => {e.preventDefault(); submitAddSetJob(e);}}>
+                            <Grid item>
+                                <Grid container direction="row" spacing={2} mb={1} alignItems="center">
+                                    <Grid item>
+                                        <Typography>Name:</Typography>
+                                    </Grid>
+                                    <Grid item>
+                                        <TextField
+                                        size="small"
+                                        color="secondary"
+                                        id="job-name"
+                                        name="name"
+                                        type="text"
+                                        margin="dense"
+                                        fullWidth
+                                        InputLabelProps={{shrink: true}}
+                                        inputProps={{ max:200 }}
+                                        />
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                            <Grid item>
+                                <Grid container direction="row" spacing={2} mb={2} alignItems="center">
+                                    <Grid item>
+                                        <Typography>Set the temperature to</Typography>
+                                    </Grid>
+                                    <Grid item>
+                                        <TextField
+                                        size="small"
+                                        color="secondary"
+                                        id="outlined-number"
+                                        name="temperature"
+                                        type="number"
+                                        margin="dense"
+                                        fullWidth
+                                        defaultValue={70}
+                                        onChange={(e) => handleInput(e.target.value)}
+                                        InputLabelProps={{shrink: true,}}
+                                        inputProps={{ min: 50, max: 90 }}
+                                        />
+                                    </Grid>
+                                    <Grid item>
+                                        <Typography>degrees Fahrenheit every</Typography>
+                                    </Grid>
+                                    <Grid item>
+                                        <TextField
+                                        size="small"
+                                        color="secondary"
+                                        id="outlined-number"
+                                        name="number"
+                                        type="number"
+                                        margin="dense"
+                                        fullWidth
+                                        defaultValue={60}
+                                        onChange={(e) => handleInput(e.target.value)}
+                                        InputLabelProps={{shrink: true,}}
+                                        inputProps={{ min: 1, max: 60 }} //conditionally render props based on timeType?
+                                        />
+                                    </Grid>
+                                    <Grid item>
+                                        <TextField
+                                        size="small"
+                                        color="secondary"
+                                        id="select-time"
+                                        name="timeType"
+                                        select
+                                        defaultValue="days"
+                                        margin="dense"
+                                        >
+                                        {timeValues.map((option) => (
+                                            <MenuItem key={option.value} value={option.value}>
+                                                {option.label}
+                                            </MenuItem>
+                                        ))}
+                                        </TextField>
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                            <Grid item>
+                                <Grid container direction="row" alignItems="center" justifyContent="center" spacing={2} mt={0.5}>
+                                    <Grid item>
+                                        <Button variant="contained" color="error" onClick={() => setAddSetJobOpen(false)}>Cancel</Button>
+                                    </Grid>
+                                    <Grid item>
+                                        <Button variant="contained" color="success" type="submit" onClick={() => setAddSetJobOpen(false)}>Add Job</Button>
                                     </Grid>
                                 </Grid>
                             </Grid>
@@ -809,7 +860,7 @@ const ThermoDashboard = () => {
                                         <Button variant={switched ? "outlined" : "contained"} color={switched ? "primary" : "secondary"} size="large" startIcon={<AddCircleIcon/>} onClick={() => setAddLogJobOpen(true)}>Add Logging Job</Button>
                                     </Grid>
                                     <Grid item>
-                                        <Button variant={switched ? "outlined" : "contained"} color={switched ? "primary" : "secondary"} size="large" startIcon={<AddCircleIcon/>}>Add Setting Job</Button>
+                                        <Button variant={switched ? "outlined" : "contained"} color={switched ? "primary" : "secondary"} size="large" startIcon={<AddCircleIcon/>} onClick={() => setAddSetJobOpen(true)}>Add Setting Job</Button>
                                     </Grid>
                                 </Grid> 
                             </Container>
