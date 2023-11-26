@@ -14,7 +14,7 @@ const AuthProvider = ({ children }) => {
   const project_id = 'f4f5bdc3-964c-466b-bf80-9508f2709ad5'
   const client_id = '589825515650-ej6sq8icgc3itevo7b731oes8q1tqk4u.apps.googleusercontent.com'
   const client_secret = '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'
-  const redirect_uri = 'http://localhost:3000'
+  const redirect_uri = 'https://tempwiseassistant.netlify.app/'
   const [code, setCode] = useState(null)
 
   var refresh
@@ -72,7 +72,7 @@ const AuthProvider = ({ children }) => {
           console.log(res.data)
           localStorage.setItem("googleAccountInfo", JSON.stringify(res.data))
           localStorage.setItem("authTokenDetails", JSON.stringify(authTokenDetails))
-          window.location.href = `https://nestservices.google.com/u/${authTokenDetails.authuser}/partnerconnections/f4f5bdc3-964c-466b-bf80-9508f2709ad5/auth?redirect_uri=http://localhost:3000&access_type=offline&prompt=consent&client_id=589825515650-ej6sq8icgc3itevo7b731oes8q1tqk4u.apps.googleusercontent.com&response_type=code&scope=https://www.googleapis.com/auth/sdm.service`;
+          window.location.href = `https://nestservices.google.com/u/${authTokenDetails.authuser}/partnerconnections/f4f5bdc3-964c-466b-bf80-9508f2709ad5/auth?_uredirectri=https://tempwiseassistant.netlify.app/&access_type=offline&prompt=consent&client_id=589825515650-ej6sq8icgc3itevo7b731oes8q1tqk4u.apps.googleusercontent.com&response_type=code&scope=https://www.googleapis.com/auth/sdm.service`;
         } else {
           console.log('Not OK')
         }
@@ -89,7 +89,7 @@ const AuthProvider = ({ children }) => {
         //also need code, can't submit old code for Nest tokens
         localStorage.setItem("googleAccountInfo", JSON.stringify(googleAccountInfo)) //so theres no errors accessing localStorage in useEffect #2
         localStorage.setItem("authTokenDetails", JSON.stringify(authTokenDetails))
-        window.location.href = `https://nestservices.google.com/u/${authTokenDetails.authuser}/partnerconnections/f4f5bdc3-964c-466b-bf80-9508f2709ad5/auth?redirect_uri=http://localhost:3000&access_type=offline&prompt=consent&client_id=589825515650-ej6sq8icgc3itevo7b731oes8q1tqk4u.apps.googleusercontent.com&response_type=code&scope=https://www.googleapis.com/auth/sdm.service`;
+        window.location.href = `https://nestservices.google.com/u/${authTokenDetails.authuser}/partnerconnections/f4f5bdc3-964c-466b-bf80-9508f2709ad5/auth?redirect_uri=https://tempwiseassistant.netlify.app/&access_type=offline&prompt=consent&client_id=589825515650-ej6sq8icgc3itevo7b731oes8q1tqk4u.apps.googleusercontent.com&response_type=code&scope=https://www.googleapis.com/auth/sdm.service`;
       }, 3600000) 
       console.log('Nest tokens timer set')
     }
