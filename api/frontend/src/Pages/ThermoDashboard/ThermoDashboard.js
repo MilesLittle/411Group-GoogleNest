@@ -54,6 +54,7 @@ const ThermoDashboard = () => {
     const [addSetJobOpen, setAddSetJobOpen] = useState(false)
     const [jobToDeleteInfo, setJobToDeleteInfo] = useState({ Id: null, Name: null })
     const [responseMessage, setResponseMessage] = useState('')
+    const [errors, setErrors] = useState(null)
     const sliderValue = useRef(0)
 
     const CtoF = (cTemp) => {
@@ -291,65 +292,112 @@ const ThermoDashboard = () => {
         }
     }, [jobToDeleteInfo])
 
-    // states for modal form submission
-    const [modalInput, setModalInput] = useState(60);
-    // restrict modal input
-    const handleInput = (input) => {
-        // find way to forbid ., e, +, - characters? input is a string, and TextField with type="number" allows those chars
-        input = Number(input) | 0   // cast so the number actually shows up in modal form. Bitwise OR to force integer
-        // limit input. Somehow disallow user to submit log every 1 minute? That would be an excessive amount of logs
-        if (input < 1) {
-            input = null    // make sure null is not submitted in post request, or maybe make the modalInput state's purpose only for display, submit actual form value?
-        } else if (input > 60) {
-            input = 60
-        }
-        setModalInput(input)
-    }
-
-    const submitAddLogJob = async (data) => { //if blah blah blah wrong stuff, return; make sure nothing is empty. Render error text in modal? Trim whitespace
+    const submitAddLogJob = async (data) => { 
         const reqbody = {
-            name: data.target.name.value,
+            name: data.target.name.value.trim(),
             number: data.target.number.value,
             timeType: data.target.timeType.value,
             refresh_token: nestTokens.refresh_token,
             deviceId: deviceId,
             googleId: googleAccountInfo.id,
         }
-        await axios.post(`/logjob`, reqbody)
-        .then((res) => {
-            if (res.status === 201) {
-                console.log('Successfully added the job')
-                console.log(res.data)
-                setJobRefresh(!jobRefresh)
-                setAddLogJobOpen(false)
-                raiseResponseToast(res.data.message)
-            }
-        })
-        .catch((err) => {
-            if (err.response.data.status === 400) {
-                console.log('Bad request')
-                console.log(err.response.data)
-                setAddLogJobOpen(false)
-                raiseResponseToast(err.response.data.message) 
-            } else if (err.response.data.status === 500) {
-                console.log('Internal Server Error')
-                console.log(err.response.data)
-                setAddLogJobOpen(false)
-                raiseResponseToast(err.response.data.message) 
-            } else {
-                console.log(err)
-            }
-        })
+
+        var errorlist = []
+        if (reqbody.name == '' || reqbody.name == null) {
+            errorlist.push('The job needs to have a name.')
+        }
+        if (reqbody.name.length > 50) {
+            errorlist.push('The name needs to be less than 50 characters.')
+        }
+        if (reqbody.number < 20 && reqbody.timeType == 'minutes') {
+            errorlist.push('The interval needs to be larger if the unit of time is minutes.')
+        }
+        if (reqbody.number <= 0) {
+            errorlist.push('The interval cannot be negative, empty, or 0.')
+        }
+
+        if (errorlist.length > 0) { 
+            console.log('Logging job: There are errors')
+            setErrors(errorlist)
+        } else {
+            console.log('Logging job: There are no errors')
+            setErrors(null)
+            await axios.post(`/logjob`, reqbody)
+            .then((res) => {
+                if (res.status === 201) {
+                    console.log('Successfully added the job')
+                    console.log(res.data)
+                    setJobRefresh(!jobRefresh)
+                    setAddLogJobOpen(false)
+                    raiseResponseToast(res.data.message)
+                }
+            })
+            .catch((err) => {
+                if (err.response.data.status === 400) {
+                    console.log('Bad request')
+                    console.log(err.response.data)
+                    setAddLogJobOpen(false)
+                    raiseResponseToast(err.response.data.message) 
+                } else if (err.response.data.status === 500) {
+                    console.log('Internal Server Error')
+                    console.log(err.response.data)
+                    setAddLogJobOpen(false)
+                    raiseResponseToast(err.response.data.message) 
+                } else if (err.response.status === 500) { //not from api view response, the 500 above is
+                    console.log("Server probably isn't started, Internal Server Error")
+                    console.log(err.response)
+                    setAddLogJobOpen(false)
+                    raiseResponseToast(err.response.data)
+                } else {
+                    console.log(err)
+                }
+            })
+        }
     }
 
     const submitAddSetJob = async (data) => {
         const reqbody = {
-            name: data.target.name.value,
+            name: data.target.name.value.trim(),
             temperature: data.target.temperature.value,
             number: data.target.number.value,
-            timeType: data.target.timeType.value
+            timeType: data.target.timeType.value,
+            refresh_token: nestTokens.refresh_token,
+            deviceId: deviceId,
+            googleId: googleAccountInfo.id
         }
-        alert(`Name: ${reqbody.name}, Temperature: ${reqbody.temperature}, Number: ${reqbody.number}, Time Type: ${reqbody.timeType}`)
+        //TextField type number already makes sure only whole numbers are entered, and 
+        //if its '60.' for example, the '.' is left out according to the alert() call further down
+        var errorlist = []
+        if (reqbody.name == '' || reqbody.name == null) {
+            errorlist.push('The job needs to have a name.')
+        }
+        if (reqbody.name.length > 50) {
+            errorlist.push('The name needs to be less than 50 characters.')
+        }
+        if (reqbody.temperature > 90 || reqbody.temperature < 50) {
+            errorlist.push('The temperature needs to be within 50 to 90 °F.')
+        }
+        if (reqbody.number < 20 && reqbody.timeType == 'minutes') {
+            errorlist.push('The interval needs to be larger if the unit of time is minutes.')
+        }
+        if (reqbody.number <= 0) {
+            errorlist.push('The interval cannot be negative, empty, or 0.')
+        }
+        //e, +, -, and . are allowed to be inputted because they are used in scientific notation. JS is smart
+        //enough to compare the scientific number to the allowed temperature range (50 to 90)
+        //e.g, 10e+1 is 100, and when submitted the correct error message for the temp not being in range of 50 to 90 comes up
+        //9e+1 is 90, so its in the range, so it is allowed to be submitted
+        //But will the API/DB recieve a scientific number correctly?
+        //e, +, -, and . being used on their own aren't allowed by the text field
+        if (errorlist.length > 0) { 
+            console.log('Setting job: There are errors')
+            setErrors(errorlist)
+        } else { //axios call goes in here
+            console.log('Setting job: There are no errors')
+            setErrors(null)
+            alert(`Name: ${reqbody.name}, Temperature: ${reqbody.temperature}, Number: ${reqbody.number}, Time Type: ${reqbody.timeType}, Google ID: ${reqbody.googleId}, Device ID: ${reqbody.deviceId}, Refresh Token: ${reqbody.refresh_token}`)
+            setAddSetJobOpen(false)
+        }
     }
      
     const timeValues = [ // Time options 
@@ -396,7 +444,7 @@ const ThermoDashboard = () => {
                 </Box>
                 </Fade>
             </Modal>
-            <Modal open={addLogJobOpen} onClose={() => setAddLogJobOpen(false)}>
+            <Modal open={addLogJobOpen} onClose={() => { setAddLogJobOpen(false); setErrors(null); }}>
                 <Fade in={addLogJobOpen}>
                 <Box sx={{ bgcolor: '#7BF1A8', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', p: 4, borderRadius: '1rem', width: '28rem' }}>
                     <Grid container direction="column" spacing={2} pl={1}>
@@ -419,7 +467,6 @@ const ThermoDashboard = () => {
                                         margin="dense"
                                         fullWidth
                                         InputLabelProps={{shrink: true}}
-                                        inputProps={{ max:200 }}
                                         />
                                     </Grid>
                                 </Grid>
@@ -438,10 +485,9 @@ const ThermoDashboard = () => {
                                         type="number"
                                         margin="dense"
                                         fullWidth
-                                        value={modalInput}
-                                        onChange={(e) => handleInput(e.target.value)}
+                                        defaultValue={60}
+                                        sx={{ width: '5rem' }}
                                         InputLabelProps={{shrink: true,}}
-                                        inputProps={{ min: 1, max: 60 }}
                                         />
                                     </Grid>
                                     <Grid item>
@@ -464,12 +510,21 @@ const ThermoDashboard = () => {
                                 </Grid>
                             </Grid>
                             <Grid item>
+                                <ul style={{ color: '#d32f2f' }}>
+                                    { errors && (
+                                        errors.map((error) => (
+                                            <li>{error}</li>
+                                        ))
+                                    )}
+                                </ul>
+                            </Grid>
+                            <Grid item>
                                 <Grid container direction="row" alignItems="center" justifyContent="center" spacing={2} mt={0.5}>
                                     <Grid item>
-                                        <Button variant="contained" color="error" onClick={() => setAddLogJobOpen(false)}>Cancel</Button>
+                                        <Button variant="contained" color="error" onClick={() => { setAddLogJobOpen(false); setErrors(null); }}>Cancel</Button>
                                     </Grid>
                                     <Grid item>
-                                        <Button variant="contained" color="success" type="submit" onClick={() => setAddLogJobOpen(false)}>Add Job</Button>
+                                        <Button variant="contained" color="success" type="submit">Add Job</Button>
                                     </Grid>
                                 </Grid>
                             </Grid>
@@ -478,9 +533,9 @@ const ThermoDashboard = () => {
                 </Box>
                 </Fade>
             </Modal>
-            <Modal open={addSetJobOpen} onClose={() => setAddSetJobOpen(false)}>
+            <Modal open={addSetJobOpen} onClose={() => { setAddSetJobOpen(false); setErrors(null); }}>
                 <Fade in={addSetJobOpen}>
-                <Box sx={{ bgcolor: '#7BF1A8', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', p: 4, borderRadius: '1rem', width: '47rem' }}>
+                <Box sx={{ bgcolor: '#7BF1A8', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', p: 4, borderRadius: '1rem', width: '42rem' }}>
                     <Grid container direction="column" spacing={2} pl={1}>
                         <Grid item>
                             <Typography variant="h4" mb={2}>Add Setting Job</Typography>
@@ -501,7 +556,6 @@ const ThermoDashboard = () => {
                                         margin="dense"
                                         fullWidth
                                         InputLabelProps={{shrink: true}}
-                                        inputProps={{ max:200 }}
                                         />
                                     </Grid>
                                 </Grid>
@@ -521,9 +575,8 @@ const ThermoDashboard = () => {
                                         margin="dense"
                                         fullWidth
                                         defaultValue={70}
-                                        onChange={(e) => handleInput(e.target.value)}
-                                        InputLabelProps={{shrink: true,}}
-                                        inputProps={{ min: 50, max: 90 }}
+                                        InputLabelProps={{shrink: true}}
+                                        sx={{ width: '5rem' }}
                                         />
                                     </Grid>
                                     <Grid item>
@@ -539,9 +592,8 @@ const ThermoDashboard = () => {
                                         margin="dense"
                                         fullWidth
                                         defaultValue={60}
-                                        onChange={(e) => handleInput(e.target.value)}
-                                        InputLabelProps={{shrink: true,}}
-                                        inputProps={{ min: 1, max: 60 }} //conditionally render props based on timeType?
+                                        InputLabelProps={{shrink: true}}
+                                        sx={{ width: '5rem' }}
                                         />
                                     </Grid>
                                     <Grid item>
@@ -564,12 +616,21 @@ const ThermoDashboard = () => {
                                 </Grid>
                             </Grid>
                             <Grid item>
+                                <ul style={{ color: '#d32f2f' }}>
+                                    { errors && (
+                                        errors.map((error) => (
+                                            <li>{error}</li>
+                                        ))
+                                    )}
+                                </ul>
+                            </Grid>
+                            <Grid item>
                                 <Grid container direction="row" alignItems="center" justifyContent="center" spacing={2} mt={0.5}>
                                     <Grid item>
-                                        <Button variant="contained" color="error" onClick={() => setAddSetJobOpen(false)}>Cancel</Button>
+                                        <Button variant="contained" color="error" onClick={() => { setAddSetJobOpen(false); setErrors(null); }}>Cancel</Button>
                                     </Grid>
                                     <Grid item>
-                                        <Button variant="contained" color="success" type="submit" onClick={() => setAddSetJobOpen(false)}>Add Job</Button>
+                                        <Button variant="contained" color="success" type="submit">Add Job</Button> 
                                     </Grid>
                                 </Grid>
                             </Grid>
