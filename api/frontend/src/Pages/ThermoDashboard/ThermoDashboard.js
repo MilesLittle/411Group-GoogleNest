@@ -449,10 +449,41 @@ const ThermoDashboard = () => {
     }
 
     const submitAddSettingJob = async (data) => {
-        console.log(data.target.name.value)
-        console.log(data.target.number.value)
-        console.log(data.target.setTemp.value)
-        console.log(data.target.timeType.value)
+        const reqbody = {
+            name: data.target.name.value,
+            setTemp: data.target.setTemp.value,
+            number: data.target.number.value,
+            timeType: data.target.timeType.value,
+            refresh_token: nestTokens.refresh_token,
+            deviceId: deviceId,
+            googleId: googleAccountInfo.id,
+        }
+
+        await axios.post(`/setjob`, reqbody)
+        .then((res) => {
+            if (res.status === 201) {
+                console.log('Successfully added the job')
+                console.log(res.data)
+                setJobRefresh(!jobRefresh)
+                setAddLogJobOpen(false)
+                raiseResponseToast(res.data.message)
+            }
+        })
+        .catch((err) => {
+            if (err.response.data.status === 400) {
+                console.log('Bad request')
+                console.log(err.response.data)
+                setAddLogJobOpen(false)
+                raiseResponseToast(err.response.data.message) 
+            } else if (err.response.data.status === 500) {
+                console.log('Internal Server Error')
+                console.log(err.response.data)
+                setAddLogJobOpen(false)
+                raiseResponseToast(err.response.data.message) 
+            } else {
+                console.log(err)
+            }
+        })
 
     }
      
@@ -522,7 +553,7 @@ const ThermoDashboard = () => {
                                 <TextField
                                     id="outlined-number"
                                     name="number"
-                                    label="Number"
+                                    label="Interval"
                                     type="number"
                                     margin="dense"
                                     fullWidth
@@ -576,7 +607,7 @@ const ThermoDashboard = () => {
                                 <TextField
                                     id="outlined-number"
                                     name="setTemp"
-                                    label="Set Temp"
+                                    label="Set Temperature"
                                     type="number"
                                     margin="dense"
                                     fullWidth
