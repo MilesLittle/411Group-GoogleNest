@@ -53,10 +53,8 @@ const Home = () => {
     }, [thermostats])
 
     function getDeviceId(id) { //grab the actual device-id out the name property
-      //console.log(id)
       const regex = new RegExp('(?<=\/devices\/).*$');
       const found = id.match(regex);
-      //console.log(found)
       let returnFound = found[0].replace('/', '')
       return returnFound;
     }

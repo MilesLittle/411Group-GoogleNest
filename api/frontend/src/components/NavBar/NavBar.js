@@ -13,7 +13,8 @@ import DarkModeSwitchContext from '../../Theming/DarkModeSwitchContext';
 import { Link } from 'react-router-dom';
 import { useGoogleLogin } from "@react-oauth/google";
 import { useNavigate } from 'react-router-dom';
-import tempwiseLogo from "./Ashton's friend's logo.jpg";
+import TempWiseLogoGreenBG from "./Ashton's friend's logo black n green.jpg"
+import TempWiseLogoColored from "./Ashton's friend's logo with green background.jpg"
 
 const NavBar = () => {
   const { setAuthTokenDetails, googleAccountInfo, setHasAuth } = useContext(AuthContext)
@@ -37,7 +38,7 @@ const NavBar = () => {
           <Grid item>
             <div onClick={() => navigate("/")} style={{ cursor: 'pointer'}}>
               <img 
-                src={tempwiseLogo} 
+                src={TempWiseLogoColored} 
                 alt="I'M NOT GOING TO SUGARCOAT IT"
                 style={{ borderRadius: '0.5rem', width: '3rem', height: '3rem' }} 
               />
