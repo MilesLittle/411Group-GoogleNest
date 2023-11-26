@@ -239,10 +239,14 @@ def createLogJob(request):
         else:
             print("job is fake!!" + job)
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
-    jobId = newJob()
-    print(Job.objects.get(pk=jobId))
-    return saveJob(jobId, refresh_token)
+        
+    alljobsbyuser = Job.objects.filter(GoogleId=googleId)
+    if alljobsbyuser.count() == 3: #Is 3 a good number of jobs a user can have? The query above is counting ALL jobs of a user, not just the ones on a single thermostat. It's == 3 and not >= 3 bc if this code is working correctly, no one should have more than 3 jobs (unless we change the limit).
+        return Response(data={'status': 400, 'message': "Your account is at its limit of 3 jobs. Try deleting one before making another."}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        jobId = newJob()
+        print(Job.objects.get(pk=jobId))
+        return saveJob(jobId, refresh_token)
 
 
 @api_view(['POST'])

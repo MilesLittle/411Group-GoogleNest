@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState, useRef } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Grow from "@mui/material/Grow";
 import Typography from '@mui/material/Typography';
@@ -29,13 +29,9 @@ import Fade from "@mui/material/Fade";
 import Slider from '@mui/material/Slider';
 import Stack from '@mui/material/Stack';
 import _debounce from 'lodash/debounce';
-import Paper from '@mui/material/Paper'; 
-import Dialog from '@mui/material/Dialog'
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
+import Paper from '@mui/material/Paper';
 import MenuItem from '@mui/material/MenuItem';
+import testarray from "./TestArray";
 
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
@@ -52,14 +48,15 @@ const ThermoDashboard = () => {
     const [deviceRefresh, setDeviceRefresh] = useState(false)
     const [jobRefresh, setJobRefresh] = useState(false)
     const [jobs, setJobs] = useState(null)
-    const [chartData, setChartData] = useState(null) 
+    const [chartData, setChartData] = useState(testarray) //useState(null) normally
     const [alertOpen, setAlertOpen] = useState(false)
     const [deleteConfOpen, setDeleteConfOpen] = useState(false)
     const [addLogJobOpen, setAddLogJobOpen] = useState(false)
     const [addSetJobOpen, setAddSetJobOpen] = useState(false)
     const [jobToDeleteInfo, setJobToDeleteInfo] = useState({ Id: null, Name: null })
     const [responseMessage, setResponseMessage] = useState('')
-    const sliderValue = useRef(0)
+    const [errors, setErrors] = useState(null)
+    const [sliderDisplayValue, setSliderDisplayValue] = useState(0)
 
     // states for modal form submission
     const [modalInput, setModalInput] = React.useState(60);
@@ -144,8 +141,9 @@ const ThermoDashboard = () => {
     useEffect(() => { 
         if (device) {
             if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "COOL" || device.traits["sdm.devices.traits.ThermostatMode"].mode === "HEAT") {
-                console.log('Setting slider useRef')
-                sliderValue.current = getSetPointTemp(device)
+                console.log('Setting slider value')
+                setSliderDisplayValue(getSetPointTemp(device)) //state that doesn't live in any dependency array so there's no side effect issues
+                console.log(`sliderValue: ${sliderDisplayValue}`) 
             } else if (device.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEATCOOL' || device.traits["sdm.devices.traits.ThermostatEco"].mode === 'MANUAL_ECO') {
                 console.log('Setting temp range')
                 var temps = getRangeTemps(device)
@@ -287,7 +285,6 @@ const ThermoDashboard = () => {
                 setDeleteConfOpen(false)
                 setJobToDeleteInfo({ Id: null, Name: null })
                 raiseResponseToast(err.response.data.message)
-                //catch 500?
            } else {
                 console.log(err)
            }
@@ -414,38 +411,110 @@ const ThermoDashboard = () => {
 
     const submitAddLogJob = async (data) => { //if blah blah blah wrong stuff, return; make sure nothing is empty. Render error text in modal? Trim whitespace
         const reqbody = {
-            name: data.target.name.value,
+            name: data.target.name.value.trim(),
             number: data.target.number.value,
             timeType: data.target.timeType.value,
             refresh_token: nestTokens.refresh_token,
             deviceId: deviceId,
             googleId: googleAccountInfo.id,
         }
-        await axios.post(`/logjob`, reqbody)
-        .then((res) => {
-            if (res.status === 201) {
-                console.log('Successfully added the job')
-                console.log(res.data)
-                setJobRefresh(!jobRefresh)
-                setAddLogJobOpen(false)
-                raiseResponseToast(res.data.message)
-            }
-        })
-        .catch((err) => {
-            if (err.response.data.status === 400) {
-                console.log('Bad request')
-                console.log(err.response.data)
-                setAddLogJobOpen(false)
-                raiseResponseToast(err.response.data.message) 
-            } else if (err.response.data.status === 500) {
-                console.log('Internal Server Error')
-                console.log(err.response.data)
-                setAddLogJobOpen(false)
-                raiseResponseToast(err.response.data.message) 
-            } else {
-                console.log(err)
-            }
-        })
+
+        var errorlist = []
+        if (reqbody.name == '' || reqbody.name == null) {
+            errorlist.push('The job needs to have a name.')
+        }
+        if (reqbody.name.length > 50) {
+            errorlist.push('The name needs to be less than 50 characters.')
+        }
+        if (reqbody.number < 20 && reqbody.timeType == 'minutes') {
+            errorlist.push('The interval needs to be larger if the unit of time is minutes.')
+        }
+        if (reqbody.number <= 0) {
+            errorlist.push('The interval cannot be negative, empty, or 0.')
+        }
+
+        if (errorlist.length > 0) { 
+            console.log('Logging job: There are errors')
+            setErrors(errorlist)
+        } else {
+            console.log('Logging job: There are no errors')
+            setErrors(null)
+            await axios.post(`/logjob`, reqbody)
+            .then((res) => {
+                if (res.status === 201) {
+                    console.log('Successfully added the job')
+                    console.log(res.data)
+                    setJobRefresh(!jobRefresh)
+                    setAddLogJobOpen(false)
+                    raiseResponseToast(res.data.message)
+                }
+            })
+            .catch((err) => {
+                if (err.response.data.status === 400) {
+                    console.log('Bad request')
+                    console.log(err.response.data)
+                    setAddLogJobOpen(false)
+                    raiseResponseToast(err.response.data.message) 
+                } else if (err.response.data.status === 500) { //500 from API view (createLogJob()) Email emptynestgroup automatically here?
+                    console.log('Internal Server Error')
+                    console.log(err.response.data)
+                    setAddLogJobOpen(false)
+                    raiseResponseToast(err.response.data.message) 
+                } else if (err.response.status === 500) { //500 not from API view, from Axios only (If server isn't running)
+                    console.log("Server probably isn't started, Internal Server Error")
+                    console.log(err.response)
+                    setAddLogJobOpen(false)
+                    raiseResponseToast(err.response.data)
+                } else {
+                    console.log(err)
+                }
+            })
+        }
+    }
+
+    const submitAddSetJob = async (data) => {
+        const reqbody = {
+            name: data.target.name.value.trim(),
+            temperature: data.target.temperature.value,
+            number: data.target.number.value,
+            timeType: data.target.timeType.value,
+            refresh_token: nestTokens.refresh_token,
+            deviceId: deviceId,
+            googleId: googleAccountInfo.id
+        }
+        //TextField type number already makes sure only whole numbers are entered, and 
+        //if its '60.' for example, the '.' is left out according to the alert() call further down
+        var errorlist = []
+        if (reqbody.name == '' || reqbody.name == null) {
+            errorlist.push('The job needs to have a name.')
+        }
+        if (reqbody.name.length > 50) {
+            errorlist.push('The name needs to be less than 50 characters.')
+        }
+        if (reqbody.temperature > 90 || reqbody.temperature < 50) {
+            errorlist.push('The temperature needs to be within 50 to 90 °F.')
+        }
+        if (reqbody.number < 20 && reqbody.timeType == 'minutes') {
+            errorlist.push('The interval needs to be larger if the unit of time is minutes.')
+        }
+        if (reqbody.number <= 0) {
+            errorlist.push('The interval cannot be negative, empty, or 0.')
+        }
+        //e, +, -, and . are allowed to be inputted because they are used in scientific notation. JS is smart
+        //enough to compare the scientific number to the allowed temperature range (50 to 90)
+        //e.g, 10e+1 is 100, and when submitted the correct error message for the temp not being in range of 50 to 90 comes up
+        //9e+1 is 90, so its in the range, so it is allowed to be submitted
+        //But will the API/DB recieve a scientific number correctly?
+        //e, +, -, and . being used on their own aren't allowed by the text field
+        if (errorlist.length > 0) { 
+            console.log('Setting job: There are errors')
+            setErrors(errorlist)
+        } else { //axios call goes in here
+            console.log('Setting job: There are no errors')
+            setErrors(null)
+            alert(`Name: ${reqbody.name}, Temperature: ${reqbody.temperature}, Number: ${reqbody.number}, Time Type: ${reqbody.timeType}, Google ID: ${reqbody.googleId}, Device ID: ${reqbody.deviceId}, Refresh Token: ${reqbody.refresh_token}`)
+            setAddSetJobOpen(false)
+        }
     }
 
     const submitAddSettingJob = async (data) => {
@@ -513,7 +582,7 @@ const ThermoDashboard = () => {
                 <Box sx={{ bgcolor: '#7BF1A8', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', p: 4, borderRadius: '1rem' }}>
                     <Grid container direction="column" spacing={2}>
                         <Grid item>
-                            <Typography variant="h4">Delete job</Typography>
+                            <Typography variant="h4">Delete Job</Typography>
                         </Grid>
                         <Grid item>
                             <Typography>Are you sure you want to delete the job {jobToDeleteInfo.Name}?</Typography>
@@ -532,127 +601,201 @@ const ThermoDashboard = () => {
                 </Box>
                 </Fade>
             </Modal>
-            {/* Form for Log Job */}
-            <div style={{textAlign: 'center'}}>
-                <Dialog open={addLogJobOpen} onClose={() => setAddLogJobOpen(false)}>
-                    <DialogTitle> Thermostat Log Job </DialogTitle>
+            <Modal open={addLogJobOpen} onClose={() => { setAddLogJobOpen(false); setErrors(null); }}>
+                <Fade in={addLogJobOpen}>
+                <Box sx={{ bgcolor: '#7BF1A8', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', p: 4, borderRadius: '1rem', width: '28rem' }}>
+                    <Grid container direction="column" spacing={2} pl={1}>
+                        <Grid item>
+                            <Typography variant="h4" mb={2}>Add Logging Job</Typography>
+                        </Grid>
                         <form onSubmit={(e) => {e.preventDefault(); submitAddLogJob(e);}}>
-                            <DialogContent>  
-                                <DialogContentText> Set the Logging Job: </DialogContentText>
-                                <TextField
-                                    id="job-name"
-                                    name="name"
-                                    label="Job Name"
-                                    type="text"
-                                    margin="dense"
-                                    fullWidth
-                                    defaultValue={"Job name"}
-                                    InputLabelProps={{shrink: true}}
-                                    inputProps={{ max:200 }}
-                                />
-                                <TextField
-                                    id="outlined-number"
-                                    name="number"
-                                    label="Interval"
-                                    type="number"
-                                    margin="dense"
-                                    fullWidth
-                                    value={modalInput}
-                                    onChange={(e) => handleInput(e.target.value)}
-                                    onKeyDown={(e) => { ['e','E','+','-','.',','].includes(e.key) && e.preventDefault()}}
-                                    InputLabelProps={{shrink: true,}}
-                                    inputProps={{ min: 1, max: 60 }}
-                                />
-                                <TextField
-                                    id="select-time"
-                                    name="timeType"
-                                    select
-                                    label = "Select"
-                                    defaultValue="days"
-                                    helperText="Please select a time interval"
-                                    margin="dense"
-                                >
-                                    {timeValues.map((option) => (
-                                        <MenuItem key={option.value} value={option.value}>
-                                            {option.label}
-                                        </MenuItem>
-                                    ))}
-                                </TextField>
-                            </DialogContent>
-                            <DialogActions> 
-                                <Button onClick={() => setAddLogJobOpen(false)} color="secondary"> Cancel </Button>
-                                <Button type="submit" onClick={() => setAddLogJobOpen(false)} color="primary"> Save </Button>
-                            </DialogActions>
+                            <Grid item>
+                                <Grid container direction="row" spacing={2} mb={1} alignItems="center">
+                                    <Grid item>
+                                        <Typography>Name:</Typography>
+                                    </Grid>
+                                    <Grid item>
+                                        <TextField
+                                        size="small"
+                                        color="secondary"
+                                        id="job-name"
+                                        name="name"
+                                        type="text"
+                                        margin="dense"
+                                        fullWidth
+                                        InputLabelProps={{shrink: true}}
+                                        />
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                            <Grid item>
+                                <Grid container direction="row" spacing={2} mb={2} alignItems="center">
+                                    <Grid item>
+                                        <Typography>Log the temperature every</Typography>
+                                    </Grid>
+                                    <Grid item>
+                                        <TextField
+                                        size="small"
+                                        color="secondary"
+                                        id="outlined-number"
+                                        name="number"
+                                        type="number"
+                                        margin="dense"
+                                        fullWidth
+                                        defaultValue={60}
+                                        sx={{ width: '5rem' }}
+                                        InputLabelProps={{shrink: true,}}
+                                        />
+                                    </Grid>
+                                    <Grid item>
+                                        <TextField
+                                        size="small"
+                                        color="secondary"
+                                        id="select-time"
+                                        name="timeType"
+                                        select
+                                        defaultValue="days"
+                                        margin="dense"
+                                        >
+                                        {timeValues.map((option) => (
+                                            <MenuItem key={option.value} value={option.value}>
+                                                {option.label}
+                                            </MenuItem>
+                                        ))}
+                                        </TextField>
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                            <Grid item>
+                                <ul style={{ color: '#d32f2f' }}>
+                                    { errors && (
+                                        errors.map((error) => (
+                                            <li>{error}</li>
+                                        ))
+                                    )}
+                                </ul>
+                            </Grid>
+                            <Grid item>
+                                <Grid container direction="row" alignItems="center" justifyContent="center" spacing={2} mt={0.5}>
+                                    <Grid item>
+                                        <Button variant="contained" color="error" onClick={() => { setAddLogJobOpen(false); setErrors(null); }}>Cancel</Button>
+                                    </Grid>
+                                    <Grid item>
+                                        <Button variant="contained" color="success" type="submit">Add Job</Button>
+                                    </Grid>
+                                </Grid>
+                            </Grid>
                         </form>
-                </Dialog>
-            </div>
-            {/* Form for Setting Job */}
-            <div style={{textAlign: 'center'}}>
-                <Dialog open={addSetJobOpen} onClose={() => setAddSetJobOpen(false)}>
-                    <DialogTitle> Thermostat Setting Job </DialogTitle>
-                        <form onSubmit={(e) => {e.preventDefault(); submitAddSettingJob(e);}}>
-                            <DialogContent>  
-                                <DialogContentText> Set the Setting Job: </DialogContentText>
-                                <TextField
-                                    id="job-name"
-                                    name="name"
-                                    label="Job Name"
-                                    type="text"
-                                    margin="dense"
-                                    fullWidth
-                                    defaultValue={"Job name"}
-                                    InputLabelProps={{shrink: true}}
-                                    inputProps={{ max:200 }}
-                                />
-                                <TextField
-                                    id="outlined-number"
-                                    name="setTemp"
-                                    label="Set Temperature"
-                                    type="number"
-                                    margin="dense"
-                                    fullWidth
-                                    value={settingModalInput}
-                                    onChange={(e) => handleSettingInput(e.target.value)}
-                                    onKeyDown={(e) => { ['e','E','+','-','.',','].includes(e.key) && e.preventDefault()}}
-                                    InputLabelProps={{shrink: true,}}
-                                    inputProps={{ min: 50, max: 90 }}
-                                />
-                                <TextField
-                                    id="outlined-number"
-                                    name="number"
-                                    label="Interval"
-                                    type="number"
-                                    margin="dense"
-                                    fullWidth
-                                    value={modalInput}
-                                    onChange={(e) => handleInput(e.target.value)}
-                                    onKeyDown={(e) => { ['e','E','+','-','.',','].includes(e.key) && e.preventDefault()}}
-                                    InputLabelProps={{shrink: true,}}
-                                    inputProps={{ min: 1, max: 60 }}
-                                />
-                                <TextField
-                                    id="select-time"
-                                    name="timeType"
-                                    select
-                                    label = "Select"
-                                    defaultValue="days"
-                                    helperText="Please select a time interval"
-                                    margin="dense"
-                                >
-                                    {timeValues.map((option) => (
-                                        <MenuItem key={option.value} value={option.value}>
-                                            {option.label}
-                                        </MenuItem>
-                                    ))}
-                                </TextField>
-                            </DialogContent>
-                            <DialogActions> 
-                                <Button onClick={() => setAddSetJobOpen(false)} color="secondary"> Cancel </Button>
-                                <Button type="submit" onClick={() => setAddSetJobOpen(false)} color="primary"> Save </Button>
-                            </DialogActions>
+                    </Grid>
+                </Box>
+                </Fade>
+            </Modal>
+            <Modal open={addSetJobOpen} onClose={() => { setAddSetJobOpen(false); setErrors(null); }}>
+                <Fade in={addSetJobOpen}>
+                <Box sx={{ bgcolor: '#7BF1A8', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', p: 4, borderRadius: '1rem', width: '42rem' }}>
+                    <Grid container direction="column" spacing={2} pl={1}>
+                        <Grid item>
+                            <Typography variant="h4" mb={2}>Add Setting Job</Typography>
+                        </Grid>
+                        <form onSubmit={(e) => {e.preventDefault(); submitAddSetJob(e);}}>
+                            <Grid item>
+                                <Grid container direction="row" spacing={2} mb={1} alignItems="center">
+                                    <Grid item>
+                                        <Typography>Name:</Typography>
+                                    </Grid>
+                                    <Grid item>
+                                        <TextField
+                                        size="small"
+                                        color="secondary"
+                                        id="job-name"
+                                        name="name"
+                                        type="text"
+                                        margin="dense"
+                                        fullWidth
+                                        InputLabelProps={{shrink: true}}
+                                        />
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                            <Grid item>
+                                <Grid container direction="row" spacing={2} mb={2} alignItems="center">
+                                    <Grid item>
+                                        <Typography>Set the temperature to</Typography>
+                                    </Grid>
+                                    <Grid item>
+                                        <TextField
+                                        size="small"
+                                        color="secondary"
+                                        id="outlined-number"
+                                        name="temperature"
+                                        type="number"
+                                        margin="dense"
+                                        fullWidth
+                                        defaultValue={70}
+                                        InputLabelProps={{shrink: true}}
+                                        sx={{ width: '5rem' }}
+                                        />
+                                    </Grid>
+                                    <Grid item>
+                                        <Typography>degrees Fahrenheit every</Typography>
+                                    </Grid>
+                                    <Grid item>
+                                        <TextField
+                                        size="small"
+                                        color="secondary"
+                                        id="outlined-number"
+                                        name="number"
+                                        type="number"
+                                        margin="dense"
+                                        fullWidth
+                                        defaultValue={60}
+                                        InputLabelProps={{shrink: true}}
+                                        sx={{ width: '5rem' }}
+                                        />
+                                    </Grid>
+                                    <Grid item>
+                                        <TextField
+                                        size="small"
+                                        color="secondary"
+                                        id="select-time"
+                                        name="timeType"
+                                        select
+                                        defaultValue="days"
+                                        margin="dense"
+                                        >
+                                        {timeValues.map((option) => (
+                                            <MenuItem key={option.value} value={option.value}>
+                                                {option.label}
+                                            </MenuItem>
+                                        ))}
+                                        </TextField>
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                            <Grid item>
+                                <ul style={{ color: '#d32f2f' }}>
+                                    { errors && (
+                                        errors.map((error) => (
+                                            <li>{error}</li>
+                                        ))
+                                    )}
+                                </ul>
+                            </Grid>
+                            <Grid item>
+                                <Grid container direction="row" alignItems="center" justifyContent="center" spacing={2} mt={0.5}>
+                                    <Grid item>
+                                        <Button variant="contained" color="error" onClick={() => { setAddSetJobOpen(false); setErrors(null); }}>Cancel</Button>
+                                    </Grid>
+                                    <Grid item>
+                                        <Button variant="contained" color="success" type="submit">Add Job</Button> 
+                                    </Grid>
+                                </Grid>
+                            </Grid>
                         </form>
-                </Dialog>
-            </div>
+                    </Grid>
+                </Box>
+                </Fade>
+            </Modal>
             <Grid container direction="column" justifyContent="center" alignItems="center" mt={1} mb={3} spacing={3}>
                 <Grid item>
                     { device &&
@@ -677,7 +820,7 @@ const ThermoDashboard = () => {
                                         min={50} 
                                         max={90} 
                                         valueLabelDisplay="auto" 
-                                        onChange={(e) => { setSetPointTemp(parseInt(e.target.value)); sliderValue.current = parseInt(e.target.value); }}
+                                        onChange={(e) => { setSetPointTemp(parseInt(e.target.value)); setSliderDisplayValue(parseInt(e.target.value)); }}
                                         /> 
                                     </Stack>
                                 </Grid>
@@ -685,7 +828,7 @@ const ThermoDashboard = () => {
                                     <ToolTip title={
                                         <>
                                             <Typography>
-                                                Set Point Temperature: {sliderValue.current}°F
+                                                Set Point Temperature: {sliderDisplayValue}°F
                                             </Typography><br/>
                                             <Typography>
                                                 Actual Temperature: {Math.round(CtoF(device.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius))}°F
@@ -699,7 +842,7 @@ const ThermoDashboard = () => {
                                         </>
                                     } placement="right-start">
                                         <Paper sx={{ width: '20rem', height: '20rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: (switched ? "#7BF1A8" : "#000")}}>
-                                            <Typography variant="h1" color={switched ? "#000" : "#fff"}>{`${sliderValue.current}°`}</Typography>
+                                            <Typography variant="h1" color={switched ? "#000" : "#fff"}>{`${sliderDisplayValue}°`}</Typography>
                                         </Paper>
                                     </ToolTip>
                                 </Grid>
@@ -707,9 +850,8 @@ const ThermoDashboard = () => {
                         </Grow>
                     ) : ( //heatcool or eco mode
                         <>
-                            <center> {/*lol, lmao even */}
                             <Grow in={true}>
-                                <Box sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', width: '40rem' }} mb={3}>
+                                <Box sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', marginLeft: '17rem', marginRight: '17rem' }} mb={3}>
                                     <List>
                                         <ListItem>
                                             <ListItemText 
@@ -734,7 +876,6 @@ const ThermoDashboard = () => {
                                     </List>
                                 </Box>
                             </Grow>
-                            </center>
                             <Grow in={true}>
                                 <Box component="form" sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', padding: '1rem', marginBottom: '2rem', marginLeft: '20rem', marginRight: '20rem' }}>
                                     <Container>
@@ -832,38 +973,40 @@ const ThermoDashboard = () => {
                     { device && 
                         <>
                             { chartData ? //charts don't show up when in a grid item for some reason
-                                (<ResponsiveContainer height={525}>
-                                    <LineChart margin={{ bottom: 30, right: 100, left: 75 }} data={chartData}>
+                                (<ResponsiveContainer height={570}>
+                                    <LineChart margin={{ bottom: 30, right: 125, left: 83 }} data={chartData}>
                                         <CartesianGrid stroke={(switched ? '#7BF1A8' : '#000')} strokeDasharray="3 3" />
-                                        <XAxis dataKey="TimeLogged" stroke={(switched ? '#7BF1A8' : '#000')} angle={-55} height={170} dx={-50} dy={75}>
-                                            <Label value="Dates Logged" position="bottom" style={{ fill: (switched ? '#7BF1A8' : '#000')}}/>
+                                        <XAxis dataKey="TimeLogged" stroke={(switched ? '#7BF1A8' : '#000')} angle={-55} height={200} dx={-50} dy={75}>
+                                            <Label value="Log Dates" position="bottom" style={{ fill: (switched ? '#7BF1A8' : '#000')}}/>
                                         </XAxis>
                                         <YAxis stroke={(switched ? '#7BF1A8' : '#000')} domain={[getMinYBound(chartData), getMaxYBound(chartData)]}>
                                             <Label value='Temperature in Fahrenheit' angle={-90} position="left" dy={-90} dx={10} style={{ fill: (switched ? '#7BF1A8' : '#000')}}/>
                                         </YAxis>
                                         <Tooltip contentStyle={{ backgroundColor: (switched ? '#000' : '#fff'), borderColor: (switched ? '#000' : '#fff'), borderRadius: '1rem' }} labelStyle={{ color: (switched ? '#7BF1A8' : '#000')}}/>
-                                        <Legend wrapperStyle={{ right: 75 }} verticalAlign="top" height={40}/>
+                                        <Legend wrapperStyle={{ right: 84 }} verticalAlign="top" height={40}/>
                                         <Line type="monotone" dataKey="ActualTemp" stroke="#9900ff" activeDot={{ r: 8 }} name="Actual Temp"/>
                                         <Line type="monotone" dataKey="SetPointTemp" stroke="#ff8000" activeDot={{ r: 8 }} name="Set Point Temp"/>
-                                        <Line type="monotone" dataKey="HeatTemp" stroke="#ff3333" activeDot={{ r: 8 }} name="Heat"/>
-                                        <Line type="monotone" dataKey="CoolTemp" stroke="#3385ff" activeDot={{ r: 8 }} name="Cool"/>
+                                        <Line type="monotone" dataKey="HeatTemp" stroke="#ff3333" activeDot={{ r: 8 }} name="Heat Temp"/>
+                                        <Line type="monotone" dataKey="CoolTemp" stroke="#3385ff" activeDot={{ r: 8 }} name="Cool Temp"/>
+                                        <Line type="monotone" dataKey="Mode" legendType='none' stroke={(switched ? '#7BF1A8' : '#000')} />
                                     </LineChart>
                                 </ResponsiveContainer>)
                                 : 
-                                (<ResponsiveContainer height={375}>
-                                    <LineChart margin={{ bottom: 30, right: 100, left: 75 }}>
+                                (<ResponsiveContainer height={400}>
+                                    <LineChart margin={{ bottom: 30, right: 125, left: 83 }}>
                                         <CartesianGrid stroke={(switched ? '#7BF1A8' : '#000')} strokeDasharray="3 3" />
                                         <XAxis>
-                                            <Label value="Dates Logged" position="bottom" />
+                                            <Label value="Log Dates" position="bottom" style={{ fill: (switched ? '#7BF1A8' : '#000')}}/>
                                         </XAxis>
                                         <YAxis>
-                                            <Label value='Temperature in Fahrenheit' angle={-90} position='left' dy={-90} dx={10}/>
+                                            <Label value='Temperatures in Fahrenheit' angle={-90} position='left' dy={-92} dx={10} style={{ fill: (switched ? '#7BF1A8' : '#000')}}/>
                                         </YAxis>
-                                        <Legend wrapperStyle={{ right: 75 }} verticalAlign="top" height={40}/>
+                                        <Legend wrapperStyle={{ right: 84 }} verticalAlign="top" height={40}/>
                                         <Line stroke="#9900ff" name="Actual Temp"/>
                                         <Line stroke="#ff8000" name="Set Point Temp"/>
-                                        <Line stroke="#ff3333" name="Heat"/>
-                                        <Line stroke="#3385ff" name="Cool"/>
+                                        <Line stroke="#ff3333" name="Heat Temp"/>
+                                        <Line stroke="#3385ff" name="Cool Temp"/>
+                                        <Line legendType='none' stroke={(switched ? '#7BF1A8' : '#000')} />
                                     </LineChart>
                                 </ResponsiveContainer>)
                             }
