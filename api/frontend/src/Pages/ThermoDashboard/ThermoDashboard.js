@@ -56,13 +56,14 @@ const ThermoDashboard = () => {
     const [alertOpen, setAlertOpen] = useState(false)
     const [deleteConfOpen, setDeleteConfOpen] = useState(false)
     const [addLogJobOpen, setAddLogJobOpen] = useState(false)
+    const [addSetJobOpen, setAddSetJobOpen] = useState(false)
     const [jobToDeleteInfo, setJobToDeleteInfo] = useState({ Id: null, Name: null })
     const [responseMessage, setResponseMessage] = useState('')
     const sliderValue = useRef(0)
 
     // states for modal form submission
     const [modalInput, setModalInput] = React.useState(60);
-    const [timeType, setTimeType] = React.useState(null);
+    const [settingModalInput, setSettingModalInput] = React.useState(60);
 
 
     const CtoF = (cTemp) => {
@@ -307,12 +308,6 @@ const ThermoDashboard = () => {
 
 
     useEffect(() => {
-        console.log("modalInput = " + modalInput);
-        console.log("timeType = " + timeType);
-    },[modalInput, timeType])
-
-
-    useEffect(() => {
         console.log("jobs");
         console.log(jobs);
 
@@ -335,7 +330,7 @@ const ThermoDashboard = () => {
 
             setJobRefresh(refresh => !refresh)
 
-        }, 60000)
+        }, 30000)
 
         return () => {
             clearInterval(jobRefreshInterval)
@@ -343,9 +338,6 @@ const ThermoDashboard = () => {
 
     }, [])
 
-    useEffect(() => {
-        console.log(chartData)
-    }, [chartData])
 
     // restrict modal input
     const handleInput = (input) => {
@@ -361,6 +353,64 @@ const ThermoDashboard = () => {
 
         setModalInput(input)
     }
+
+    const handleSettingInput = (input) => {
+
+        input = Number(input) | 0
+
+        // should find way to throw modal alert and preveht submission if set temp value is not between 50 and 90
+        if (input < 50) {
+            input = null
+        } else if (input > 90) {
+            input = 90
+        }
+
+        setSettingModalInput(input)
+    }
+
+
+    const getMinYBound = (data) => {
+        var bound = data.reduce((min, i) => {
+
+                if (i.ActualTemp < min) {
+                    return i.ActualTemp
+
+                } else if (i.SetPointTemp < min) {
+                    return i.SetPointTemp
+                    
+                } else {
+                    return min
+                }
+            },
+            data[0].ActualTemp)
+        
+        bound -= 10
+        bound = Math.round(bound/5) * 5 // make graph nice, round values by 5's
+
+        return bound
+    }
+
+    const getMaxYBound = (data) => {
+        var bound = data.reduce((max, i) => {
+
+            if (i.ActualTemp > max) {
+                return i.ActualTemp
+
+            } else if (i.SetPointTemp > max) {
+                return i.SetPointTemp
+                
+            } else {
+                return max
+            }
+        },
+        data[0].ActualTemp)
+
+        bound += 10
+        bound = Math.round(bound/5) * 5 // make graph nice, round values by 5's
+
+        return bound
+    }
+
 
     const submitAddLogJob = async (data) => { //if blah blah blah wrong stuff, return; make sure nothing is empty. Render error text in modal? Trim whitespace
         const reqbody = {
@@ -397,7 +447,16 @@ const ThermoDashboard = () => {
             }
         })
     }
+
+    const submitAddSettingJob = async (data) => {
+        console.log(data.target.name.value)
+        console.log(data.target.number.value)
+        console.log(data.target.setTemp.value)
+        console.log(data.target.timeType.value)
+
+    }
      
+
     const timeValues = [ // Time options 
         {
             value: "minutes", 
@@ -442,13 +501,13 @@ const ThermoDashboard = () => {
                 </Box>
                 </Fade>
             </Modal>
-            {/* changeLog dialogue*/}
+            {/* Form for Log Job */}
             <div style={{textAlign: 'center'}}>
                 <Dialog open={addLogJobOpen} onClose={() => setAddLogJobOpen(false)}>
-                    <DialogTitle> Thermostat 1 Log Setting </DialogTitle>
+                    <DialogTitle> Thermostat Log Job </DialogTitle>
                         <form onSubmit={(e) => {e.preventDefault(); submitAddLogJob(e);}}>
                             <DialogContent>  
-                                <DialogContentText> Set the Log: </DialogContentText>
+                                <DialogContentText> Set the Logging Job: </DialogContentText>
                                 <TextField
                                     id="job-name"
                                     name="name"
@@ -479,7 +538,7 @@ const ThermoDashboard = () => {
                                     select
                                     label = "Select"
                                     defaultValue="days"
-                                    helperText="Please Select a time"
+                                    helperText="Please select a time interval"
                                     margin="dense"
                                 >
                                     {timeValues.map((option) => (
@@ -492,6 +551,73 @@ const ThermoDashboard = () => {
                             <DialogActions> 
                                 <Button onClick={() => setAddLogJobOpen(false)} color="secondary"> Cancel </Button>
                                 <Button type="submit" onClick={() => setAddLogJobOpen(false)} color="primary"> Save </Button>
+                            </DialogActions>
+                        </form>
+                </Dialog>
+            </div>
+            {/* Form for Setting Job */}
+            <div style={{textAlign: 'center'}}>
+                <Dialog open={addSetJobOpen} onClose={() => setAddSetJobOpen(false)}>
+                    <DialogTitle> Thermostat Setting Job </DialogTitle>
+                        <form onSubmit={(e) => {e.preventDefault(); submitAddSettingJob(e);}}>
+                            <DialogContent>  
+                                <DialogContentText> Set the Setting Job: </DialogContentText>
+                                <TextField
+                                    id="job-name"
+                                    name="name"
+                                    label="Job Name"
+                                    type="text"
+                                    margin="dense"
+                                    fullWidth
+                                    defaultValue={"Job name"}
+                                    InputLabelProps={{shrink: true}}
+                                    inputProps={{ max:200 }}
+                                />
+                                <TextField
+                                    id="outlined-number"
+                                    name="setTemp"
+                                    label="Set Temp"
+                                    type="number"
+                                    margin="dense"
+                                    fullWidth
+                                    value={settingModalInput}
+                                    onChange={(e) => handleSettingInput(e.target.value)}
+                                    onKeyDown={(e) => { ['e','E','+','-','.',','].includes(e.key) && e.preventDefault()}}
+                                    InputLabelProps={{shrink: true,}}
+                                    inputProps={{ min: 50, max: 90 }}
+                                />
+                                <TextField
+                                    id="outlined-number"
+                                    name="number"
+                                    label="Interval"
+                                    type="number"
+                                    margin="dense"
+                                    fullWidth
+                                    value={modalInput}
+                                    onChange={(e) => handleInput(e.target.value)}
+                                    onKeyDown={(e) => { ['e','E','+','-','.',','].includes(e.key) && e.preventDefault()}}
+                                    InputLabelProps={{shrink: true,}}
+                                    inputProps={{ min: 1, max: 60 }}
+                                />
+                                <TextField
+                                    id="select-time"
+                                    name="timeType"
+                                    select
+                                    label = "Select"
+                                    defaultValue="days"
+                                    helperText="Please select a time interval"
+                                    margin="dense"
+                                >
+                                    {timeValues.map((option) => (
+                                        <MenuItem key={option.value} value={option.value}>
+                                            {option.label}
+                                        </MenuItem>
+                                    ))}
+                                </TextField>
+                            </DialogContent>
+                            <DialogActions> 
+                                <Button onClick={() => setAddSetJobOpen(false)} color="secondary"> Cancel </Button>
+                                <Button type="submit" onClick={() => setAddSetJobOpen(false)} color="primary"> Save </Button>
                             </DialogActions>
                         </form>
                 </Dialog>
@@ -681,7 +807,7 @@ const ThermoDashboard = () => {
                                         <XAxis dataKey="TimeLogged" stroke={(switched ? '#7BF1A8' : '#000')} angle={-55} height={170} dx={-50} dy={75}>
                                             <Label value="Dates Logged" position="bottom" style={{ fill: (switched ? '#7BF1A8' : '#000')}}/>
                                         </XAxis>
-                                        <YAxis stroke={(switched ? '#7BF1A8' : '#000')}>
+                                        <YAxis stroke={(switched ? '#7BF1A8' : '#000')} domain={[getMinYBound(chartData), getMaxYBound(chartData)]}>
                                             <Label value='Temperature in Fahrenheit' angle={-90} position="left" dy={-90} dx={10} style={{ fill: (switched ? '#7BF1A8' : '#000')}}/>
                                         </YAxis>
                                         <Tooltip contentStyle={{ backgroundColor: (switched ? '#000' : '#fff'), borderColor: (switched ? '#000' : '#fff'), borderRadius: '1rem' }} labelStyle={{ color: (switched ? '#7BF1A8' : '#000')}}/>
@@ -780,7 +906,7 @@ const ThermoDashboard = () => {
                                         <Button variant={switched ? "outlined" : "contained"} color={switched ? "primary" : "secondary"} size="large" startIcon={<AddCircleIcon/>} onClick={() => setAddLogJobOpen(true)}>Add Logging Job</Button>
                                     </Grid>
                                     <Grid item>
-                                        <Button variant={switched ? "outlined" : "contained"} color={switched ? "primary" : "secondary"} size="large" startIcon={<AddCircleIcon/>}>Add Setting Job</Button>
+                                        <Button variant={switched ? "outlined" : "contained"} color={switched ? "primary" : "secondary"} size="large" startIcon={<AddCircleIcon/>} onClick={() => setAddSetJobOpen(true)}>Add Setting Job</Button>
                                     </Grid>
                                 </Grid> 
                             </Container>
