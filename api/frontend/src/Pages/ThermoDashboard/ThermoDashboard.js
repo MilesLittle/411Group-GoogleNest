@@ -58,6 +58,11 @@ const ThermoDashboard = () => {
     const [errors, setErrors] = useState(null)
     const [sliderDisplayValue, setSliderDisplayValue] = useState(0)
 
+    // states for modal form submission
+    const [modalInput, setModalInput] = React.useState(60);
+    const [timeType, setTimeType] = React.useState(null);
+
+
     const CtoF = (cTemp) => {
         return (cTemp * 9/5) + 32
     }
@@ -190,6 +195,7 @@ const ThermoDashboard = () => {
                 console.log(err)
             }
         })
+
     }, [jobRefresh])
 
     const sliderTempHandler = async () => {
@@ -268,6 +274,10 @@ const ThermoDashboard = () => {
                 setJobToDeleteInfo({ Id: null, Name: null })
                 raiseResponseToast(res.data.message)
             }
+
+            // reset chartData so chart isn't showing deleted logs
+            setChartData(null)
+
         }).catch((err) => {
            if (err.response.data.status === 404) {
                 console.log('The job was not found')
@@ -293,6 +303,66 @@ const ThermoDashboard = () => {
         }
     }, [jobToDeleteInfo])
 
+
+    useEffect(() => {
+        console.log("modalInput = " + modalInput);
+        console.log("timeType = " + timeType);
+    },[modalInput, timeType])
+
+
+    useEffect(() => {
+        console.log("jobs");
+        console.log(jobs);
+
+        // for refresh
+        if (chartData !== undefined && chartData != null && jobs !== undefined && jobs != null) {
+            for (const job of jobs) {
+                if (chartData[0].JobId === job.Id) {
+                    setChartData(job.JobLogs)
+                }
+            }
+        }
+
+    }, [jobs])
+
+
+    // auto refresh collection of logs every minute for "real-time" graphs
+    useEffect(() => {
+
+        const jobRefreshInterval = setInterval(() => {
+
+            setJobRefresh(refresh => !refresh)
+
+        }, 60000)
+
+        return () => {
+            clearInterval(jobRefreshInterval)
+        }
+
+    }, [])
+
+    useEffect(() => {
+        console.log(chartData)
+    }, [chartData])
+
+    // restrict modal input
+    const handleInput = (input) => {
+        
+        input = Number(input) | 0   // cast so the number actually shows up in modal form. Bitwise OR to force integer
+
+        // limit input. Somehow disallow user to submit log every 1 minute? That would be an excessive amount of logs
+        if (input < 1) {
+            input = null    // make sure null is not submitted in post request, or maybe make the modalInput state's purpose only for display, submit actual form value?
+        } else if (input > 60) {
+            input = 60
+        }
+
+        setModalInput(input)
+    }
+
+    const submitAddJob = async (data) => { //if blah blah blah wrong stuff, return; make sure nothing is empty. Render error text in modal? Trim whitespace
+        const reqbody = {
+            name: data.target.name.value,
     const submitAddLogJob = async (data) => { 
         const reqbody = {
             name: data.target.name.value.trim(),
