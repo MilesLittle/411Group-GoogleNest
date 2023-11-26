@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState, useRef } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Grow from "@mui/material/Grow";
 import Typography from '@mui/material/Typography';
@@ -31,6 +31,7 @@ import Stack from '@mui/material/Stack';
 import _debounce from 'lodash/debounce';
 import Paper from '@mui/material/Paper';
 import MenuItem from '@mui/material/MenuItem';
+import testarray from "./TestArray";
 
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
@@ -47,7 +48,7 @@ const ThermoDashboard = () => {
     const [deviceRefresh, setDeviceRefresh] = useState(false)
     const [jobRefresh, setJobRefresh] = useState(false)
     const [jobs, setJobs] = useState(null)
-    const [chartData, setChartData] = useState(null) 
+    const [chartData, setChartData] = useState(testarray) //useState(null) normally
     const [alertOpen, setAlertOpen] = useState(false)
     const [deleteConfOpen, setDeleteConfOpen] = useState(false)
     const [addLogJobOpen, setAddLogJobOpen] = useState(false)
@@ -55,7 +56,7 @@ const ThermoDashboard = () => {
     const [jobToDeleteInfo, setJobToDeleteInfo] = useState({ Id: null, Name: null })
     const [responseMessage, setResponseMessage] = useState('')
     const [errors, setErrors] = useState(null)
-    const sliderValue = useRef(0)
+    const [sliderDisplayValue, setSliderDisplayValue] = useState(0)
 
     const CtoF = (cTemp) => {
         return (cTemp * 9/5) + 32
@@ -135,8 +136,9 @@ const ThermoDashboard = () => {
     useEffect(() => { 
         if (device) {
             if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "COOL" || device.traits["sdm.devices.traits.ThermostatMode"].mode === "HEAT") {
-                console.log('Setting slider useRef')
-                sliderValue.current = getSetPointTemp(device)
+                console.log('Setting slider value')
+                setSliderDisplayValue(getSetPointTemp(device)) //state that doesn't live in any dependency array so there's no side effect issues
+                console.log(`sliderValue: ${sliderDisplayValue}`) //it is console logging the correct value but it doesn't show up in the circle or change when the slider changes
             } else if (device.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEATCOOL' || device.traits["sdm.devices.traits.ThermostatEco"].mode === 'MANUAL_ECO') {
                 console.log('Setting temp range')
                 var temps = getRangeTemps(device)
@@ -273,7 +275,6 @@ const ThermoDashboard = () => {
                 setDeleteConfOpen(false)
                 setJobToDeleteInfo({ Id: null, Name: null })
                 raiseResponseToast(err.response.data.message)
-                //catch 500?
            } else {
                 console.log(err)
            }
@@ -663,7 +664,7 @@ const ThermoDashboard = () => {
                                         min={50} 
                                         max={90} 
                                         valueLabelDisplay="auto" 
-                                        onChange={(e) => { setSetPointTemp(parseInt(e.target.value)); sliderValue.current = parseInt(e.target.value); }}
+                                        onChange={(e) => { setSetPointTemp(parseInt(e.target.value)); setSliderDisplayValue(parseInt(e.target.value)); }}
                                         /> 
                                     </Stack>
                                 </Grid>
@@ -671,7 +672,7 @@ const ThermoDashboard = () => {
                                     <ToolTip title={
                                         <>
                                             <Typography>
-                                                Set Point Temperature: {sliderValue.current}°F
+                                                Set Point Temperature: {sliderDisplayValue}°F
                                             </Typography><br/>
                                             <Typography>
                                                 Actual Temperature: {Math.round(CtoF(device.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius))}°F
@@ -685,7 +686,7 @@ const ThermoDashboard = () => {
                                         </>
                                     } placement="right-start">
                                         <Paper sx={{ width: '20rem', height: '20rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: (switched ? "#7BF1A8" : "#000")}}>
-                                            <Typography variant="h1" color={switched ? "#000" : "#fff"}>{`${sliderValue.current}°`}</Typography>
+                                            <Typography variant="h1" color={switched ? "#000" : "#fff"}>{`${sliderDisplayValue}°`}</Typography>
                                         </Paper>
                                     </ToolTip>
                                 </Grid>
@@ -816,38 +817,40 @@ const ThermoDashboard = () => {
                     { device && 
                         <>
                             { chartData ? //charts don't show up when in a grid item for some reason
-                                (<ResponsiveContainer height={525}>
-                                    <LineChart margin={{ bottom: 30, right: 100, left: 75 }} data={chartData}>
+                                (<ResponsiveContainer height={570}>
+                                    <LineChart margin={{ bottom: 30, right: 125, left: 83 }} data={chartData}>
                                         <CartesianGrid stroke={(switched ? '#7BF1A8' : '#000')} strokeDasharray="3 3" />
-                                        <XAxis dataKey="TimeLogged" stroke={(switched ? '#7BF1A8' : '#000')} angle={-55} height={170} dx={-50} dy={75}>
-                                            <Label value="Dates Logged" position="bottom" style={{ fill: (switched ? '#7BF1A8' : '#000')}}/>
+                                        <XAxis dataKey="TimeLogged" stroke={(switched ? '#7BF1A8' : '#000')} angle={-55} height={200} dx={-50} dy={75}>
+                                            <Label value="Log Dates" position="bottom" style={{ fill: (switched ? '#7BF1A8' : '#000')}}/>
                                         </XAxis>
                                         <YAxis stroke={(switched ? '#7BF1A8' : '#000')}>
-                                            <Label value='Temperature in Fahrenheit' angle={-90} position="left" dy={-90} dx={10} style={{ fill: (switched ? '#7BF1A8' : '#000')}}/>
+                                            <Label value='Temperatures in Fahrenheit' angle={-90} position="left" dy={-92} dx={10} style={{ fill: (switched ? '#7BF1A8' : '#000')}}/>
                                         </YAxis>
                                         <Tooltip contentStyle={{ backgroundColor: (switched ? '#000' : '#fff'), borderColor: (switched ? '#000' : '#fff'), borderRadius: '1rem' }} labelStyle={{ color: (switched ? '#7BF1A8' : '#000')}}/>
-                                        <Legend wrapperStyle={{ right: 75 }} verticalAlign="top" height={40}/>
+                                        <Legend wrapperStyle={{ right: 84 }} verticalAlign="top" height={40}/>
                                         <Line type="monotone" dataKey="ActualTemp" stroke="#9900ff" activeDot={{ r: 8 }} name="Actual Temp"/>
                                         <Line type="monotone" dataKey="SetPointTemp" stroke="#ff8000" activeDot={{ r: 8 }} name="Set Point Temp"/>
-                                        <Line type="monotone" dataKey="HeatTemp" stroke="#ff3333" activeDot={{ r: 8 }} name="Heat"/>
-                                        <Line type="monotone" dataKey="CoolTemp" stroke="#3385ff" activeDot={{ r: 8 }} name="Cool"/>
+                                        <Line type="monotone" dataKey="HeatTemp" stroke="#ff3333" activeDot={{ r: 8 }} name="Heat Temp"/>
+                                        <Line type="monotone" dataKey="CoolTemp" stroke="#3385ff" activeDot={{ r: 8 }} name="Cool Temp"/>
+                                        <Line type="monotone" dataKey="Mode" legendType='none' stroke={(switched ? '#7BF1A8' : '#000')} />
                                     </LineChart>
                                 </ResponsiveContainer>)
                                 : 
-                                (<ResponsiveContainer height={375}>
-                                    <LineChart margin={{ bottom: 30, right: 100, left: 75 }}>
+                                (<ResponsiveContainer height={400}>
+                                    <LineChart margin={{ bottom: 30, right: 125, left: 83 }}>
                                         <CartesianGrid stroke={(switched ? '#7BF1A8' : '#000')} strokeDasharray="3 3" />
                                         <XAxis>
-                                            <Label value="Dates Logged" position="bottom" />
+                                            <Label value="Log Dates" position="bottom" style={{ fill: (switched ? '#7BF1A8' : '#000')}}/>
                                         </XAxis>
                                         <YAxis>
-                                            <Label value='Temperature in Fahrenheit' angle={-90} position='left' dy={-90} dx={10}/>
+                                            <Label value='Temperatures in Fahrenheit' angle={-90} position='left' dy={-92} dx={10} style={{ fill: (switched ? '#7BF1A8' : '#000')}}/>
                                         </YAxis>
-                                        <Legend wrapperStyle={{ right: 75 }} verticalAlign="top" height={40}/>
+                                        <Legend wrapperStyle={{ right: 84 }} verticalAlign="top" height={40}/>
                                         <Line stroke="#9900ff" name="Actual Temp"/>
                                         <Line stroke="#ff8000" name="Set Point Temp"/>
-                                        <Line stroke="#ff3333" name="Heat"/>
-                                        <Line stroke="#3385ff" name="Cool"/>
+                                        <Line stroke="#ff3333" name="Heat Temp"/>
+                                        <Line stroke="#3385ff" name="Cool Temp"/>
+                                        <Line legendType='none' stroke={(switched ? '#7BF1A8' : '#000')} />
                                     </LineChart>
                                 </ResponsiveContainer>)
                             }
