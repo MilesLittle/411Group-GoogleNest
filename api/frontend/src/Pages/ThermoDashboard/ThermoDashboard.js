@@ -338,12 +338,12 @@ const ThermoDashboard = () => {
                     console.log(err.response.data)
                     setAddLogJobOpen(false)
                     raiseResponseToast(err.response.data.message) 
-                } else if (err.response.data.status === 500) {
+                } else if (err.response.data.status === 500) { //500 from API view (createLogJob()) Email emptynestgroup automatically here?
                     console.log('Internal Server Error')
                     console.log(err.response.data)
                     setAddLogJobOpen(false)
                     raiseResponseToast(err.response.data.message) 
-                } else if (err.response.status === 500) { //not from api view response, the 500 above is
+                } else if (err.response.status === 500) { //500 not from API view, from Axios only (If server isn't running)
                     console.log("Server probably isn't started, Internal Server Error")
                     console.log(err.response)
                     setAddLogJobOpen(false)
