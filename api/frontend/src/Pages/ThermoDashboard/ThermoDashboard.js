@@ -143,7 +143,7 @@ const ThermoDashboard = () => {
             if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "COOL" || device.traits["sdm.devices.traits.ThermostatMode"].mode === "HEAT") {
                 console.log('Setting slider value')
                 setSliderDisplayValue(getSetPointTemp(device)) //state that doesn't live in any dependency array so there's no side effect issues
-                console.log(`sliderValue: ${sliderDisplayValue}`) //it is console logging the correct value but it doesn't show up in the circle or change when the slider changes
+                console.log(`sliderValue: ${sliderDisplayValue}`) 
             } else if (device.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEATCOOL' || device.traits["sdm.devices.traits.ThermostatEco"].mode === 'MANUAL_ECO') {
                 console.log('Setting temp range')
                 var temps = getRangeTemps(device)
@@ -360,9 +360,6 @@ const ThermoDashboard = () => {
         setModalInput(input)
     }
 
-    const submitAddJob = async (data) => { //if blah blah blah wrong stuff, return; make sure nothing is empty. Render error text in modal? Trim whitespace
-        const reqbody = {
-            name: data.target.name.value,
     const submitAddLogJob = async (data) => { 
         const reqbody = {
             name: data.target.name.value.trim(),
