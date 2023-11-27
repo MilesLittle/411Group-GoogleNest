@@ -33,6 +33,7 @@ import Paper from '@mui/material/Paper';
 import MenuItem from '@mui/material/MenuItem';
 import testarray from "./TestArray";
 import DownloadIcon from '@mui/icons-material/Download';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
 
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
@@ -519,12 +520,25 @@ const ThermoDashboard = () => {
         link.click();
     }
 
+    const readFileOnUpload = (uploadedFile) =>{
+        const fileReader = new FileReader();
+        fileReader.onloadend = () => {
+           try {
+              setChartData(JSON.parse(fileReader.result));
+           } catch(e) {
+              raiseResponseToast('JSON files only, pretty please uwu')
+           }
+        }
+        if (uploadedFile!== undefined)
+            fileReader.readAsText(uploadedFile);
+    }
+
     return (
         <>
             <Snackbar open={alertOpen} anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}>
                 <SnackbarContent message={responseMessage} sx={{ backgroundColor: '#7BF1A8', color: '#000' }}/>
             </Snackbar>
-            <Modal open={deleteConfOpen} onClose={() => setDeleteConfOpen(false)}>
+            <Modal open={deleteConfOpen} onClose={() => { setDeleteConfOpen(false); setJobToDeleteInfo({ Id: null, Name: null}); }}>
                 <Fade in={deleteConfOpen}>
                 <Box sx={{ bgcolor: '#7BF1A8', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', p: 4, borderRadius: '1rem' }}>
                     <Grid container direction="column" spacing={2}>
@@ -861,7 +875,7 @@ const ThermoDashboard = () => {
                 <Grid item>
                     { device &&
                         <Container>
-                            <Grid container direction="row" justifyContent="center" spacing={5} marginBottom="2rem">
+                            <Grid container direction="row" justifyContent="center" spacing={5} marginBottom="1rem">
                                 {jobs ? (jobs.map((job) => { //Logging and setting jobs are set in the same state so differentiate where they are mapped in UI with the JobTypeId (make 'jobs ?' more specific for logging lobs so the 'no jobs' message appears correctly)
                                     if (job.JobTypeId.Id === 1) { //Logging job
                                     return (
@@ -919,9 +933,14 @@ const ThermoDashboard = () => {
                                             </Grid>
                                         </Grow>
                                     )}
-                                })) : (<Typography variant="h6" color={ switched ? 'primary.main' : 'secondary.main' } sx={{ mt: '3rem', mb: '1rem', ml: '1.7rem' }}>You have no logging jobs set on this thermostat.</Typography>)}
+                                })) : (<Typography variant="h6" color={ switched ? 'primary.main' : 'secondary.main' } sx={{ mt: '3rem', ml: '1.7rem' }}>{(device.parentRelations[0].displayName.length === 0 ? 'You have no logging jobs for this thermostat.' : `You have no logging jobs for ${device.parentRelations[0].displayName}.`)}</Typography>)}
                             </Grid>
                         </Container>
+                    }
+                </Grid>
+                <Grid item mb={'2rem'}>
+                    { device &&
+                        <Button variant={switched ? "outlined" : "contained"} color={switched ? "primary" : "secondary"} size="large" startIcon={<AddCircleIcon/>} onClick={() => setAddLogJobOpen(true)}>Add Logging Job</Button> 
                     }
                 </Grid>
                     { device && 
@@ -946,8 +965,8 @@ const ThermoDashboard = () => {
                                     </LineChart>
                                 </ResponsiveContainer>)
                                 : 
-                                (<ResponsiveContainer height={400}>
-                                    <LineChart margin={{ bottom: 30, right: 125, left: 83 }}>
+                                (<ResponsiveContainer height={375}>
+                                    <LineChart margin={{ right: 125, left: 83 }}>
                                         <CartesianGrid stroke={(switched ? '#7BF1A8' : '#000')} strokeDasharray="3 3" />
                                         <XAxis>
                                             <Label value="Log Dates" position="bottom" style={{ fill: (switched ? '#7BF1A8' : '#000')}}/>
@@ -968,13 +987,21 @@ const ThermoDashboard = () => {
                     }
                     <Grid item>
                         { device &&
+                            <label htmlFor="upload-file">
+                                <input style={{ display: 'none' }} id="upload-file" name="upload-file" type="file" onChange={(e)=>readFileOnUpload(e.target.files[0])}/>
+                                <Button variant={switched ? "outlined" : "contained"} component="span" color={switched ? "primary" : "secondary"} size="large" startIcon={<UploadFileIcon />}>Upload File</Button>
+                            </label>
+                        }
+                    </Grid>
+                    <Grid item>
+                        { device &&
                             <Typography variant="h3" mt={4}>Your Setting Jobs</Typography>
                         }
                     </Grid>
                     <Grid item>
                         { device &&
                             <Container>
-                                <Grid container direction="row" justifyContent="center" spacing={5} marginBottom="2rem">
+                                <Grid container direction="row" justifyContent="center" spacing={5} marginBottom="1rem">
                                     {jobs ? (jobs.map((job) => { //make 'jobs ?' more specific for setting lobs so the 'no jobs' message appears correctly
                                         if (job.JobTypeId.Id === 2) { //setting jobs
                                         return (
@@ -1021,23 +1048,14 @@ const ThermoDashboard = () => {
                                                 </Grid>
                                             </Grow>
                                         )}
-                                    })) : (<Typography variant="h6" color={ switched ? 'primary.main' : 'secondary.main' } sx={{ mt: '3rem', mb: '1rem', ml: '1.7rem' }}>You have no setting jobs set on this thermostat.</Typography>)}
+                                    })) : (<Typography variant="h6" color={ switched ? 'primary.main' : 'secondary.main' } sx={{ mt: '3rem', ml: '1.7rem' }}>{(device.parentRelations[0].displayName.length === 0 ? 'You have no logging jobs for this thermostat.' : `You have no setting jobs for ${device.parentRelations[0].displayName}.`)}</Typography>)}
                             </Grid>
                         </Container>
                         }
                     </Grid>
-                    <Grid item>
+                    <Grid item mb={'2rem'}>
                         { device &&
-                            <Container>
-                                <Grid container direction="row" justifyContent="space-around" alignItems="center" spacing={2}>
-                                    <Grid item>
-                                        <Button variant={switched ? "outlined" : "contained"} color={switched ? "primary" : "secondary"} size="large" startIcon={<AddCircleIcon/>} onClick={() => setAddLogJobOpen(true)}>Add Logging Job</Button>
-                                    </Grid>
-                                    <Grid item>
-                                        <Button variant={switched ? "outlined" : "contained"} color={switched ? "primary" : "secondary"} size="large" startIcon={<AddCircleIcon/>} onClick={() => setAddSetJobOpen(true)}>Add Setting Job</Button>
-                                    </Grid>
-                                </Grid> 
-                            </Container>
+                            <Button variant={switched ? "outlined" : "contained"} color={switched ? "primary" : "secondary"} size="large" startIcon={<AddCircleIcon/>} onClick={() => setAddSetJobOpen(true)}>Add Setting Job</Button>
                         }
                     </Grid>
             </Grid>
