@@ -62,7 +62,6 @@ const ThermoDashboard = () => {
     const [modalInput, setModalInput] = React.useState(60);
     const [settingModalInput, setSettingModalInput] = React.useState(60);
 
-
     const CtoF = (cTemp) => {
         return (cTemp * 9/5) + 32
     }
@@ -273,11 +272,8 @@ const ThermoDashboard = () => {
                 setDeleteConfOpen(false)
                 setJobToDeleteInfo({ Id: null, Name: null })
                 raiseResponseToast(res.data.message)
+                setChartData(null)  // reset chartData so chart isn't showing deleted logs
             }
-
-            // reset chartData so chart isn't showing deleted logs
-            setChartData(null)
-
         }).catch((err) => {
            if (err.response.data.status === 404) {
                 console.log('The job was not found')
@@ -303,11 +299,9 @@ const ThermoDashboard = () => {
         }
     }, [jobToDeleteInfo])
 
-
     useEffect(() => {
         console.log("jobs");
         console.log(jobs);
-
         // for refresh
         if (chartData !== undefined && chartData != null && jobs !== undefined && jobs != null) {
             for (const job of jobs) {
@@ -316,55 +310,17 @@ const ThermoDashboard = () => {
                 }
             }
         }
-
     }, [jobs])
-
 
     // auto refresh collection of logs every minute for "real-time" graphs
     useEffect(() => {
-
         const jobRefreshInterval = setInterval(() => {
-
             setJobRefresh(refresh => !refresh)
-
         }, 30000)
-
         return () => {
             clearInterval(jobRefreshInterval)
         }
-
     }, [])
-
-
-    // restrict modal input
-    const handleInput = (input) => {
-        
-        input = Number(input) | 0   // cast so the number actually shows up in modal form. Bitwise OR to force integer
-
-        // limit input. Somehow disallow user to submit log every 1 minute? That would be an excessive amount of logs
-        if (input < 1) {
-            input = null    // make sure null is not submitted in post request, or maybe make the modalInput state's purpose only for display, submit actual form value?
-        } else if (input > 60) {
-            input = 60
-        }
-
-        setModalInput(input)
-    }
-
-    const handleSettingInput = (input) => {
-
-        input = Number(input) | 0
-
-        // should find way to throw modal alert and preveht submission if set temp value is not between 50 and 90
-        if (input < 50) {
-            input = null
-        } else if (input > 90) {
-            input = 90
-        }
-
-        setSettingModalInput(input)
-    }
-
 
     const getMinYBound = (data) => {
         var bound = data.reduce((min, i) => {
@@ -380,36 +336,28 @@ const ThermoDashboard = () => {
                 }
             },
             data[0].ActualTemp)
-        
         bound -= 10
         bound = Math.round(bound/5) * 5 // make graph nice, round values by 5's
-
         return bound
     }
 
     const getMaxYBound = (data) => {
         var bound = data.reduce((max, i) => {
-
             if (i.ActualTemp > max) {
                 return i.ActualTemp
-
             } else if (i.SetPointTemp > max) {
                 return i.SetPointTemp
-                
             } else {
                 return max
             }
         },
         data[0].ActualTemp)
-
         bound += 10
         bound = Math.round(bound/5) * 5 // make graph nice, round values by 5's
-
         return bound
     }
 
-
-    const submitAddLogJob = async (data) => { //if blah blah blah wrong stuff, return; make sure nothing is empty. Render error text in modal? Trim whitespace
+    const submitAddLogJob = async (data) => { 
         const reqbody = {
             name: data.target.name.value.trim(),
             number: data.target.number.value,
@@ -475,7 +423,7 @@ const ThermoDashboard = () => {
     const submitAddSetJob = async (data) => {
         const reqbody = {
             name: data.target.name.value.trim(),
-            setTemp: data.target.temperature.value,
+            setTemp: data.target.setTemp.value,
             number: data.target.number.value,
             timeType: data.target.timeType.value,
             refresh_token: nestTokens.refresh_token,
@@ -491,7 +439,7 @@ const ThermoDashboard = () => {
         if (reqbody.name.length > 50) {
             errorlist.push('The name needs to be less than 50 characters.')
         }
-        if (reqbody.temperature > 90 || reqbody.temperature < 50) {
+        if (reqbody.setTemp > 90 || reqbody.setTemp < 50) {
             errorlist.push('The temperature needs to be within 50 to 90 °F.')
         }
         if (reqbody.number < 20 && reqbody.timeType == 'minutes') {
@@ -509,18 +457,16 @@ const ThermoDashboard = () => {
         if (errorlist.length > 0) { 
             console.log('Setting job: There are errors')
             setErrors(errorlist)
-        } else { //axios call goes in here
+        } else {
             console.log('Setting job: There are no errors')
             setErrors(null)
-
-            // same as submit add log job
             await axios.post(`/setjob`, reqbody)
             .then((res) => {
                 if (res.status === 201) {
                     console.log('Successfully added the job')
                     console.log(res.data)
                     setJobRefresh(!jobRefresh)
-                    setAddLogJobOpen(false)
+                    setAddSetJobOpen(false)
                     raiseResponseToast(res.data.message)
                 }
             })
@@ -528,66 +474,24 @@ const ThermoDashboard = () => {
                 if (err.response.data.status === 400) {
                     console.log('Bad request')
                     console.log(err.response.data)
-                    setAddLogJobOpen(false)
+                    setAddSetJobOpen(false)
                     raiseResponseToast(err.response.data.message) 
                 } else if (err.response.data.status === 500) { //500 from API view (createLogJob()) Email emptynestgroup automatically here?
                     console.log('Internal Server Error')
                     console.log(err.response.data)
-                    setAddLogJobOpen(false)
+                    setAddSetJobOpen(false)
                     raiseResponseToast(err.response.data.message) 
                 } else if (err.response.status === 500) { //500 not from API view, from Axios only (If server isn't running)
                     console.log("Server probably isn't started, Internal Server Error")
                     console.log(err.response)
-                    setAddLogJobOpen(false)
+                    setAddSetJobOpen(false)
                     raiseResponseToast(err.response.data)
                 } else {
                     console.log(err)
                 }
             })
-            
-            setAddSetJobOpen(false)
         }
     }
-
-    const submitAddSettingJob = async (data) => {
-        const reqbody = {
-            name: data.target.name.value,
-            setTemp: data.target.setTemp.value,
-            number: data.target.number.value,
-            timeType: data.target.timeType.value,
-            refresh_token: nestTokens.refresh_token,
-            deviceId: deviceId,
-            googleId: googleAccountInfo.id,
-        }
-
-        await axios.post(`/setjob`, reqbody)
-        .then((res) => {
-            if (res.status === 201) {
-                console.log('Successfully added the job')
-                console.log(res.data)
-                setJobRefresh(!jobRefresh)
-                setAddLogJobOpen(false)
-                raiseResponseToast(res.data.message)
-            }
-        })
-        .catch((err) => {
-            if (err.response.data.status === 400) {
-                console.log('Bad request')
-                console.log(err.response.data)
-                setAddLogJobOpen(false)
-                raiseResponseToast(err.response.data.message) 
-            } else if (err.response.data.status === 500) {
-                console.log('Internal Server Error')
-                console.log(err.response.data)
-                setAddLogJobOpen(false)
-                raiseResponseToast(err.response.data.message) 
-            } else {
-                console.log(err)
-            }
-        })
-
-    }
-     
 
     const timeValues = [ // Time options 
         {
@@ -759,7 +663,7 @@ const ThermoDashboard = () => {
                                         size="small"
                                         color="secondary"
                                         id="outlined-number"
-                                        name="temperature"
+                                        name="setTemp"
                                         type="number"
                                         margin="dense"
                                         fullWidth
