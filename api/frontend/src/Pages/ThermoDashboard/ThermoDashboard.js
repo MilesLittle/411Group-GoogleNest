@@ -475,7 +475,7 @@ const ThermoDashboard = () => {
     const submitAddSetJob = async (data) => {
         const reqbody = {
             name: data.target.name.value.trim(),
-            temperature: data.target.temperature.value,
+            setTemp: data.target.temperature.value,
             number: data.target.number.value,
             timeType: data.target.timeType.value,
             refresh_token: nestTokens.refresh_token,
@@ -512,7 +512,39 @@ const ThermoDashboard = () => {
         } else { //axios call goes in here
             console.log('Setting job: There are no errors')
             setErrors(null)
-            alert(`Name: ${reqbody.name}, Temperature: ${reqbody.temperature}, Number: ${reqbody.number}, Time Type: ${reqbody.timeType}, Google ID: ${reqbody.googleId}, Device ID: ${reqbody.deviceId}, Refresh Token: ${reqbody.refresh_token}`)
+
+            // same as submit add log job
+            await axios.post(`/setjob`, reqbody)
+            .then((res) => {
+                if (res.status === 201) {
+                    console.log('Successfully added the job')
+                    console.log(res.data)
+                    setJobRefresh(!jobRefresh)
+                    setAddLogJobOpen(false)
+                    raiseResponseToast(res.data.message)
+                }
+            })
+            .catch((err) => {
+                if (err.response.data.status === 400) {
+                    console.log('Bad request')
+                    console.log(err.response.data)
+                    setAddLogJobOpen(false)
+                    raiseResponseToast(err.response.data.message) 
+                } else if (err.response.data.status === 500) { //500 from API view (createLogJob()) Email emptynestgroup automatically here?
+                    console.log('Internal Server Error')
+                    console.log(err.response.data)
+                    setAddLogJobOpen(false)
+                    raiseResponseToast(err.response.data.message) 
+                } else if (err.response.status === 500) { //500 not from API view, from Axios only (If server isn't running)
+                    console.log("Server probably isn't started, Internal Server Error")
+                    console.log(err.response)
+                    setAddLogJobOpen(false)
+                    raiseResponseToast(err.response.data)
+                } else {
+                    console.log(err)
+                }
+            })
+            
             setAddSetJobOpen(false)
         }
     }
