@@ -134,11 +134,9 @@ def setJob(jobId, refresh_token):
         cmd = '{"command" : "sdm.devices.commands.ThermostatTemperatureSetpoint.SetHeat", "params" : {"heatCelsius": ' + str(setTemp) + '} }'
     
     # send command stuff
-    print("subject")
-    print(cmd)
     cmdResponse = requests.post(url=url, data=cmd, headers=headers)
-    print(cmdResponse)
-    print(cmdResponse.json())
+    if cmdResponse.status == 200:
+        print("set temp success")
 
 
 
