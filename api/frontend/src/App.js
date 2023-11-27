@@ -13,7 +13,7 @@ function App() {
       <NavBar />
       <Routes>
         <Route path="/profile" element={<Profile />}/>
-        <Route path="/thermo/:deviceId" element={<ThermoDashboard />}/> {/*protect this route later */}
+        <Route path="/thermo/:deviceId" element={<ThermoDashboard />}/>
         <Route path="/" element={<Home />}/>
         <Route path="*" element={<NotFound />}/>
       </Routes>

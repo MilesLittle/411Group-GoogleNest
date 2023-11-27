@@ -32,6 +32,8 @@ import _debounce from 'lodash/debounce';
 import Paper from '@mui/material/Paper';
 import MenuItem from '@mui/material/MenuItem';
 import testarray from "./TestArray";
+import DownloadIcon from '@mui/icons-material/Download';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
 
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
@@ -48,7 +50,7 @@ const ThermoDashboard = () => {
     const [deviceRefresh, setDeviceRefresh] = useState(false)
     const [jobRefresh, setJobRefresh] = useState(false)
     const [jobs, setJobs] = useState(null)
-    const [chartData, setChartData] = useState(testarray) //useState(null) normally
+    const [chartData, setChartData] = useState(null) 
     const [alertOpen, setAlertOpen] = useState(false)
     const [deleteConfOpen, setDeleteConfOpen] = useState(false)
     const [addLogJobOpen, setAddLogJobOpen] = useState(false)
@@ -57,11 +59,6 @@ const ThermoDashboard = () => {
     const [responseMessage, setResponseMessage] = useState('')
     const [errors, setErrors] = useState(null)
     const [sliderDisplayValue, setSliderDisplayValue] = useState(0)
-
-    // states for modal form submission
-    const [modalInput, setModalInput] = React.useState(60);
-    const [timeType, setTimeType] = React.useState(null);
-
 
     const CtoF = (cTemp) => {
         return (cTemp * 9/5) + 32
@@ -273,11 +270,8 @@ const ThermoDashboard = () => {
                 setDeleteConfOpen(false)
                 setJobToDeleteInfo({ Id: null, Name: null })
                 raiseResponseToast(res.data.message)
+                setChartData(null)  // reset chartData so chart isn't showing deleted logs
             }
-
-            // reset chartData so chart isn't showing deleted logs
-            setChartData(null)
-
         }).catch((err) => {
            if (err.response.data.status === 404) {
                 console.log('The job was not found')
@@ -303,17 +297,9 @@ const ThermoDashboard = () => {
         }
     }, [jobToDeleteInfo])
 
-
-    useEffect(() => {
-        console.log("modalInput = " + modalInput);
-        console.log("timeType = " + timeType);
-    },[modalInput, timeType])
-
-
     useEffect(() => {
         console.log("jobs");
         console.log(jobs);
-
         // for refresh
         if (chartData !== undefined && chartData != null && jobs !== undefined && jobs != null) {
             for (const job of jobs) {
@@ -322,42 +308,51 @@ const ThermoDashboard = () => {
                 }
             }
         }
-
     }, [jobs])
-
 
     // auto refresh collection of logs every minute for "real-time" graphs
     useEffect(() => {
-
         const jobRefreshInterval = setInterval(() => {
-
             setJobRefresh(refresh => !refresh)
-
-        }, 60000)
-
+        }, 30000)
         return () => {
             clearInterval(jobRefreshInterval)
         }
-
     }, [])
 
-    useEffect(() => {
-        console.log(chartData)
-    }, [chartData])
+    const getMinYBound = (data) => {
+        var bound = data.reduce((min, i) => {
 
-    // restrict modal input
-    const handleInput = (input) => {
-        
-        input = Number(input) | 0   // cast so the number actually shows up in modal form. Bitwise OR to force integer
+                if (i.ActualTemp < min) {
+                    return i.ActualTemp
 
-        // limit input. Somehow disallow user to submit log every 1 minute? That would be an excessive amount of logs
-        if (input < 1) {
-            input = null    // make sure null is not submitted in post request, or maybe make the modalInput state's purpose only for display, submit actual form value?
-        } else if (input > 60) {
-            input = 60
-        }
+                } else if (i.SetPointTemp < min) {
+                    return i.SetPointTemp
+                    
+                } else {
+                    return min
+                }
+            },
+            data[0].ActualTemp)
+        bound -= 10
+        bound = Math.round(bound/5) * 5 // make graph nice, round values by 5's
+        return bound
+    }
 
-        setModalInput(input)
+    const getMaxYBound = (data) => {
+        var bound = data.reduce((max, i) => {
+            if (i.ActualTemp > max) {
+                return i.ActualTemp
+            } else if (i.SetPointTemp > max) {
+                return i.SetPointTemp
+            } else {
+                return max
+            }
+        },
+        data[0].ActualTemp)
+        bound += 10
+        bound = Math.round(bound/5) * 5 // make graph nice, round values by 5's
+        return bound
     }
 
     const submitAddLogJob = async (data) => { 
@@ -382,6 +377,9 @@ const ThermoDashboard = () => {
         }
         if (reqbody.number <= 0) {
             errorlist.push('The interval cannot be negative, empty, or 0.')
+        }
+        if (reqbody.number.toString().length > 3) {
+            errorlist.push('The interval can be 3 digits at most.')
         }
 
         if (errorlist.length > 0) { 
@@ -426,7 +424,7 @@ const ThermoDashboard = () => {
     const submitAddSetJob = async (data) => {
         const reqbody = {
             name: data.target.name.value.trim(),
-            temperature: data.target.temperature.value,
+            setTemp: data.target.setTemp.value,
             number: data.target.number.value,
             timeType: data.target.timeType.value,
             refresh_token: nestTokens.refresh_token,
@@ -442,11 +440,14 @@ const ThermoDashboard = () => {
         if (reqbody.name.length > 50) {
             errorlist.push('The name needs to be less than 50 characters.')
         }
-        if (reqbody.temperature > 90 || reqbody.temperature < 50) {
+        if (reqbody.setTemp > 90 || reqbody.setTemp < 50) {
             errorlist.push('The temperature needs to be within 50 to 90 °F.')
         }
         if (reqbody.number < 20 && reqbody.timeType == 'minutes') {
             errorlist.push('The interval needs to be larger if the unit of time is minutes.')
+        }
+        if (reqbody.number.toString().length > 3) {
+            errorlist.push('The interval can be 3 digits at most.')
         }
         if (reqbody.number <= 0) {
             errorlist.push('The interval cannot be negative, empty, or 0.')
@@ -460,14 +461,42 @@ const ThermoDashboard = () => {
         if (errorlist.length > 0) { 
             console.log('Setting job: There are errors')
             setErrors(errorlist)
-        } else { //axios call goes in here
+        } else {
             console.log('Setting job: There are no errors')
             setErrors(null)
-            alert(`Name: ${reqbody.name}, Temperature: ${reqbody.temperature}, Number: ${reqbody.number}, Time Type: ${reqbody.timeType}, Google ID: ${reqbody.googleId}, Device ID: ${reqbody.deviceId}, Refresh Token: ${reqbody.refresh_token}`)
-            setAddSetJobOpen(false)
+            await axios.post(`/setjob`, reqbody)
+            .then((res) => {
+                if (res.status === 201) {
+                    console.log('Successfully added the job')
+                    console.log(res.data)
+                    setJobRefresh(!jobRefresh)
+                    setAddSetJobOpen(false)
+                    raiseResponseToast(res.data.message)
+                }
+            })
+            .catch((err) => {
+                if (err.response.data.status === 400) {
+                    console.log('Bad request')
+                    console.log(err.response.data)
+                    setAddSetJobOpen(false)
+                    raiseResponseToast(err.response.data.message) 
+                } else if (err.response.data.status === 500) { //500 from API view (createLogJob()) Email emptynestgroup automatically here?
+                    console.log('Internal Server Error')
+                    console.log(err.response.data)
+                    setAddSetJobOpen(false)
+                    raiseResponseToast(err.response.data.message) 
+                } else if (err.response.status === 500) { //500 not from API view, from Axios only (If server isn't running)
+                    console.log("Server probably isn't started, Internal Server Error")
+                    console.log(err.response)
+                    setAddSetJobOpen(false)
+                    raiseResponseToast(err.response.data)
+                } else {
+                    console.log(err)
+                }
+            })
         }
     }
-     
+
     const timeValues = [ // Time options 
         {
             value: "minutes", 
@@ -483,12 +512,33 @@ const ThermoDashboard = () => {
         }
     ]
 
+    const exportLogs = (data, name) => {
+        const jobJSON = `data:text/json;chatset=utf-8,${encodeURIComponent(JSON.stringify(data, null, "     "))}`
+        const link = document.createElement("a");
+        link.href = jobJSON;
+        link.download = `${name}.json`;
+        link.click();
+    }
+
+    const readFileOnUpload = (uploadedFile) =>{
+        const fileReader = new FileReader();
+        fileReader.onloadend = () => {
+           try {
+              setChartData(JSON.parse(fileReader.result));
+           } catch(e) {
+              raiseResponseToast('JSON files only, pretty please uwu')
+           }
+        }
+        if (uploadedFile!== undefined)
+            fileReader.readAsText(uploadedFile);
+    }
+
     return (
         <>
             <Snackbar open={alertOpen} anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}>
                 <SnackbarContent message={responseMessage} sx={{ backgroundColor: '#7BF1A8', color: '#000' }}/>
             </Snackbar>
-            <Modal open={deleteConfOpen} onClose={() => setDeleteConfOpen(false)}>
+            <Modal open={deleteConfOpen} onClose={() => { setDeleteConfOpen(false); setJobToDeleteInfo({ Id: null, Name: null}); }}>
                 <Fade in={deleteConfOpen}>
                 <Box sx={{ bgcolor: '#7BF1A8', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', p: 4, borderRadius: '1rem' }}>
                     <Grid container direction="column" spacing={2}>
@@ -638,7 +688,7 @@ const ThermoDashboard = () => {
                                         size="small"
                                         color="secondary"
                                         id="outlined-number"
-                                        name="temperature"
+                                        name="setTemp"
                                         type="number"
                                         margin="dense"
                                         fullWidth
@@ -825,7 +875,7 @@ const ThermoDashboard = () => {
                 <Grid item>
                     { device &&
                         <Container>
-                            <Grid container direction="row" justifyContent="center" spacing={5} marginBottom="2rem">
+                            <Grid container direction="row" justifyContent="center" spacing={5} marginBottom="1rem">
                                 {jobs ? (jobs.map((job) => { //Logging and setting jobs are set in the same state so differentiate where they are mapped in UI with the JobTypeId (make 'jobs ?' more specific for logging lobs so the 'no jobs' message appears correctly)
                                     if (job.JobTypeId.Id === 1) { //Logging job
                                     return (
@@ -838,12 +888,19 @@ const ThermoDashboard = () => {
                                                                 <Grid item>
                                                                     <Typography gutterBottom variant="h6" color='#000' component="div">
                                                                         <div onClick={() => setChartData(job.JobLogs)} style={{ cursor: 'pointer' }}>
-                                                                            {(job.Name.length > 17 ? `${job.Name.substr(0, 13)}...` : job.Name)}
+                                                                            {(job.Name.length > 11 ? `${job.Name.substr(0, 9)}...` : job.Name)} {/*11 characters max to not interfere with (possibly) 4 buttons */}
                                                                         </div>
                                                                     </Typography>
                                                                 </Grid>
                                                                 <Grid item>
                                                                     <Grid container justifyContent="flex-end">
+                                                                        <Grid item>
+                                                                            <div onClick={() => exportLogs(job.JobLogs, job.Name)} style={{ cursor: 'pointer' }}> 
+                                                                                <ToolTip title="Download Job Logs">
+                                                                                    <DownloadIcon />
+                                                                                </ToolTip>
+                                                                            </div>
+                                                                        </Grid>
                                                                         <Grid item>
                                                                             <div onClick={() => alert(`Pause logging job ${job.Name}`)} style={{ cursor: 'pointer' }}>
                                                                                 <ToolTip title="Pause Job">
@@ -865,7 +922,7 @@ const ThermoDashboard = () => {
                                                                 <Grid item>
                                                                     <Typography variant="body2" color='#000'>
                                                                         <div onClick={() => setChartData(job.JobLogs)} style={{ cursor: 'pointer' }}>
-                                                                            {(job.Description.length > 36 ? `${job.Description.substr(0, 32)}...` : job.Description)}
+                                                                            {(job.Description)}
                                                                         </div>
                                                                     </Typography>
                                                                 </Grid>
@@ -876,9 +933,14 @@ const ThermoDashboard = () => {
                                             </Grid>
                                         </Grow>
                                     )}
-                                })) : (<Typography variant="h6" color={ switched ? 'primary.main' : 'secondary.main' } sx={{ mt: '3rem', mb: '1rem', ml: '1.7rem' }}>You have no logging jobs set on this thermostat.</Typography>)}
+                                })) : (<Typography variant="h6" color={ switched ? 'primary.main' : 'secondary.main' } sx={{ mt: '3rem', ml: '1.7rem' }}>{(device.parentRelations[0].displayName.length === 0 ? 'You have no logging jobs for this thermostat.' : `You have no logging jobs for ${device.parentRelations[0].displayName}.`)}</Typography>)}
                             </Grid>
                         </Container>
+                    }
+                </Grid>
+                <Grid item mb={'2rem'}>
+                    { device &&
+                        <Button variant={switched ? "outlined" : "contained"} color={switched ? "primary" : "secondary"} size="large" startIcon={<AddCircleIcon/>} onClick={() => setAddLogJobOpen(true)}>Add Logging Job</Button> 
                     }
                 </Grid>
                     { device && 
@@ -890,8 +952,8 @@ const ThermoDashboard = () => {
                                         <XAxis dataKey="TimeLogged" stroke={(switched ? '#7BF1A8' : '#000')} angle={-55} height={200} dx={-50} dy={75}>
                                             <Label value="Log Dates" position="bottom" style={{ fill: (switched ? '#7BF1A8' : '#000')}}/>
                                         </XAxis>
-                                        <YAxis stroke={(switched ? '#7BF1A8' : '#000')}>
-                                            <Label value='Temperatures in Fahrenheit' angle={-90} position="left" dy={-92} dx={10} style={{ fill: (switched ? '#7BF1A8' : '#000')}}/>
+                                        <YAxis stroke={(switched ? '#7BF1A8' : '#000')} domain={[getMinYBound(chartData), getMaxYBound(chartData)]}>
+                                            <Label value='Temperature in Fahrenheit' angle={-90} position="left" dy={-90} dx={10} style={{ fill: (switched ? '#7BF1A8' : '#000')}}/>
                                         </YAxis>
                                         <Tooltip contentStyle={{ backgroundColor: (switched ? '#000' : '#fff'), borderColor: (switched ? '#000' : '#fff'), borderRadius: '1rem' }} labelStyle={{ color: (switched ? '#7BF1A8' : '#000')}}/>
                                         <Legend wrapperStyle={{ right: 84 }} verticalAlign="top" height={40}/>
@@ -903,8 +965,8 @@ const ThermoDashboard = () => {
                                     </LineChart>
                                 </ResponsiveContainer>)
                                 : 
-                                (<ResponsiveContainer height={400}>
-                                    <LineChart margin={{ bottom: 30, right: 125, left: 83 }}>
+                                (<ResponsiveContainer height={375}>
+                                    <LineChart margin={{ right: 125, left: 83 }}>
                                         <CartesianGrid stroke={(switched ? '#7BF1A8' : '#000')} strokeDasharray="3 3" />
                                         <XAxis>
                                             <Label value="Log Dates" position="bottom" style={{ fill: (switched ? '#7BF1A8' : '#000')}}/>
@@ -925,13 +987,21 @@ const ThermoDashboard = () => {
                     }
                     <Grid item>
                         { device &&
+                            <label htmlFor="upload-file">
+                                <input style={{ display: 'none' }} id="upload-file" name="upload-file" type="file" onChange={(e)=>readFileOnUpload(e.target.files[0])}/>
+                                <Button variant={switched ? "outlined" : "contained"} component="span" color={switched ? "primary" : "secondary"} size="large" startIcon={<UploadFileIcon />}>Upload File</Button>
+                            </label>
+                        }
+                    </Grid>
+                    <Grid item>
+                        { device &&
                             <Typography variant="h3" mt={4}>Your Setting Jobs</Typography>
                         }
                     </Grid>
                     <Grid item>
                         { device &&
                             <Container>
-                                <Grid container direction="row" justifyContent="center" spacing={5} marginBottom="2rem">
+                                <Grid container direction="row" justifyContent="center" spacing={5} marginBottom="1rem">
                                     {jobs ? (jobs.map((job) => { //make 'jobs ?' more specific for setting lobs so the 'no jobs' message appears correctly
                                         if (job.JobTypeId.Id === 2) { //setting jobs
                                         return (
@@ -943,7 +1013,7 @@ const ThermoDashboard = () => {
                                                                 <Grid container direction="row" justifyContent="space-between">
                                                                     <Grid item>
                                                                         <Typography gutterBottom variant="h6" color='#000' component="div">
-                                                                            {(job.Name.length > 17 ? `${job.Name.substr(0, 13)}...` : job.Name)}
+                                                                            {(job.Name.length > 11 ? `${job.Name.substr(0, 9)}...` : job.Name)}
                                                                         </Typography>
                                                                     </Grid>
                                                                     <Grid item>
@@ -968,7 +1038,7 @@ const ThermoDashboard = () => {
                                                                 <Grid container direction="column">
                                                                     <Grid item>
                                                                         <Typography variant="body2" color='#000'>
-                                                                            {(job.Description.length > 36 ? `${job.Description.substr(0, 32)}...` : job.Description)}
+                                                                            {(job.Description)}
                                                                         </Typography>
                                                                     </Grid>
                                                                 </Grid>
@@ -978,23 +1048,14 @@ const ThermoDashboard = () => {
                                                 </Grid>
                                             </Grow>
                                         )}
-                                    })) : (<Typography variant="h6" color={ switched ? 'primary.main' : 'secondary.main' } sx={{ mt: '3rem', mb: '1rem', ml: '1.7rem' }}>You have no setting jobs set on this thermostat.</Typography>)}
+                                    })) : (<Typography variant="h6" color={ switched ? 'primary.main' : 'secondary.main' } sx={{ mt: '3rem', ml: '1.7rem' }}>{(device.parentRelations[0].displayName.length === 0 ? 'You have no logging jobs for this thermostat.' : `You have no setting jobs for ${device.parentRelations[0].displayName}.`)}</Typography>)}
                             </Grid>
                         </Container>
                         }
                     </Grid>
-                    <Grid item>
+                    <Grid item mb={'2rem'}>
                         { device &&
-                            <Container>
-                                <Grid container direction="row" justifyContent="space-around" alignItems="center" spacing={2}>
-                                    <Grid item>
-                                        <Button variant={switched ? "outlined" : "contained"} color={switched ? "primary" : "secondary"} size="large" startIcon={<AddCircleIcon/>} onClick={() => setAddLogJobOpen(true)}>Add Logging Job</Button>
-                                    </Grid>
-                                    <Grid item>
-                                        <Button variant={switched ? "outlined" : "contained"} color={switched ? "primary" : "secondary"} size="large" startIcon={<AddCircleIcon/>} onClick={() => setAddSetJobOpen(true)}>Add Setting Job</Button>
-                                    </Grid>
-                                </Grid> 
-                            </Container>
+                            <Button variant={switched ? "outlined" : "contained"} color={switched ? "primary" : "secondary"} size="large" startIcon={<AddCircleIcon/>} onClick={() => setAddSetJobOpen(true)}>Add Setting Job</Button>
                         }
                     </Grid>
             </Grid>
