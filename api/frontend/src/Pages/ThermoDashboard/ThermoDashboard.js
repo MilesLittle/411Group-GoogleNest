@@ -32,6 +32,7 @@ import _debounce from 'lodash/debounce';
 import Paper from '@mui/material/Paper';
 import MenuItem from '@mui/material/MenuItem';
 import testarray from "./TestArray";
+import DownloadIcon from '@mui/icons-material/Download';
 
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
@@ -48,7 +49,7 @@ const ThermoDashboard = () => {
     const [deviceRefresh, setDeviceRefresh] = useState(false)
     const [jobRefresh, setJobRefresh] = useState(false)
     const [jobs, setJobs] = useState(null)
-    const [chartData, setChartData] = useState(testarray) //useState(null) normally
+    const [chartData, setChartData] = useState(null) 
     const [alertOpen, setAlertOpen] = useState(false)
     const [deleteConfOpen, setDeleteConfOpen] = useState(false)
     const [addLogJobOpen, setAddLogJobOpen] = useState(false)
@@ -57,10 +58,6 @@ const ThermoDashboard = () => {
     const [responseMessage, setResponseMessage] = useState('')
     const [errors, setErrors] = useState(null)
     const [sliderDisplayValue, setSliderDisplayValue] = useState(0)
-
-    // states for modal form submission
-    const [modalInput, setModalInput] = React.useState(60);
-    const [settingModalInput, setSettingModalInput] = React.useState(60);
 
     const CtoF = (cTemp) => {
         return (cTemp * 9/5) + 32
@@ -380,6 +377,9 @@ const ThermoDashboard = () => {
         if (reqbody.number <= 0) {
             errorlist.push('The interval cannot be negative, empty, or 0.')
         }
+        if (reqbody.number.toString().length > 3) {
+            errorlist.push('The interval can be 3 digits at most.')
+        }
 
         if (errorlist.length > 0) { 
             console.log('Logging job: There are errors')
@@ -445,6 +445,9 @@ const ThermoDashboard = () => {
         if (reqbody.number < 20 && reqbody.timeType == 'minutes') {
             errorlist.push('The interval needs to be larger if the unit of time is minutes.')
         }
+        if (reqbody.number.toString().length > 3) {
+            errorlist.push('The interval can be 3 digits at most.')
+        }
         if (reqbody.number <= 0) {
             errorlist.push('The interval cannot be negative, empty, or 0.')
         }
@@ -507,6 +510,14 @@ const ThermoDashboard = () => {
             label: "days",
         }
     ]
+
+    const exportLogs = (data, name) => {
+        const jobJSON = `data:text/json;chatset=utf-8,${encodeURIComponent(JSON.stringify(data, null, "     "))}`
+        const link = document.createElement("a");
+        link.href = jobJSON;
+        link.download = `${name}.json`;
+        link.click();
+    }
 
     return (
         <>
@@ -863,12 +874,19 @@ const ThermoDashboard = () => {
                                                                 <Grid item>
                                                                     <Typography gutterBottom variant="h6" color='#000' component="div">
                                                                         <div onClick={() => setChartData(job.JobLogs)} style={{ cursor: 'pointer' }}>
-                                                                            {(job.Name.length > 17 ? `${job.Name.substr(0, 13)}...` : job.Name)}
+                                                                            {(job.Name.length > 11 ? `${job.Name.substr(0, 9)}...` : job.Name)} {/*11 characters max to not interfere with (possibly) 4 buttons */}
                                                                         </div>
                                                                     </Typography>
                                                                 </Grid>
                                                                 <Grid item>
                                                                     <Grid container justifyContent="flex-end">
+                                                                        <Grid item>
+                                                                            <div onClick={() => exportLogs(job.JobLogs, job.Name)} style={{ cursor: 'pointer' }}> 
+                                                                                <ToolTip title="Download Job Logs">
+                                                                                    <DownloadIcon />
+                                                                                </ToolTip>
+                                                                            </div>
+                                                                        </Grid>
                                                                         <Grid item>
                                                                             <div onClick={() => alert(`Pause logging job ${job.Name}`)} style={{ cursor: 'pointer' }}>
                                                                                 <ToolTip title="Pause Job">
@@ -890,7 +908,7 @@ const ThermoDashboard = () => {
                                                                 <Grid item>
                                                                     <Typography variant="body2" color='#000'>
                                                                         <div onClick={() => setChartData(job.JobLogs)} style={{ cursor: 'pointer' }}>
-                                                                            {(job.Description.length > 36 ? `${job.Description.substr(0, 32)}...` : job.Description)}
+                                                                            {(job.Description)}
                                                                         </div>
                                                                     </Typography>
                                                                 </Grid>
@@ -968,7 +986,7 @@ const ThermoDashboard = () => {
                                                                 <Grid container direction="row" justifyContent="space-between">
                                                                     <Grid item>
                                                                         <Typography gutterBottom variant="h6" color='#000' component="div">
-                                                                            {(job.Name.length > 17 ? `${job.Name.substr(0, 13)}...` : job.Name)}
+                                                                            {(job.Name.length > 11 ? `${job.Name.substr(0, 9)}...` : job.Name)}
                                                                         </Typography>
                                                                     </Grid>
                                                                     <Grid item>
@@ -993,7 +1011,7 @@ const ThermoDashboard = () => {
                                                                 <Grid container direction="column">
                                                                     <Grid item>
                                                                         <Typography variant="body2" color='#000'>
-                                                                            {(job.Description.length > 36 ? `${job.Description.substr(0, 32)}...` : job.Description)}
+                                                                            {(job.Description)}
                                                                         </Typography>
                                                                     </Grid>
                                                                 </Grid>

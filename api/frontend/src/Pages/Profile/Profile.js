@@ -47,7 +47,9 @@ const Profile = () => {
                 { googleAccountInfo ? (
                     <>
                         <Grid item>
-                            <Avatar src={googleAccountInfo.picture} alt="User Image" sx={{ width: 150, height: 150 }}/>
+                            <div onClick={() => navigate('/mygraph')} style={{ cursor: 'pointer' }}>
+                                <Avatar src={googleAccountInfo.picture} alt="User Image" sx={{ width: 150, height: 150 }}/>
+                            </div>
                         </Grid>
                         <Grid item>
                             <Typography fontSize={'3rem'} color={ switched && '#7BF1A8' }>Hi, {googleAccountInfo.name} </Typography>
