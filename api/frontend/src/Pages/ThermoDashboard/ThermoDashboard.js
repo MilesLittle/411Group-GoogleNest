@@ -153,7 +153,7 @@ const ThermoDashboard = () => {
         }).catch((err) => {
             console.log(err)
         })
-    }, [deviceRefresh])
+    }, [deviceRefresh]) //make duplicate of this call for slider to call that doesn't set device null first in line 148
 
     useEffect(() => { 
         if (device) {
@@ -395,7 +395,7 @@ const ThermoDashboard = () => {
         if (tempRange.Cool < 50 || tempRange.Cool > 90 || tempRange.Heat < 50 || tempRange.Heat > 90) {
             errorlist.push('The temperatures need to be within 50 to 90 °F.')
         }
-        if (tempRange.Cool === getRangeTemps(device).coolTemp || tempRange.Heat === getRangeTemps(device).heatTemp) {
+        if (tempRange.Cool === getRangeTemps(device).coolTemp && tempRange.Heat === getRangeTemps(device).heatTemp) {
             errorlist.push('The thermostat already has these temperatures for the range.')
         }
 
@@ -495,7 +495,7 @@ const ThermoDashboard = () => {
         }
     }, [])
 
-    const getMinYBound = (data) => {
+    /*const getMinYBound = (data) => {
         var bound = data.reduce((min, i) => {
                 if (i.ActualTemp < min) {
                     return i.ActualTemp
@@ -510,9 +510,9 @@ const ThermoDashboard = () => {
         bound -= 10
         bound = Math.round(bound/5) * 5 // make graph nice, round values by 5's
         return bound
-    }
+    }*/
 
-    const getMaxYBound = (data) => {
+    /*const getMaxYBound = (data) => {
         var bound = data.reduce((max, i) => {
             if (i.ActualTemp > max) {
                 return i.ActualTemp
@@ -526,7 +526,7 @@ const ThermoDashboard = () => {
         bound += 10
         bound = Math.round(bound/5) * 5 // make graph nice, round values by 5's
         return bound
-    }
+    }*/
 
     const submitAddLogJob = async (data) => { 
         const reqbody = {
@@ -1238,7 +1238,7 @@ const ThermoDashboard = () => {
                                         <XAxis dataKey="TimeLogged" stroke={(switched ? '#7BF1A8' : '#000')} angle={-55} height={200} dx={-50} dy={75}>
                                             <Label value="Log Dates" position="bottom" style={{ fill: (switched ? '#7BF1A8' : '#000')}}/>
                                         </XAxis>
-                                        <YAxis stroke={(switched ? '#7BF1A8' : '#000')} domain={[getMinYBound(chartData), getMaxYBound(chartData)]}>
+                                        <YAxis stroke={(switched ? '#7BF1A8' : '#000')}> {/*domain={[getMinYBound(chartData), getMaxYBound(chartData)]} */}
                                             <Label value='Temperature in Fahrenheit' angle={-90} position="left" dy={-90} dx={10} style={{ fill: (switched ? '#7BF1A8' : '#000')}}/>
                                         </YAxis>
                                         <Tooltip contentStyle={{ backgroundColor: (switched ? '#000' : '#fff'), borderColor: (switched ? '#000' : '#fff'), borderRadius: '1rem' }} labelStyle={{ color: (switched ? '#7BF1A8' : '#000')}}/>
