@@ -152,7 +152,7 @@ const ThermoDashboard = () => {
     }, [device])
 
     useEffect(() => {
-        axios.get(`/jobs?googleId=${googleAccountInfo.id}&thermostatId=${deviceId}`)
+        axios.get(`https://tempwiseserver-production.up.railway.app/jobs?googleId=${googleAccountInfo.id}&thermostatId=${deviceId}`)
         .then((res) => {
             if (res.status === 200) { 
                 console.log(res.data) //raw data from Django, temp unconverted (How are the temps already converted in the console before the forEach functions run below?)
@@ -261,7 +261,7 @@ const ThermoDashboard = () => {
     }
 
     const deleteJob = async (id) => {
-        await axios.delete(`/job/${id}/delete`)
+        await axios.delete(`https://tempwiseserver-production.up.railway.app/job/${id}/delete`)
         .then((res) => {
             if (res.status === 200) {
                 console.log('Successfully deleted the job')
@@ -388,7 +388,7 @@ const ThermoDashboard = () => {
         } else {
             console.log('Logging job: There are no errors')
             setErrors(null)
-            await axios.post(`/logjob`, reqbody)
+            await axios.post(`https://tempwiseserver-production.up.railway.app/logjob`, reqbody)
             .then((res) => {
                 if (res.status === 201) {
                     console.log('Successfully added the job')
@@ -464,7 +464,7 @@ const ThermoDashboard = () => {
         } else {
             console.log('Setting job: There are no errors')
             setErrors(null)
-            await axios.post(`/setjob`, reqbody)
+            await axios.post(`https://tempwiseserver-production.up.railway.app/setjob`, reqbody)
             .then((res) => {
                 if (res.status === 201) {
                     console.log('Successfully added the job')

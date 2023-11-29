@@ -1,13 +1,18 @@
 {
   "files": {
-    "main.css": "/static/css/main.e6c13ad2.css",
-    "main.js": "/static/js/main.e250cc4e.js",
+    "main.css": "/static/css/main.8b050f47.css",
+    "main.js": "/static/js/main.82aebd02.js",
+    "static/media/blanknestthermo.jpg": "/static/media/blanknestthermo.ca77a6fadd9b7b0171b1.jpg",
+    "static/media/blanknestthermodark.jpg": "/static/media/blanknestthermodark.8955d6f9762b6c424483.jpg",
+    "static/media/ourmascottransparent.png": "/static/media/ourmascottransparent.c9323409e44bab8dec94.png",
+    "static/media/Ashton's friend's logo with green background.jpg": "/static/media/Ashton's friend's logo with green background.bad243117ad9084633f4.jpg",
+    "static/media/Ashton's friend's logo black n green.jpg": "/static/media/Ashton's friend's logo black n green.61e257d780f80387755a.jpg",
     "index.html": "/index.html",
-    "main.e6c13ad2.css.map": "/static/css/main.e6c13ad2.css.map",
-    "main.e250cc4e.js.map": "/static/js/main.e250cc4e.js.map"
+    "main.8b050f47.css.map": "/static/css/main.8b050f47.css.map",
+    "main.82aebd02.js.map": "/static/js/main.82aebd02.js.map"
   },
   "entrypoints": [
-    "static/css/main.e6c13ad2.css",
-    "static/js/main.e250cc4e.js"
+    "static/css/main.8b050f47.css",
+    "static/js/main.82aebd02.js"
   ]
 }
