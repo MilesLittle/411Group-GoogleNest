@@ -63,6 +63,12 @@ def saveLog(jobId, refresh_token):
     # initial temp log
     response_json = response.json()
     actualTemp = response_json["traits"]["sdm.devices.traits.Temperature"]["ambientTemperatureCelsius"]
+    if response_json["traits"]["sdm.devices.traits.ThermostatEco"]["mode"] == 'MANUAL_ECO': #if the thermo is in eco mode. Eco mode goes first in statement because the way Google writes their JSON and the way we need to read it gives it higher precedence.
+        heat = response_json["traits"]["sdm.devices.traits.ThermostatEco"]["heatCelsius"]
+        cool = response_json["traits"]["sdm.devices.traits.ThermostatEco"]["coolCelsius"]
+        mode = response_json["traits"]["sdm.devices.traits.ThermostatEco"]["mode"]
+        newJobLog = JobLog(JobId=job, ActualTemp=actualTemp, SetPointTemp=None, HeatTemp=heat, CoolTemp=cool, Mode=mode, TimeLogged=datetime.now())
+        newJobLog.save()
     if response_json["traits"]["sdm.devices.traits.ThermostatMode"]["mode"] == 'HEAT': #if thermo is in heat mode
         setPointTemp = response_json["traits"]["sdm.devices.traits.ThermostatTemperatureSetpoint"]["heatCelsius"]
         mode = response_json["traits"]["sdm.devices.traits.ThermostatMode"]["mode"] #redundant, just insert the mode already in if case?
@@ -74,15 +80,9 @@ def saveLog(jobId, refresh_token):
         newJobLog = JobLog(JobId=job, ActualTemp=actualTemp, SetPointTemp=setPointTemp, HeatTemp=None, CoolTemp=None, Mode=mode, TimeLogged=datetime.now())
         newJobLog.save()
     elif response_json["traits"]["sdm.devices.traits.ThermostatMode"]["mode"] == 'HEATCOOL': #if the thermo is in heatcool mode
-        heat = response_json["sdm.devices.traits.ThermostatTemperatureSetpoint"]["heatCelsius"]
-        cool = response_json["sdm.devices.traits.ThermostatTemperatureSetpoint"]["coolCelsius"]
+        heat = response_json["traits"]["sdm.devices.traits.ThermostatTemperatureSetpoint"]["heatCelsius"]
+        cool = response_json["traits"]["sdm.devices.traits.ThermostatTemperatureSetpoint"]["coolCelsius"]
         mode = response_json["traits"]["sdm.devices.traits.ThermostatMode"]["mode"]
-        newJobLog = JobLog(JobId=job, ActualTemp=actualTemp, SetPointTemp=None, HeatTemp=heat, CoolTemp=cool, Mode=mode, TimeLogged=datetime.now())
-        newJobLog.save()
-    elif response_json["traits"]["sdm.devices.traits.ThermostatEco"]["mode"] == 'MANUAL_ECO': #if the thermo is in eco mode
-        heat = response_json["traits"]["sdm.devices.traits.ThermostatEco"]["heatCelsius"]
-        cool = response_json["traits"]["sdm.devices.traits.ThermostatEco"]["coolCelsius"]
-        mode = response_json["traits"]["sdm.devices.traits.ThermostatEco"]["mode"]
         newJobLog = JobLog(JobId=job, ActualTemp=actualTemp, SetPointTemp=None, HeatTemp=heat, CoolTemp=cool, Mode=mode, TimeLogged=datetime.now())
         newJobLog.save()
     else: #off
