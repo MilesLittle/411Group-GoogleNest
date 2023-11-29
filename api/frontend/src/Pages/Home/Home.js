@@ -30,18 +30,32 @@ const Home = () => {
 
     const getDisplayTemp = (thermostat) => {
       var displayTemp
-      if (thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEAT') {
+      if (thermostat.traits["sdm.devices.traits.ThermostatEco"].mode === 'MANUAL_ECO') { //eco mode priority
+        displayTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatEco"].heatCelsius)) + ' • ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatEco"].coolCelsius))
+      } else if (thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEAT') {
         displayTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].heatCelsius))
       } else if (thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'COOL') {
         displayTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius))
       } else if (thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEATCOOL') {
-        displayTemp = 'H: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].heatCelsius)) + ', C: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius))
-      } else if (thermostat.traits["sdm.devices.traits.ThermostatEco"].mode === 'MANUAL_ECO') {
-        displayTemp = 'H: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatEco"].heatCelsius)) + ', C: ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatEco"].coolCelsius))
+        displayTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].heatCelsius)) + ' • ' + Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius))
       } else { //OFF
         displayTemp = 'Thermostat is off.'
       }
       return displayTemp
+    }
+
+    const getMode = (thermostat) => {
+      var mode
+      if (thermostat.traits["sdm.devices.traits.ThermostatEco"].mode === 'MANUAL_ECO') { //eco has priority
+          mode = thermostat.traits["sdm.devices.traits.ThermostatEco"].mode
+      } else if (thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEAT' || 
+          thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'COOL' ||
+          thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEATCOOL') {
+          mode = thermostat.traits["sdm.devices.traits.ThermostatMode"].mode
+      } else { //off
+          mode = 'OFF'
+      }
+      return mode
     }
 
     const scrollToBottom = () => {
@@ -122,7 +136,7 @@ const Home = () => {
                         <ThermoCard 
                           deviceId={getDeviceId(thermostat.name)} 
                           deviceName={thermostat.parentRelations[0].displayName.length === 0 ? 'No custom name set.' : thermostat.parentRelations[0].displayName} 
-                          mode={thermostat.traits["sdm.devices.traits.ThermostatMode"].mode}
+                          mode={getMode(thermostat)}
                           actualTempF={Math.round(CtoF(thermostat.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius))} 
                           actualTempC={Math.round(thermostat.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius)}
                           setPointTempF={getDisplayTemp(thermostat)}
