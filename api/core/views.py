@@ -135,7 +135,7 @@ def setJob(jobId, refresh_token):
     
     # send command stuff
     cmdResponse = requests.post(url=url, data=cmd, headers=headers)
-    if cmdResponse.status == 200:
+    if cmdResponse.status_code == 200:
         print("set temp success")
 
 
