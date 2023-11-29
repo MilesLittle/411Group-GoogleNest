@@ -181,11 +181,20 @@ def createLogJob(request):
 
     description = ''
     if timeType == 'minutes':
-        description = f'Logging every {timeNum} minutes'
+        if timeNum == 1: #shouldnt happen but whatever
+            description = f'Logging every minute'
+        else:
+            description = f'Logging every {timeNum} minutes'
     elif timeType == 'hours':
-        description = f'Logging every {timeNum} hours'
+        if timeNum == 1:
+            description = f'Logging every hour'
+        else:
+            description = f'Logging every {timeNum} hours'
     else: #days
-        description = f'Logging every {timeNum} days'
+        if timeNum == 1: 
+            description = f'Logging every day'
+        else:
+            description = f'Logging every {timeNum} days'
 
     def newJob():
        # get access token with refresh token
@@ -257,58 +266,71 @@ def createSetJob(request):
     deviceId = request.data['deviceId']
     googleId = request.data['googleId']
 
-    description = ''
-    if timeType == 'minutes':
-        description = f'Setting thermostat to {setTemp} every {timeNum} minutes'
-    elif timeType == 'hours':
-        description = f'Setting thermostat to {setTemp} every {timeNum} hours'
-    else: #days
-        description = f'Setting thermostat to {setTemp} every {timeNum} days'
-    
-    # get access token with refresh token
-    loggingType = JobType.objects.get(pk=2)
-    params = (
-        ('client_id', client_id),
-        ('client_secret', client_secret),
-        ('refresh_token', refresh_token),
-        ('grant_type', 'refresh_token'),
-    )
-    response = requests.post('https://www.googleapis.com/oauth2/v4/token', params=params)
-    response_json = response.json()
-    access_token = response_json['access_token']
-
-    # use access token
-    projectid = project_id
-    getdevice = 'https://smartdevicemanagement.googleapis.com/v1/enterprises/' + projectid + '/devices/' + deviceId
-    headers = {
-        'Content-Type': 'application/json',
-        'Authorization': "Bearer " + access_token
-    } 
-    response = requests.get(getdevice, headers=headers)
-
-    # make Job record (our model)
-    if response.status_code == 200:
-        # new job
-        newJob = Job(Name=jobname, GoogleId=googleId, ThermostatId=deviceId, Description=description, SettingTemp=setTemp, JobTypeId=loggingType)
-        newJob.save()
+    alljobsbyuser = Job.objects.filter(GoogleId=googleId)
+    if alljobsbyuser.count() == 3: #Is 3 a good number of jobs a user can have? The query above is counting ALL jobs of a user, not just the ones on a single thermostat. It's == 3 and not >= 3 bc if this code is working correctly, no one should have more than 3 jobs (unless we change the limit).
+        return Response(data={'status': 400, 'message': "Your account is at its limit of 3 jobs. Try deleting one before making another."}, status=status.HTTP_400_BAD_REQUEST)
     else:
-        print('Something went wrong')
-        return Response(data={'status': 500, 'message': "There was a problem creating setting job"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    # make APS job
-    if myscheduler.get_job(newJob.Id):
-        return Response(data={'status': 400, "message": "There's already a job with this id"}, status=status.HTTP_400_BAD_REQUEST)
-    else:
-        Id = str(newJob.Id)
-        print(Id)
+        description = ''
         if timeType == 'minutes':
-            myscheduler.add_job(setJob, trigger=IntervalTrigger(minutes=timeNum), id=Id, args=[newJob.Id, refresh_token])
+            if timeNum == 1: #this shouldn't happen but whatever, uniformity i guess
+                description == f'Setting thermostat to {setTemp} every minute'
+            else:
+                description = f'Setting thermostat to {setTemp} every {timeNum} minutes'
         elif timeType == 'hours':
-            myscheduler.add_job(setJob, trigger=IntervalTrigger(hours=timeNum), id=Id, args=[newJob.Id, refresh_token])
+            if timeNum == 1:
+                description = f'Setting thermostat to {setTemp} every hour'
+            else:
+                description = f'Setting thermostat to {setTemp} every {timeNum} hours'
         else: #days
-            myscheduler.add_job(setJob, trigger=IntervalTrigger(days=timeNum), id=Id, args=[newJob.Id, refresh_token])
-        print("added job")
-        return Response(data={'status': 201, 'message': "Log job succesfully created."}, status=status.HTTP_201_CREATED) #should response go inside each if statement?
+            if timeNum == 1:
+                description = f'Setting thermostat to {setTemp} every day'
+            else: 
+                description = f'Setting thermostat to {setTemp} every {timeNum} days'
+        
+        # get access token with refresh token
+        loggingType = JobType.objects.get(pk=2)
+        params = (
+            ('client_id', client_id),
+            ('client_secret', client_secret),
+            ('refresh_token', refresh_token),
+            ('grant_type', 'refresh_token'),
+        )
+        response = requests.post('https://www.googleapis.com/oauth2/v4/token', params=params)
+        response_json = response.json()
+        access_token = response_json['access_token']
+
+        # use access token
+        projectid = project_id
+        getdevice = 'https://smartdevicemanagement.googleapis.com/v1/enterprises/' + projectid + '/devices/' + deviceId
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + access_token
+        } 
+        response = requests.get(getdevice, headers=headers)
+
+        # make Job record (our model)
+        if response.status_code == 200:
+            # new job
+            newJob = Job(Name=jobname, GoogleId=googleId, ThermostatId=deviceId, Description=description, SettingTemp=setTemp, JobTypeId=loggingType)
+            newJob.save()
+        else:
+            print('Something went wrong')
+            return Response(data={'status': 500, 'message': "There was a problem creating setting job"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # make APS job
+        if myscheduler.get_job(newJob.Id):
+            return Response(data={'status': 400, "message": "There's already a job with this id"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            Id = str(newJob.Id)
+            print(Id)
+            if timeType == 'minutes':
+                myscheduler.add_job(setJob, trigger=IntervalTrigger(minutes=timeNum), id=Id, args=[newJob.Id, refresh_token])
+            elif timeType == 'hours':
+                myscheduler.add_job(setJob, trigger=IntervalTrigger(hours=timeNum), id=Id, args=[newJob.Id, refresh_token])
+            else: #days
+                myscheduler.add_job(setJob, trigger=IntervalTrigger(days=timeNum), id=Id, args=[newJob.Id, refresh_token])
+            print("added job")
+            return Response(data={'status': 201, 'message': "Set job succesfully created."}, status=status.HTTP_201_CREATED) #should response go inside each if statement?
 
 
 @api_view(['DELETE'])
