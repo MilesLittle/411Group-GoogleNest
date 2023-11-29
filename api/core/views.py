@@ -135,7 +135,7 @@ def setJob(jobId, refresh_token):
     
     # send command stuff
     cmdResponse = requests.post(url=url, data=cmd, headers=headers)
-    if cmdResponse.status == 200:
+    if cmdResponse.status_code == 200:
         print("set temp success")
 
 
@@ -219,7 +219,7 @@ def createLogJob(request):
         # make Job record (our model)
         if response.status_code == 200:
             # new job
-            newJob = Job(Name=jobname, GoogleId=googleId, ThermostatId=deviceId, Description=description, SettingTemp=None, JobTypeId=loggingType)
+            newJob = Job(Name=jobname, GoogleId=googleId, ThermostatId=deviceId, Description=description, SettingTemp=None, JobTypeId=loggingType, DateCreated=datetime.now())
             newJob.save()
             saveLog(newJob.Id, refresh_token)
             return newJob.Id
@@ -311,7 +311,7 @@ def createSetJob(request):
         # make Job record (our model)
         if response.status_code == 200:
             # new job
-            newJob = Job(Name=jobname, GoogleId=googleId, ThermostatId=deviceId, Description=description, SettingTemp=setTemp, JobTypeId=loggingType)
+            newJob = Job(Name=jobname, GoogleId=googleId, ThermostatId=deviceId, Description=description, SettingTemp=setTemp, JobTypeId=loggingType, DateCreated=datetime.now())
             newJob.save()
         else:
             print('Something went wrong')
