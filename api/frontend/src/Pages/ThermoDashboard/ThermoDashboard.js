@@ -175,6 +175,7 @@ const ThermoDashboard = () => {
                         }
                         joblog.TimeLogged = moment(`${joblog.TimeLogged}`).format('llll')
                     })
+                    jobanditslogs.DateCreated = moment(`${jobanditslogs.DateCreated}`).format('llll')
                 })
                 console.log(convertedData) //temperatures changed from C to F, date changed (but somehow they are already changed above?)
                 setJobs(convertedData)
@@ -320,7 +321,7 @@ const ThermoDashboard = () => {
         }
     }, [])
 
-    const getMinYBound = (data) => {
+    /*const getMinYBound = (data) => {
         var bound = data.reduce((min, i) => {
 
                 if (i.ActualTemp < min) {
@@ -337,9 +338,9 @@ const ThermoDashboard = () => {
         bound -= 10
         bound = Math.round(bound/5) * 5 // make graph nice, round values by 5's
         return bound
-    }
+    }*/
 
-    const getMaxYBound = (data) => {
+    /*const getMaxYBound = (data) => {
         var bound = data.reduce((max, i) => {
             if (i.ActualTemp > max) {
                 return i.ActualTemp
@@ -353,7 +354,7 @@ const ThermoDashboard = () => {
         bound += 10
         bound = Math.round(bound/5) * 5 // make graph nice, round values by 5's
         return bound
-    }
+    }*/
 
     const submitAddLogJob = async (data) => { 
         const reqbody = {
@@ -882,7 +883,7 @@ const ThermoDashboard = () => {
                                         <Grow in={true}>
                                             <Grid item>
                                                 <ToolTip title={<>Job Name: {job.Name}<br/>Job Description: {job.Description}</>} arrow>
-                                                    <Card sx={{ borderRadius: '2rem', bgcolor: (job.JobLogs === chartData ? 'primary.dark' : 'primary.main'), width: '15rem' }} elevation={(job.JobLogs === chartData ? 8 : 0)} key={job.Id}>
+                                                    <Card sx={{ borderRadius: '2rem', bgcolor: (job.JobLogs === chartData ? 'primary.dark' : 'primary.main'), width: '18rem' }} elevation={(job.JobLogs === chartData ? 8 : 0)} key={job.Id}>
                                                         <CardContent>
                                                             <Grid container direction="row" justifyContent="space-between">
                                                                 <Grid item>
@@ -902,13 +903,6 @@ const ThermoDashboard = () => {
                                                                             </div>
                                                                         </Grid>
                                                                         <Grid item>
-                                                                            <div onClick={() => alert(`Pause logging job ${job.Name}`)} style={{ cursor: 'pointer' }}>
-                                                                                <ToolTip title="Pause Job">
-                                                                                    <PauseCircleIcon />
-                                                                                </ToolTip>
-                                                                            </div>
-                                                                        </Grid>
-                                                                        <Grid item>
                                                                             <div onClick={() => setJobToDeleteInfo({ Id: job.Id, Name: job.Name })} style={{ cursor: 'pointer' }}>
                                                                                 <ToolTip title="Delete Job">
                                                                                     <DeleteIcon />
@@ -924,6 +918,16 @@ const ThermoDashboard = () => {
                                                                         <div onClick={() => setChartData(job.JobLogs)} style={{ cursor: 'pointer' }}>
                                                                             {(job.Description)}
                                                                         </div>
+                                                                    </Typography>
+                                                                </Grid>
+                                                                <Grid item>
+                                                                    <Typography variant="body2" color="#000">
+                                                                        Created {job.DateCreated}
+                                                                    </Typography>
+                                                                </Grid>
+                                                                <Grid>
+                                                                    <Typography variant="body2" color="#000">
+                                                                        Expires {`${moment(job.DateCreated).add(7, 'days').format('llll')}`}
                                                                     </Typography>
                                                                 </Grid>
                                                             </Grid>
@@ -952,7 +956,7 @@ const ThermoDashboard = () => {
                                         <XAxis dataKey="TimeLogged" stroke={(switched ? '#7BF1A8' : '#000')} angle={-55} height={200} dx={-50} dy={75}>
                                             <Label value="Log Dates" position="bottom" style={{ fill: (switched ? '#7BF1A8' : '#000')}}/>
                                         </XAxis>
-                                        <YAxis stroke={(switched ? '#7BF1A8' : '#000')} domain={[getMinYBound(chartData), getMaxYBound(chartData)]}>
+                                        <YAxis stroke={(switched ? '#7BF1A8' : '#000')}> {/*domain={[getMinYBound(chartData), getMaxYBound(chartData)]} */}
                                             <Label value='Temperature in Fahrenheit' angle={-90} position="left" dy={-90} dx={10} style={{ fill: (switched ? '#7BF1A8' : '#000')}}/>
                                         </YAxis>
                                         <Tooltip contentStyle={{ backgroundColor: (switched ? '#000' : '#fff'), borderColor: (switched ? '#000' : '#fff'), borderRadius: '1rem' }} labelStyle={{ color: (switched ? '#7BF1A8' : '#000')}}/>
@@ -1008,7 +1012,7 @@ const ThermoDashboard = () => {
                                             <Grow in={true}>
                                                 <Grid item>
                                                     <ToolTip title={<>Job Name: {job.Name}<br/>Job Description: {job.Description}</>} arrow>
-                                                        <Card sx={{ borderRadius: '2rem', bgcolor: 'primary.main', width: '15rem' }} elevation={0} key={job.Id}>
+                                                        <Card sx={{ borderRadius: '2rem', bgcolor: 'primary.main', width: '18rem' }} elevation={0} key={job.Id}>
                                                             <CardContent>
                                                                 <Grid container direction="row" justifyContent="space-between">
                                                                     <Grid item>
@@ -1018,13 +1022,6 @@ const ThermoDashboard = () => {
                                                                     </Grid>
                                                                     <Grid item>
                                                                         <Grid container justifyContent="flex-end">
-                                                                            <Grid item>
-                                                                                <div onClick={() => alert(`Pause setting job ${job.Name}`)} style={{ cursor: 'pointer' }}>
-                                                                                    <ToolTip title="Pause Job">
-                                                                                        <PauseCircleIcon />
-                                                                                    </ToolTip>
-                                                                                </div>
-                                                                            </Grid>
                                                                             <Grid item>
                                                                                 <div onClick={() => setJobToDeleteInfo({ Id: job.Id, Name: job.Name })} style={{ cursor: 'pointer' }}>
                                                                                     <ToolTip title="Delete Job">
@@ -1039,6 +1036,16 @@ const ThermoDashboard = () => {
                                                                     <Grid item>
                                                                         <Typography variant="body2" color='#000'>
                                                                             {(job.Description)}
+                                                                        </Typography>
+                                                                    </Grid>
+                                                                    <Grid item>
+                                                                        <Typography variant="body2">
+                                                                            Created {job.DateCreated}
+                                                                        </Typography>
+                                                                    </Grid>
+                                                                    <Grid>
+                                                                        <Typography variant="body2" color="#000">
+                                                                            Expires {`${moment(job.DateCreated).add(7, 'days').format('llll')}`}
                                                                         </Typography>
                                                                     </Grid>
                                                                 </Grid>

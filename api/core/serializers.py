@@ -21,4 +21,4 @@ class JobSerializer(serializers.ModelSerializer):
     JobTypeId = JobTypeSerializer()
     class Meta:
         model = Job
-        fields = ('Id', 'Name', 'GoogleId', 'ThermostatId', 'Description', 'SettingTemp', 'JobTypeId', 'JobLogs')
+        fields = ('Id', 'Name', 'GoogleId', 'ThermostatId', 'Description', 'SettingTemp', 'JobTypeId', 'DateCreated', 'JobLogs')
