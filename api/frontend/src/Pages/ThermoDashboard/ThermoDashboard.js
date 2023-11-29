@@ -421,6 +421,7 @@ const ThermoDashboard = () => {
         }
     }
 
+
     const submitAddSetJob = async (data) => {
         const reqbody = {
             name: data.target.name.value.trim(),
@@ -496,6 +497,36 @@ const ThermoDashboard = () => {
             })
         }
     }
+
+
+    // pause job
+    const pauseJob = async (job) => {
+
+        await axios.post(`/pausejob`, job.Id)
+        .then((res) => {
+            if (res.status === 200) {
+                console.log("Job successfully paused/resumed")
+                console.log(res.data)
+                setJobRefresh(!jobRefresh)
+                raiseResponseToast(res.data.message)
+            }
+        })
+        .catch((err) => {
+            if (err.response.data.status === 404) {
+                console.log('Bad request')
+                console.log(err.response.data)
+                raiseResponseToast(err.response.data.message)
+            } else if (err.response.status === 500) {
+                console.log("Server probably isn't started, Internal Server Error")
+                console.log(err.response)
+                raiseResponseToast(err.response.data)
+            } else {
+                console.log(err)
+            }
+        })
+
+    }
+
 
     const timeValues = [ // Time options 
         {
@@ -902,7 +933,7 @@ const ThermoDashboard = () => {
                                                                             </div>
                                                                         </Grid>
                                                                         <Grid item>
-                                                                            <div onClick={() => alert(`Pause logging job ${job.Name}`)} style={{ cursor: 'pointer' }}>
+                                                                            <div onClick={() => pauseJob(job)} style={{ cursor: 'pointer' }}>
                                                                                 <ToolTip title="Pause Job">
                                                                                     <PauseCircleIcon />
                                                                                 </ToolTip>

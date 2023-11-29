@@ -12,6 +12,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.executors.pool import ProcessPoolExecutor, ThreadPoolExecutor
 from django_apscheduler.jobstores import register_events, register_job
 from django.conf import settings
+import json
 
 # Create your views here.
 
@@ -74,8 +75,8 @@ def saveLog(jobId, refresh_token):
         newJobLog = JobLog(JobId=job, ActualTemp=actualTemp, SetPointTemp=setPointTemp, HeatTemp=None, CoolTemp=None, Mode=mode, TimeLogged=datetime.now())
         newJobLog.save()
     elif response_json["traits"]["sdm.devices.traits.ThermostatMode"]["mode"] == 'HEATCOOL': #if the thermo is in heatcool mode
-        heat = response_json["sdm.devices.traits.ThermostatTemperatureSetpoint"]["heatCelsius"]
-        cool = response_json["sdm.devices.traits.ThermostatTemperatureSetpoint"]["coolCelsius"]
+        heat = response_json["traits"]["sdm.devices.traits.ThermostatTemperatureSetpoint"]["heatCelsius"]
+        cool = response_json["traits"]["sdm.devices.traits.ThermostatTemperatureSetpoint"]["coolCelsius"]
         mode = response_json["traits"]["sdm.devices.traits.ThermostatMode"]["mode"]
         newJobLog = JobLog(JobId=job, ActualTemp=actualTemp, SetPointTemp=None, HeatTemp=heat, CoolTemp=cool, Mode=mode, TimeLogged=datetime.now())
         newJobLog.save()
@@ -88,6 +89,7 @@ def saveLog(jobId, refresh_token):
     else: #off
         newJobLog = JobLog(JobId=job, ActualTemp=None, SetPointTemp=None, HeatTemp=None, CoolTemp=None, Mode='OFF', TimeLogged=datetime.now()) 
         newJobLog.save()
+
 
 
 def setJob(jobId, refresh_token):
@@ -336,4 +338,32 @@ def getJobs(request):
         return Response(data={'status': 200, 'message': 'Got the jobs and their logs', 'data': serializedlogsandjobs.data}, status=status.HTTP_200_OK)
     else:
         return Response(data={'status': 404, 'message': 'No jobs found for this thermostat created by the logged in user'}, status=status.HTTP_404_NOT_FOUND)
-    
+
+
+
+@api_view(['POST'])
+def pauseJob(request):
+
+    jobId = int(json.loads(request.body.decode(("utf-8"))))
+    message = ''
+
+    job = myscheduler.get_job(jobId)
+    isPaused = (job.next_run_time == None)
+
+    try:
+
+        if job != None:
+            if isPaused:
+                myscheduler.resume_job(jobId)
+                message = "Job resumed"
+            else:
+                myscheduler.pause_job(jobId)
+                message = "Job paused"
+
+            return Response(data={'status': 200, 'message': message}, status=status.HTTP_200_OK)
+        
+        else:
+            return Response(data={'status': 404, 'message': 'Job pause failed'}, status=status.HTTP_404_NOT_FOUND)
+
+    except:
+        return Response(data={'status': 500, 'message': 'Something went wrong'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
