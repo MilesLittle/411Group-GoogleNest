@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import Job, JobLog, JobType
 
 class JobAdmin(admin.ModelAdmin):
-    list_display = ('Id', 'Name', 'GoogleId', 'ThermostatId', 'Description', 'SettingTemp', 'JobTypeId')
+    list_display = ('Id', 'Name', 'GoogleId', 'ThermostatId', 'Description', 'SettingTemp', 'JobTypeId', 'DateCreated')
 
 class JobLogAdmin(admin.ModelAdmin):
     list_display = ('Id', 'JobId', 'ActualTemp', 'SetPointTemp', 'HeatTemp', 'CoolTemp', 'Mode', 'TimeLogged')

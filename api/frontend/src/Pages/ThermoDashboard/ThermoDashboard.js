@@ -215,6 +215,7 @@ const ThermoDashboard = () => {
                         }
                         joblog.TimeLogged = moment(`${joblog.TimeLogged}`).format('llll')
                     })
+                    jobanditslogs.DateCreated = moment(`${jobanditslogs.DateCreated}`).format('llll')
                 })
                 console.log(convertedData) //temperatures changed from C to F, date changed (but somehow they are already changed above?)
                 setJobs(convertedData)
@@ -1189,7 +1190,7 @@ const ThermoDashboard = () => {
                                         <Grow in={true}>
                                             <Grid item>
                                                 <ToolTip title={<>Job Name: {job.Name}<br/>Job Description: {job.Description}</>} arrow>
-                                                    <Card sx={{ borderRadius: '2rem', bgcolor: (job.JobLogs === chartData ? 'primary.dark' : 'primary.main'), width: '15rem' }} elevation={(job.JobLogs === chartData ? 8 : 0)} key={job.Id}>
+                                                    <Card sx={{ borderRadius: '2rem', bgcolor: (job.JobLogs === chartData ? 'primary.dark' : 'primary.main'), width: '18rem' }} elevation={(job.JobLogs === chartData ? 8 : 0)} key={job.Id}>
                                                         <CardContent>
                                                             <Grid container direction="row" justifyContent="space-between">
                                                                 <Grid item>
@@ -1209,13 +1210,6 @@ const ThermoDashboard = () => {
                                                                             </div>
                                                                         </Grid>
                                                                         <Grid item>
-                                                                            <div onClick={() => alert(`Pause logging job ${job.Name}`)} style={{ cursor: 'pointer' }}>
-                                                                                <ToolTip title="Pause Job">
-                                                                                    <PauseCircleIcon />
-                                                                                </ToolTip>
-                                                                            </div>
-                                                                        </Grid>
-                                                                        <Grid item>
                                                                             <div onClick={() => setJobToDeleteInfo({ Id: job.Id, Name: job.Name })} style={{ cursor: 'pointer' }}>
                                                                                 <ToolTip title="Delete Job">
                                                                                     <DeleteIcon />
@@ -1231,6 +1225,16 @@ const ThermoDashboard = () => {
                                                                         <div onClick={() => setChartData(job.JobLogs)} style={{ cursor: 'pointer' }}>
                                                                             {(job.Description)}
                                                                         </div>
+                                                                    </Typography>
+                                                                </Grid>
+                                                                <Grid item>
+                                                                    <Typography variant="body2" color="#000">
+                                                                        Created {job.DateCreated}
+                                                                    </Typography>
+                                                                </Grid>
+                                                                <Grid>
+                                                                    <Typography variant="body2" color="#000">
+                                                                        Expires {`${moment(job.DateCreated).add(7, 'days').format('llll')}`}
                                                                     </Typography>
                                                                 </Grid>
                                                             </Grid>
@@ -1315,7 +1319,7 @@ const ThermoDashboard = () => {
                                             <Grow in={true}>
                                                 <Grid item>
                                                     <ToolTip title={<>Job Name: {job.Name}<br/>Job Description: {job.Description}</>} arrow>
-                                                        <Card sx={{ borderRadius: '2rem', bgcolor: 'primary.main', width: '15rem' }} elevation={0} key={job.Id}>
+                                                        <Card sx={{ borderRadius: '2rem', bgcolor: 'primary.main', width: '18rem' }} elevation={0} key={job.Id}>
                                                             <CardContent>
                                                                 <Grid container direction="row" justifyContent="space-between">
                                                                     <Grid item>
@@ -1325,13 +1329,6 @@ const ThermoDashboard = () => {
                                                                     </Grid>
                                                                     <Grid item>
                                                                         <Grid container justifyContent="flex-end">
-                                                                            <Grid item>
-                                                                                <div onClick={() => alert(`Pause setting job ${job.Name}`)} style={{ cursor: 'pointer' }}>
-                                                                                    <ToolTip title="Pause Job">
-                                                                                        <PauseCircleIcon />
-                                                                                    </ToolTip>
-                                                                                </div>
-                                                                            </Grid>
                                                                             <Grid item>
                                                                                 <div onClick={() => setJobToDeleteInfo({ Id: job.Id, Name: job.Name })} style={{ cursor: 'pointer' }}>
                                                                                     <ToolTip title="Delete Job">
@@ -1346,6 +1343,16 @@ const ThermoDashboard = () => {
                                                                     <Grid item>
                                                                         <Typography variant="body2" color='#000'>
                                                                             {(job.Description)}
+                                                                        </Typography>
+                                                                    </Grid>
+                                                                    <Grid item>
+                                                                        <Typography variant="body2">
+                                                                            Created {job.DateCreated}
+                                                                        </Typography>
+                                                                    </Grid>
+                                                                    <Grid>
+                                                                        <Typography variant="body2" color="#000">
+                                                                            Expires {`${moment(job.DateCreated).add(7, 'days').format('llll')}`}
                                                                         </Typography>
                                                                     </Grid>
                                                                 </Grid>

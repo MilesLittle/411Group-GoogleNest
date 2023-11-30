@@ -26,6 +26,7 @@ class Job(models.Model): #mirror table for apscheduler jobs to make mapping data
     Description = models.TextField() #enforce length constraint on front end bc its not enforced at db level
     SettingTemp = models.IntegerField(null=True) #temp to set thermo to if its a setting job, if its a logging job its null, store in C?
     JobTypeId = models.ForeignKey(JobType, on_delete=models.SET_NULL, null=True) #does it need related_name='JobType'?
+    DateCreated = models.DateTimeField(auto_now_add=True, null=True) #for showing when job will expire on front end
     #do status boolean later for if the job is running or not. May not be possible though, will have to look into it more
 
     def __str__(self):
