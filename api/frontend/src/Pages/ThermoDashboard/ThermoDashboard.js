@@ -40,7 +40,6 @@ import EnergySavingsLeafIcon from '@mui/icons-material/EnergySavingsLeaf';
 
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
-//axios.defaults.withCredentials = true //somehow this messes with the Google login?
 
 const ThermoDashboard = () => {
     document.title = 'Nest Thermostat Dashboard'
@@ -62,6 +61,7 @@ const ThermoDashboard = () => {
     const [responseMessage, setResponseMessage] = useState('')
     const [errors, setErrors] = useState(null)
     const [sliderDisplayValue, setSliderDisplayValue] = useState(0)
+    const [sliderRefresh, setSliderRefresh] = useState(false)
 
     const CtoF = (cTemp) => {
         return (cTemp * 9/5) + 32
@@ -148,12 +148,31 @@ const ThermoDashboard = () => {
                 setDevice(null) //so conditional rendering can reset?
                 setTimeout(() => {
                     setDevice(res.data)
-                }, 1000)
+                }, 500)
             }
         }).catch((err) => {
             console.log(err)
         })
-    }, [deviceRefresh]) //make duplicate of this call for slider to call that doesn't set device null first in line 148
+    }, [deviceRefresh]) 
+
+    useEffect(() => {
+        if (device) {
+            axios.get(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${nestTokens.access_token}`
+                    }
+            }).then((res) => {
+                if (res.status === 200) {
+                    console.log('Got the device')
+                    console.log(res.data)
+                    setDevice(res.data)
+                }
+            }).catch((err) => {
+                console.log(err)
+            })
+        }
+    }, [sliderRefresh]) //same call as above but the slider component doesn't have to pop out and back in from moving it
 
     useEffect(() => { 
         if (device) {
@@ -323,7 +342,7 @@ const ThermoDashboard = () => {
     }
 
     const sliderTempHandler = async () => { //safe
-        if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "COOL") {
+        if (getMode(device) === "COOL") {
             await axios.post(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}:executeCommand`, {
                 command: "sdm.devices.commands.ThermostatTemperatureSetpoint.SetCool",
                 params: {
@@ -340,13 +359,14 @@ const ThermoDashboard = () => {
                     console.log('Cool setpoint temp changed')
                     console.log(res) 
                     raiseResponseToast('Temperature successfully set.')
-                    setDeviceRefresh(!deviceRefresh) 
+                    //setDeviceRefresh(!deviceRefresh) 
+                    setSliderRefresh(!sliderRefresh)
                 }
             }).catch((err) => {
                 console.log(err)
                 raiseResponseToast(err.response.data.error.message)
             })
-        } else if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "HEAT") {
+        } else if (getMode(device) === "HEAT") {
             await axios.post(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}:executeCommand`, {
                 command: "sdm.devices.commands.ThermostatTemperatureSetpoint.SetHeat",
                 params: {
@@ -363,7 +383,8 @@ const ThermoDashboard = () => {
                     console.log('Heat setpoint temp changed')
                     console.log(res)
                     raiseResponseToast('Temperature successfully set.')
-                    setDeviceRefresh(!deviceRefresh)
+                    //setDeviceRefresh(!deviceRefresh)
+                    setSliderRefresh(!sliderRefresh)
                 }
             }).catch((err) => {
                 console.log(err)
@@ -405,7 +426,7 @@ const ThermoDashboard = () => {
         } else {
             console.log('Range temp: there are no errors')
             setErrors(null)
-            if (device.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEATCOOL') {
+            if (getMode(device) === 'HEATCOOL') {
                 console.log('Thermostat is in heatcool mode')
                 await axios.post(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}:executeCommand`, {
                     command: "sdm.devices.commands.ThermostatTemperatureSetpoint.SetRange",
