@@ -31,13 +31,15 @@ import Stack from '@mui/material/Stack';
 import _debounce from 'lodash/debounce';
 import Paper from '@mui/material/Paper';
 import MenuItem from '@mui/material/MenuItem';
-import testarray from "./TestArray";
 import DownloadIcon from '@mui/icons-material/Download';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
+import ButtonGroup from "@mui/material/ButtonGroup";
+import AcUnitIcon from '@mui/icons-material/AcUnit';
+import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
+import EnergySavingsLeafIcon from '@mui/icons-material/EnergySavingsLeaf';
 
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
-//axios.defaults.withCredentials = true //somehow this messes with the Google login?
 
 const ThermoDashboard = () => {
     document.title = 'Nest Thermostat Dashboard'
@@ -59,6 +61,7 @@ const ThermoDashboard = () => {
     const [responseMessage, setResponseMessage] = useState('')
     const [errors, setErrors] = useState(null)
     const [sliderDisplayValue, setSliderDisplayValue] = useState(0)
+    const [sliderRefresh, setSliderRefresh] = useState(false)
 
     const CtoF = (cTemp) => {
         return (cTemp * 9/5) + 32
@@ -68,7 +71,7 @@ const ThermoDashboard = () => {
         return (fTemp - 32) * 5/9
     }
 
-    const getSetPointTemp = (thermostat) => {
+    const getSetPointTemp = (thermostat) => { //safe
         var setPointTemp
         if (thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEAT') {
           setPointTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].heatCelsius))
@@ -83,31 +86,45 @@ const ThermoDashboard = () => {
     const getRangeTemps = (thermostat) => {
         var coolTemp
         var heatTemp
-        if (thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEATCOOL') {
+        if (thermostat.traits["sdm.devices.traits.ThermostatEco"].mode === 'MANUAL_ECO') { //eco has priority, first precedence
+            coolTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatEco"].coolCelsius))
+            heatTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatEco"].heatCelsius))
+        } else if (thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEATCOOL') {
             coolTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].coolCelsius))
             heatTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatTemperatureSetpoint"].heatCelsius))
-        } else if (thermostat.traits["sdm.devices.traits.ThermostatEco"].mode === 'MANUAL_ECO') {
-           coolTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatEco"].coolCelsius))
-           heatTemp = Math.round(CtoF(thermostat.traits["sdm.devices.traits.ThermostatEco"].heatCelsius))
         } else { //OFF
            coolTemp = 0
            heatTemp = 0
         }
-        return [coolTemp, heatTemp]
+        return { coolTemp, heatTemp }
     }
 
     const getMode = (thermostat) => {
         var mode
-        if (thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEAT' || 
+        if (thermostat.traits["sdm.devices.traits.ThermostatEco"].mode === 'MANUAL_ECO') { //eco has priority
+            mode = thermostat.traits["sdm.devices.traits.ThermostatEco"].mode
+        } else if (thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEAT' || 
             thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'COOL' ||
             thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEATCOOL') {
             mode = thermostat.traits["sdm.devices.traits.ThermostatMode"].mode
-        } else if (thermostat.traits["sdm.devices.traits.ThermostatEco"].mode === 'MANUAL_ECO') {
-            mode = thermostat.traits["sdm.devices.traits.ThermostatEco"].mode
-        } else { //off
+        } else { //OFF
             mode = 'OFF'
         }
         return mode
+    }
+
+    const getFormattedModeName = (rawMode) => {
+        if (rawMode === 'MANUAL_ECO') {
+            return 'Eco'
+        } else if (rawMode === 'HEAT') {
+            return 'Heat'
+        } else if (rawMode === 'COOL') {
+            return 'Cool'
+        } else if (rawMode === 'HEATCOOL') {
+            return 'Heat • Cool'
+        } else {
+            return 'Off'
+        }
     }
 
     const raiseResponseToast = (message) => {
@@ -128,23 +145,46 @@ const ThermoDashboard = () => {
             if (res.status === 200) {
                 console.log('Got the device')
                 console.log(res.data)
-                setDevice(res.data)
+                setDevice(null) //so conditional rendering can reset?
+                setTimeout(() => {
+                    setDevice(res.data)
+                }, 500)
             }
         }).catch((err) => {
             console.log(err)
         })
-    }, [deviceRefresh])
+    }, [deviceRefresh]) 
+
+    useEffect(() => {
+        if (device) {
+            axios.get(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${nestTokens.access_token}`
+                    }
+            }).then((res) => {
+                if (res.status === 200) {
+                    console.log('Got the device')
+                    console.log(res.data)
+                    setDevice(res.data)
+                }
+            }).catch((err) => {
+                console.log(err)
+            })
+        }
+    }, [sliderRefresh]) //same call as above but the slider component doesn't have to pop out and back in from moving it
 
     useEffect(() => { 
         if (device) {
-            if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "COOL" || device.traits["sdm.devices.traits.ThermostatMode"].mode === "HEAT") {
+            if (getMode(device) === 'MANUAL_ECO') { //don't waste time setting anything that doesn't need to be set
+                return
+            } else if (getMode(device) === "COOL" || getMode(device) === "HEAT") {
                 console.log('Setting slider value')
                 setSliderDisplayValue(getSetPointTemp(device)) //state that doesn't live in any dependency array so there's no side effect issues
                 console.log(`sliderValue: ${sliderDisplayValue}`) 
-            } else if (device.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEATCOOL' || device.traits["sdm.devices.traits.ThermostatEco"].mode === 'MANUAL_ECO') {
+            } else if (getMode(device) === 'HEATCOOL') {
                 console.log('Setting temp range')
-                var temps = getRangeTemps(device)
-                setTempRange({ Cool: temps[0], Heat: temps[1] })
+                setTempRange({ Cool: getRangeTemps(device).coolTemp, Heat: getRangeTemps(device).heatTemp })
             } else { //OFF
                 console.log('Thermostat is probably off.')
             }
@@ -196,8 +236,114 @@ const ThermoDashboard = () => {
 
     }, [jobRefresh])
 
-    const sliderTempHandler = async () => {
-        if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "COOL") {
+    const changeMode = async (mode) => {
+        if (getMode(device) === mode) { //if the mode of the device in state is the same as the mode from the button (could make another device call here to ensure device JSON in state's mode is the same as the device from Google API's mode (refresh button to recall device like the one with jobs?))
+            if (mode === 'MANUAL_ECO') { //eco has priority
+                raiseResponseToast('The thermostat is already in eco mode.')
+            } else if (mode === 'COOL') {
+                raiseResponseToast('The thermostat is already in cool mode.')
+            } else if (mode === 'HEATCOOL') {
+                raiseResponseToast('The thermostat is already in heatcool mode.')
+            } else if (mode === 'HEAT') {
+                raiseResponseToast('The thermostat is already in heat mode.')
+            } else { //off
+                raiseResponseToast('The thermostat is off.') //There is no button to turn thermo off, add one?
+            }
+        } else {
+            if (mode === 'MANUAL_ECO') { //eco has priority
+                await axios.post(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}:executeCommand`, {
+                    command: "sdm.devices.commands.ThermostatEco.SetMode",
+                    params: {
+                        mode: "MANUAL_ECO"
+                    }
+                }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${nestTokens.access_token}`
+                    }
+                }).then((res) => {
+                    if (res.status === 200) {
+                        console.log('Successfully set to eco mode')
+                        console.log(res)
+                        raiseResponseToast('Successfully set to eco mode.')
+                        setDeviceRefresh(!deviceRefresh)
+                    }
+                }).catch((err) => {
+                    console.log(err)
+                    raiseResponseToast(err.response.data.error.message)
+                })
+            } else if (mode === 'COOL') {
+                await axios.post(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}:executeCommand`, {
+                    command: "sdm.devices.commands.ThermostatMode.SetMode",
+                    params: {
+                        mode: "COOL"
+                    }
+                }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${nestTokens.access_token}`
+                    }
+                }).then((res) => {
+                    if (res.status === 200) {
+                        console.log('Successfully set to cool mode')
+                        console.log(res)
+                        raiseResponseToast('Successfully set to cool mode.')
+                        setDeviceRefresh(!deviceRefresh)
+                    }
+                }).catch((err) => {
+                    console.log(err)
+                    raiseResponseToast(err.response.data.error.message)
+                })
+            } else if (mode === 'HEATCOOL') {
+                await axios.post(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}:executeCommand`, {
+                    command: "sdm.devices.commands.ThermostatMode.SetMode",
+                    params: {
+                        mode: "HEATCOOL"
+                    }
+                }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${nestTokens.access_token}`
+                    }
+                }).then((res) => {
+                    if (res.status === 200) {
+                        console.log('Successfully set to heatcool mode')
+                        console.log(res)
+                        raiseResponseToast('Successfully set to heatcool mode.')
+                        setDeviceRefresh(!deviceRefresh)
+                    }
+                }).catch((err) => {
+                    console.log(err)
+                    raiseResponseToast(err.response.data.error.message)
+                })
+            } else { //HEAT (do we need to catch if thermostat is off? but OFF isn't a provided button)
+                await axios.post(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}:executeCommand`, {
+                    command: "sdm.devices.commands.ThermostatMode.SetMode",
+                    params: {
+                        mode: "HEAT"
+                    }
+                }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${nestTokens.access_token}`
+                    }
+                }).then((res) => {
+                    if (res.status === 200) {
+                        console.log('Successfully set to heat mode')
+                        console.log(res)
+                        raiseResponseToast('Successfully set to heat mode.')
+                        setDeviceRefresh(!deviceRefresh)
+                    }
+                }).catch((err) => {
+                    console.log(err)
+                    raiseResponseToast(err.response.data.error.message)
+                })
+            }
+        }
+    }
+
+    const sliderTempHandler = async () => { //safe
+        if (getMode(device) === "COOL") {
             await axios.post(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}:executeCommand`, {
                 command: "sdm.devices.commands.ThermostatTemperatureSetpoint.SetCool",
                 params: {
@@ -214,13 +360,14 @@ const ThermoDashboard = () => {
                     console.log('Cool setpoint temp changed')
                     console.log(res) 
                     raiseResponseToast('Temperature successfully set.')
-                    setDeviceRefresh(!deviceRefresh) 
+                    //setDeviceRefresh(!deviceRefresh) 
+                    setSliderRefresh(!sliderRefresh)
                 }
             }).catch((err) => {
                 console.log(err)
                 raiseResponseToast(err.response.data.error.message)
             })
-        } else if (device.traits["sdm.devices.traits.ThermostatMode"].mode === "HEAT") {
+        } else if (getMode(device) === "HEAT") {
             await axios.post(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}:executeCommand`, {
                 command: "sdm.devices.commands.ThermostatTemperatureSetpoint.SetHeat",
                 params: {
@@ -237,7 +384,8 @@ const ThermoDashboard = () => {
                     console.log('Heat setpoint temp changed')
                     console.log(res)
                     raiseResponseToast('Temperature successfully set.')
-                    setDeviceRefresh(!deviceRefresh)
+                    //setDeviceRefresh(!deviceRefresh)
+                    setSliderRefresh(!sliderRefresh)
                 }
             }).catch((err) => {
                 console.log(err)
@@ -257,8 +405,56 @@ const ThermoDashboard = () => {
         }
     }, [setPointTemp])
 
-    const rangeTempHandler = () => {
-        alert(`Cool: ${tempRange.Cool}, Heat: ${tempRange.Heat}`)
+    const rangeTempHandler = async () => { //Apparently only for heatcool mode, API has no command to set range in eco mode
+        setErrors(null)
+        var errorlist = []
+        if (tempRange.Cool < tempRange.Heat) {
+            errorlist.push('Cool temperature must be higher than heat temperature.')
+        }
+        if (tempRange.Cool <= 0 || tempRange.Heat <= 0) {
+            errorlist.push('The temperatures cannot be negative, empty, or 0.')
+        }
+        if (tempRange.Cool < 50 || tempRange.Cool > 90 || tempRange.Heat < 50 || tempRange.Heat > 90) {
+            errorlist.push('The temperatures need to be within 50 to 90 °F.')
+        }
+        if (tempRange.Cool === getRangeTemps(device).coolTemp && tempRange.Heat === getRangeTemps(device).heatTemp) {
+            errorlist.push('The thermostat already has these temperatures for the range.')
+        }
+
+        if (errorlist.length > 0) {
+            console.log('Range temp: there are errors')
+            setErrors(errorlist)
+        } else {
+            console.log('Range temp: there are no errors')
+            setErrors(null)
+            if (getMode(device) === 'HEATCOOL') {
+                console.log('Thermostat is in heatcool mode')
+                await axios.post(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project_id}/devices/${deviceId}:executeCommand`, {
+                    command: "sdm.devices.commands.ThermostatTemperatureSetpoint.SetRange",
+                    params: {
+                        "heatCelsius": FtoC(tempRange.Heat),
+                        "coolCelsius": FtoC(tempRange.Cool)
+                    }
+                }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${nestTokens.access_token}`
+                    }
+                }).then((res) => {
+                    if (res.status === 200) {
+                        console.log('Heatcool range successfully set')
+                        console.log(res)
+                        raiseResponseToast('Temperature range successfully set.')
+                        setDeviceRefresh(!deviceRefresh)
+                    }
+                }).catch((err) => {
+                    console.log(err)
+                    raiseResponseToast(err.response.data.error.message)
+                })
+            } else { //OFF
+                console.log('Thermostat is probably off')
+            }
+        }
     }
 
     const deleteJob = async (id) => {
@@ -323,13 +519,11 @@ const ThermoDashboard = () => {
 
     /*const getMinYBound = (data) => {
         var bound = data.reduce((min, i) => {
-
                 if (i.ActualTemp < min) {
                     return i.ActualTemp
 
                 } else if (i.SetPointTemp < min) {
                     return i.SetPointTemp
-                    
                 } else {
                     return min
                 }
@@ -616,7 +810,7 @@ const ThermoDashboard = () => {
                                         id="select-time"
                                         name="timeType"
                                         select
-                                        defaultValue="days"
+                                        defaultValue="minutes"
                                         margin="dense"
                                         >
                                         {timeValues.map((option) => (
@@ -657,7 +851,12 @@ const ThermoDashboard = () => {
                 <Box sx={{ bgcolor: '#7BF1A8', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', p: 4, borderRadius: '1rem', width: '42rem' }}>
                     <Grid container direction="column" spacing={2} pl={1}>
                         <Grid item>
-                            <Typography variant="h4" mb={2}>Add Setting Job</Typography>
+                            <Typography variant="h4">Add Setting Job</Typography>
+                        </Grid>
+                        <Grid item>
+                            <Typography variant="body1" color="#ff6f00" mb="1rem">
+                                This will set the thermostat to a set point temperature at an interval, so it won't work if the thermostat isn't in heat mode or cool mode.
+                            </Typography>
                         </Grid>
                         <form onSubmit={(e) => {e.preventDefault(); submitAddSetJob(e);}}>
                             <Grid item>
@@ -722,7 +921,7 @@ const ThermoDashboard = () => {
                                         id="select-time"
                                         name="timeType"
                                         select
-                                        defaultValue="days"
+                                        defaultValue="minutes"
                                         margin="dense"
                                         >
                                         {timeValues.map((option) => (
@@ -769,51 +968,10 @@ const ThermoDashboard = () => {
                     }
                 </Grid>
                 <Grid item>
-                    { device && ( //device in cool mode or heat mode 
-                    device.traits["sdm.devices.traits.ThermostatMode"].mode === 'COOL' || device.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEAT' ? ( 
-                        <Grow in={true}>
-                            <Grid container direction="row" justifyContent="center" alignItems="center" spacing={5} mb={5}>
-                                <Grid item>
-                                    <Stack sx={{ height: '20rem' }}>
-                                        <Slider sx={{ color: (switched ? "#7BF1A8" : "#000")}} 
-                                        orientation="vertical" 
-                                        defaultValue={getSetPointTemp(device)} 
-                                        step={1} 
-                                        min={50} 
-                                        max={90} 
-                                        valueLabelDisplay="auto" 
-                                        onChange={(e) => { setSetPointTemp(parseInt(e.target.value)); setSliderDisplayValue(parseInt(e.target.value)); }}
-                                        /> 
-                                    </Stack>
-                                </Grid>
-                                <Grid item>
-                                    <ToolTip title={
-                                        <>
-                                            <Typography>
-                                                Set Point Temperature: {sliderDisplayValue}°F
-                                            </Typography><br/>
-                                            <Typography>
-                                                Actual Temperature: {Math.round(CtoF(device.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius))}°F
-                                            </Typography><br/>
-                                            <Typography>
-                                                Humidity: {device.traits["sdm.devices.traits.Humidity"].ambientHumidityPercent}%
-                                            </Typography><br/>
-                                            <Typography>
-                                                Mode: {getMode(device)}
-                                            </Typography>
-                                        </>
-                                    } placement="right-start">
-                                        <Paper sx={{ width: '20rem', height: '20rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: (switched ? "#7BF1A8" : "#000")}}>
-                                            <Typography variant="h1" color={switched ? "#000" : "#fff"}>{`${sliderDisplayValue}°`}</Typography>
-                                        </Paper>
-                                    </ToolTip>
-                                </Grid>
-                            </Grid>
-                        </Grow>
-                    ) : ( //heatcool or eco mode
-                        <>
+                    { device && ( //evaluate eco mode first 
+                        getMode(device) === 'MANUAL_ECO' ? (
                             <Grow in={true}>
-                                <Box sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', marginLeft: '17rem', marginRight: '17rem' }} mb={3}>
+                                <Box sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', width: '33rem' }} mb={3}>
                                     <List>
                                         <ListItem>
                                             <ListItemText 
@@ -831,37 +989,186 @@ const ThermoDashboard = () => {
                                         <Divider variant="middle" />
                                         <ListItem>
                                             <ListItemText 
-                                            primary={`Mode: ${getMode(device)}`}
+                                            primary={`Mode: ${getFormattedModeName(getMode(device))}`}
                                             primaryTypographyProps={{ fontSize: '2rem' }}
                                             />
-                                        </ListItem> {/*Add list items for heat and cool, show eco mode leaf somewhere */}
+                                        </ListItem> {/*show eco mode leaf somewhere */}
+                                        <Divider variant="middle"/>
+                                        <ListItem>
+                                            <ListItemText
+                                            primary={`Heat: ${getRangeTemps(device).heatTemp}, Cool: ${getRangeTemps(device).coolTemp}`}
+                                            primaryTypographyProps={{ fontSize: '2rem' }}
+                                            />
+                                        </ListItem>
                                     </List>
                                 </Box>
                             </Grow>
-                            <Grow in={true}>
-                                <Box component="form" sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', padding: '1rem', marginBottom: '2rem', marginLeft: '20rem', marginRight: '20rem' }}>
-                                    <Container>
-                                        <Grid container direction="column" justifyContent="center" alignItems="center" spacing={2}>
-                                            <Grid item>
-                                                <Grid container direction="row" justifyContent="center" alignItems="center" spacing={2}>
+                        ) : ( //other modes besides eco
+                            getMode(device) === 'HEATCOOL' ? (
+                                <>
+                                    <Grow in={true}>
+                                        <Box sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', marginLeft: '14.5rem', marginRight: '14.5rem' }} mb={3}>
+                                            <List>
+                                                <ListItem>
+                                                    <ListItemText 
+                                                    primary={`Humidity Percent: ${device.traits["sdm.devices.traits.Humidity"].ambientHumidityPercent}%`}
+                                                    primaryTypographyProps={{ fontSize: '2rem' }}
+                                                    />
+                                                </ListItem>
+                                                <Divider variant="middle" />
+                                                <ListItem>
+                                                    <ListItemText 
+                                                    primary={`Current Temperature: ${Math.round(CtoF(device.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius))}°F`}
+                                                    primaryTypographyProps={{ fontSize: '2rem'}}
+                                                    />
+                                                </ListItem>
+                                                <Divider variant="middle" />
+                                                <ListItem>
+                                                    <ListItemText 
+                                                    primary={`Mode: ${getFormattedModeName(getMode(device))}`}
+                                                    primaryTypographyProps={{ fontSize: '2rem' }}
+                                                    />
+                                                </ListItem> {/*show eco mode leaf somewhere */}
+                                                <Divider variant="middle"/>
+                                                <ListItem>
+                                                    <ListItemText
+                                                    primary={`Heat: ${getRangeTemps(device).heatTemp}, Cool: ${getRangeTemps(device).coolTemp}`}
+                                                    primaryTypographyProps={{ fontSize: '2rem' }}
+                                                    />
+                                                </ListItem>
+                                            </List>
+                                        </Box>
+                                    </Grow>
+                                    <Grow in={true}>
+                                        <Box component="form" sx={{ backgroundColor: '#7BF1A8', borderRadius: '2rem', padding: '1rem', marginBottom: '2rem', marginLeft: '20rem', marginRight: '20rem' }}>
+                                            <Container>
+                                                <Grid container direction="column" justifyContent="center" alignItems="center" spacing={2}>
                                                     <Grid item>
-                                                        <TextField type="number" variant="outlined" color="secondary" label="Set cool in F" onChange={(e) => setTempRange({...tempRange, Cool: parseInt(e.target.value)})}/>
-                                                    </Grid>
+                                                        <Grid container direction="row" justifyContent="center" alignItems="center" spacing={2}>
+                                                            <Grid item>
+                                                                <ToolTip placement="left" title={
+                                                                    <Typography variant="body2">
+                                                                        The heat temperature is the lowest/coolest it can get before the thermostat begins automatically heating.
+                                                                    </Typography>
+                                                                }>
+                                                                    <TextField 
+                                                                    type="number" 
+                                                                    variant="outlined" 
+                                                                    color="secondary" 
+                                                                    label="Set heat in F"
+                                                                    sx={{ width: '8rem' }}
+                                                                    defaultValue={getRangeTemps(device).heatTemp} 
+                                                                    onChange={(e) => setTempRange({...tempRange, Heat: parseInt(e.target.value)})}/>
+                                                                </ToolTip>
+                                                            </Grid>
+                                                            <Grid item>
+                                                                <ToolTip placement="right" title={
+                                                                    <Typography variant="body2">
+                                                                        The cool temperature is the highest/hottest it can get before the thermostat begins automatically cooling.
+                                                                    </Typography>
+                                                                }>
+                                                                    <TextField 
+                                                                    type="number" 
+                                                                    variant="outlined" 
+                                                                    color="secondary" 
+                                                                    label="Set cool in F"
+                                                                    sx={{ width: '8rem' }} 
+                                                                    defaultValue={getRangeTemps(device).coolTemp}
+                                                                    onChange={(e) => setTempRange({...tempRange, Cool: parseInt(e.target.value)})}/>
+                                                                </ToolTip>
+                                                            </Grid>
+                                                        </Grid>
+                                                    </Grid> 
                                                     <Grid item>
-                                                        <TextField type="number" variant="outlined" color="secondary" label="Set heat in F" onChange={(e) => setTempRange({...tempRange, Heat: parseInt(e.target.value)})}/>
+                                                        <Button variant="contained" color="secondary" onClick={() => rangeTempHandler()}>Set HeatCool Range</Button>
                                                     </Grid>
-                                                </Grid>
-                                            </Grid> 
-                                            <Grid item>
-                                                <Button variant="contained" color="secondary" onClick={() => rangeTempHandler()}>Set Temperature</Button>
-                                            </Grid>
-                                        </Grid>   
-                                    </Container>
-                                </Box>
-                            </Grow>
-                        </>
+                                                </Grid>   
+                                            </Container>
+                                        </Box>
+                                    </Grow>
+                                    <center>
+                                        <div style={{ color: '#d32f2f' }}>
+                                            { errors && (
+                                                errors.map((error) => (
+                                                    <>{error}<br/></>
+                                                ))
+                                            )}
+                                        </div>
+                                    </center>
+                                </>
+                            ) : ( //heat mode or cool mode
+                                <Grow in={true}>
+                                    <Grid container direction="row" justifyContent="center" alignItems="center" spacing={5} mb={5}>
+                                        <Grid item>
+                                            <Stack sx={{ height: '20rem' }}>
+                                                <Slider sx={{ color: (switched ? "#7BF1A8" : "#000")}} 
+                                                orientation="vertical" 
+                                                defaultValue={getSetPointTemp(device)} 
+                                                step={1} 
+                                                min={50} 
+                                                max={90} 
+                                                valueLabelDisplay="auto" 
+                                                onChange={(e) => { setSetPointTemp(parseInt(e.target.value)); setSliderDisplayValue(parseInt(e.target.value)); }}
+                                                /> 
+                                            </Stack>
+                                        </Grid>
+                                        <Grid item>
+                                            <ToolTip title={
+                                                <>
+                                                    <Typography>
+                                                        Set Point Temperature: {sliderDisplayValue}°F
+                                                    </Typography><br/>
+                                                    <Typography>
+                                                        Actual Temperature: {Math.round(CtoF(device.traits["sdm.devices.traits.Temperature"].ambientTemperatureCelsius))}°F
+                                                    </Typography><br/>
+                                                    <Typography>
+                                                        Humidity: {device.traits["sdm.devices.traits.Humidity"].ambientHumidityPercent}%
+                                                    </Typography><br/>
+                                                    <Typography>
+                                                        Mode: {getFormattedModeName(getMode(device))}
+                                                    </Typography>
+                                                </>
+                                            } placement="right-start">
+                                                <Paper sx={{ width: '20rem', height: '20rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: (switched ? "#7BF1A8" : "#000")}}>
+                                                    <Typography variant="h1" color={switched ? "#000" : "#fff"}>{`${sliderDisplayValue}°`}</Typography>
+                                                </Paper>
+                                            </ToolTip>
+                                        </Grid>
+                                    </Grid>
+                                </Grow>
+                            )
                         )
                     )
+                }
+                </Grid>
+                <Grid item>
+                    { device && //make the current mode button disabled?
+                        <ButtonGroup size="large" color={switched ? "primary" : "secondary"} variant={switched ? "outlined" : "contained"} sx={{ marginBottom: '2rem' }}>
+                            <ToolTip title="Cool Mode">
+                                <Button onClick={() => changeMode('COOL')}>
+                                    <AcUnitIcon sx={{ color: '#2196f3'}}/>
+                                </Button>
+                            </ToolTip>
+                            <Divider orientation="vertical" />
+                            <ToolTip title="Heat Mode">
+                                <Button onClick={() => changeMode('HEAT')} >
+                                    <LocalFireDepartmentIcon sx={{ color: '#f4511e'}}/>
+                                </Button>
+                            </ToolTip>
+                            <Divider orientation="vertical" />
+                            <ToolTip title="Heat/Cool Mode">
+                                <Button onClick={() => changeMode('HEATCOOL')}>
+                                    <LocalFireDepartmentIcon sx={{ color: '#f4511e'}}/>
+                                    <AcUnitIcon sx={{ color: '#2196f3'}}/>
+                                </Button>
+                            </ToolTip>
+                            <Divider orientation="vertical" />
+                            <ToolTip title="Eco Mode">
+                                <Button onClick={() => changeMode('MANUAL_ECO')}>
+                                    <EnergySavingsLeafIcon sx={{ color: '#00e676'}}/>
+                                </Button>
+                            </ToolTip>
+                        </ButtonGroup>
                     }
                 </Grid>
                 <Grid item>
