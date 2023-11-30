@@ -13,23 +13,9 @@
     left: 219px;
 }
 
-.heatorcool { 
+.mode {
     position: absolute;
     color: white;
-    top: 86.5px;
-    left: 158px;
-}
-
-.eco { 
-    position: absolute;
-    color: white;
-    top: 86.5px;
-    left: 165px;
-}
-
-.heatcool {
-    position: absolute;
-    color: white;
-    top: 86.5px;
+    top: 89px;
     left: 155px;
 }

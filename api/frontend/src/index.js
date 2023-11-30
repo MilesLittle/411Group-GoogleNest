@@ -6,7 +6,7 @@ import App from './App'
 //import './css/index.css'
 import AuthProvider from './Login/AuthProvider';
 import CustomTheme from './Theming/CustomTheme';
-import DarkModeSwitchProvider from './Theming/DarkModeSwitchProvider';
+import DarkModeSwitchProvider from './components/NavBar/Dark Mode/DarkModeSwitchProvider';
 import { BrowserRouter } from 'react-router-dom';
 import './index.css'
 

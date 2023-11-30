@@ -8,44 +8,18 @@ import TuneIcon from '@mui/icons-material/Tune';
 import { useNavigate } from "react-router-dom";
 import blanknestthermostat from './blanknestthermo.jpg'
 import blanknestthermostatdark from './blanknestthermodark.jpg'
-import DarkModeSwitchContext from "../../Theming/DarkModeSwitchContext";
+import DarkModeSwitchContext from "../NavBar/Dark Mode/DarkModeSwitchContext";
 import './thermocard.css'
-
 
 const ThermoCard = ({ deviceId, deviceName, mode, actualTempF, actualTempC, setPointTempF, humidity }) => {    
     const navigate = useNavigate()
     const { switched } = useContext(DarkModeSwitchContext)
-
-    const getFormattedModeName = (rawMode) => {
-        if (rawMode === 'MANUAL_ECO') {
-            return 'Eco'
-        } else if (rawMode === 'HEAT') {
-            return 'Heat'
-        } else if (rawMode === 'COOL') {
-            return 'Cool'
-        } else if (rawMode === 'HEATCOOL') {
-            return 'H • C'
-        } else {
-            return 'Off'
-        }
-    }
-
-    const modeClassChooser = (mode) => {
-        if (mode === 'HEAT' || mode === 'COOL') {
-            return 'heatorcool'
-        } else if (mode === 'MANUAL_ECO') {
-            return 'eco'
-        } else {
-            return 'heatcool'
-        }
-    }
-
     return (
         <Card sx={{ width: '25rem', borderRadius: '3rem', bgcolor: 'primary.main' }} elevation={15} key={deviceId}>
             <CardMedia sx={{ height: 300, borderRadius: '3rem', position: 'relative', border: '0.1rem solid #7BF1A8' }} image={(switched ? blanknestthermostatdark : blanknestthermostat)} title='Nest Device'>
                 <Typography variant="h2" className="setpointtemp">{setPointTempF}</Typography>
                 <Typography variant="body1" className="actualtemp">{actualTempF}</Typography>
-                <Typography variant="body1" className={modeClassChooser(mode)}>{getFormattedModeName(mode)}</Typography>
+                <Typography variant="body2" className="mode">{mode}</Typography>
             </CardMedia>
             <CardContent sx={{ margin: '0.5rem' }}>
                 <Grid container direction="row" justifyContent="space-between">
@@ -63,7 +37,7 @@ const ThermoCard = ({ deviceId, deviceName, mode, actualTempF, actualTempC, setP
                 <Grid container direction="column" justifyContent="flex-start">
                     <Grid item>
                         <Typography mb={1}> 
-                            Current Temperature: {actualTempC}°C
+                            Current Temperature: {actualTempC} C
                         </Typography>
                         <Typography mb={1}>
                             Humidity: {humidity}%

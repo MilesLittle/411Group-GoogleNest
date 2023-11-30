@@ -4,17 +4,17 @@ import Toolbar from '@mui/material/Toolbar';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
-import DarkModeSwitch from './DarkModeSwitch';
+import DarkModeSwitch from './Dark Mode/DarkModeSwitch';
 import Card from '@mui/material/Card';
 import Avatar from '@mui/material/Avatar';
 import GoogleIcon from '@mui/icons-material/Google';
 import AuthContext from '../../Login/AuthContext';
-import DarkModeSwitchContext from '../../Theming/DarkModeSwitchContext';
+import DarkModeSwitchContext from './Dark Mode/DarkModeSwitchContext';
 import { Link } from 'react-router-dom';
 import { useGoogleLogin } from "@react-oauth/google";
 import { useNavigate } from 'react-router-dom';
-import TempWiseLogoGreenBG from "./Ashton's friend's logo black n green.jpg"
-import TempWiseLogoColored from "./Ashton's friend's logo with green background.jpg"
+import tempwiseLogo from "./Ashton's friend's logo.jpg";
+import './Navbar.css';
 
 const NavBar = () => {
   const { setAuthTokenDetails, googleAccountInfo, setHasAuth } = useContext(AuthContext)
@@ -25,7 +25,7 @@ const NavBar = () => {
         onError: (error) => console.log('Login Failed:', error)
     });
   return (
-    <Box sx={{ flexGrow: 1, marginTop: '1rem', marginBottom: '1rem', marginLeft: '4rem', marginRight: '4rem', position: 'sticky', top: '0', zIndex: 1000 }}>
+    <Box sx={{ flexGrow: 1, marginTop: '1rem', marginBottom: '1rem', marginLeft: '4rem', marginRight: '4rem', position: 'sticky', top: '0' }} className="navbar">
       <AppBar position="sticky" sx={{ borderRadius: '30px' }} elevation={10}> 
         <Toolbar>
         <Grid container direction="row" justifyContent="space-between" alignItems="center">
@@ -38,7 +38,7 @@ const NavBar = () => {
           <Grid item>
             <div onClick={() => navigate("/")} style={{ cursor: 'pointer'}}>
               <img 
-                src={TempWiseLogoColored} 
+                src={tempwiseLogo} 
                 alt="I'M NOT GOING TO SUGARCOAT IT"
                 style={{ borderRadius: '0.5rem', width: '3rem', height: '3rem' }} 
               />
