@@ -107,7 +107,7 @@ const ThermoDashboard = () => {
             thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'COOL' ||
             thermostat.traits["sdm.devices.traits.ThermostatMode"].mode === 'HEATCOOL') {
             mode = thermostat.traits["sdm.devices.traits.ThermostatMode"].mode
-        } else { //off
+        } else { //OFF
             mode = 'OFF'
         }
         return mode
