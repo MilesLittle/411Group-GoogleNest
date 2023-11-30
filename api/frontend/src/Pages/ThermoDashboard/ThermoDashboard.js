@@ -39,7 +39,7 @@ import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
 import EnergySavingsLeafIcon from '@mui/icons-material/EnergySavingsLeaf';
 
 axios.defaults.xsrfCookieName = 'csrftoken'
-axios.defaults.xsrfHeaderName = 'X-CSRFToken'
+axios.defaults.xsrfHeaderName = 'X-CSRFToken' //;)
 
 const ThermoDashboard = () => {
     document.title = 'Nest Thermostat Dashboard'
