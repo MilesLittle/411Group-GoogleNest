@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from core.views import front
-from core.views import tempinfo, temp_detail, deleteLogJob, getLogJobs
+from core.views import tempinfo, temp_detail, deleteJob, getJobs, createLogJob, createSetJob
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -25,7 +25,8 @@ urlpatterns = [
     path("tempinfo/", tempinfo, name="tempinfo"),
     path("tempinfo/<int:pk>/", temp_detail, name = "detail"),
 
-    #path('logjob', createLogJob),
-    path('logjob/<str:name>/delete', deleteLogJob),
-    path('logjobs', getLogJobs)
+    path('logjob', createLogJob),
+    path('setjob', createSetJob),
+    path('job/<int:id>/delete', deleteJob),
+    path('jobs', getJobs),
 ]

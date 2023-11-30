@@ -146,8 +146,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'frontend', 'build', 'static')]
 
+CORS_ORIGIN_ALLOW_ALL = False
+
 CORS_ORIGIN_WHITELIST = [
-    'https://localhost:3000',
+    'http://localhost:3000',
+    'https://localhost:3000'
 ]
 
 CSRF_COOKIE_NAME = "csrftoken"
@@ -155,4 +158,4 @@ CSRF_COOKIE_HTTPONLY = False
 
 CORS_EXPOSE_HEADERS = ["Content-Type", "X-CSRFToken"]
 CORS_ALLOW_CREDENTIALS = True
-CSRF_TRUSTED_ORIGINS = ['http://localhost:8000/', 'https://localhost:3000']
+CSRF_TRUSTED_ORIGINS = ['http://localhost:8000/', 'https://localhost:3000', 'http://localhost:3000']
